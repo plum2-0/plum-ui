@@ -194,25 +194,60 @@ providers: [
 
 ## Firebase Data Model
 
-### Collections Structure
+### Collections Structure (Current Implementation)
 
-#### Users Collection
+#### Projects Collection (Main Entity)
 ```javascript
-users/{userId}: {
-  email: string,
-  displayName: string,
-  photoURL: string,
-  provider: '**google**' | 'github' | 'microsoft',
-  createdAt: timestamp,
-  lastLogin: timestamp,
-  onboardingComplete: boolean,
-  onboardingStep: number,
-  subscriptionTier: 'free' | 'pro' | 'enterprise'
+projects/{projectId}: {
+  users: [{
+    user_id: string,
+    google_auth: {
+      auth_token: string
+    },
+    created_at: timestamp,
+    updated_at: timestamp
+  }],
+  google_auth: {
+    auth_token: string
+  },
+  source: {
+    reddit: {
+      oauth_token: string,
+      oauth_token_expires_at: number,
+      refresh_token: string,
+      subreddits: string[],
+      keywords: string[]
+    }
+  },
+  destination: {
+    discord: {
+      server_id: string,
+      channel_id: string,
+      bot_token: string
+    }
+  },
+  created_at: timestamp,
+  updated_at: timestamp,
+  status: string // default: "active"
 }
 ```
 
+#### Subreddits Collection
+```javascript
+subreddits/{subredditId}: {
+  id: string,
+  project_id: string,
+  name: string,
+  active: boolean,
+  created_at: timestamp
+}
+```
+
+### Planned Collections (Not Yet Implemented)
+
 #### OAuth Connections
 ```javascript
+// Planned for future implementation
 users/{userId}/connections/{connectionId}: {
   platform: 'reddit' | 'discord' | 'slack' | 'gmail',
   accountId: string,
@@ -228,25 +263,9 @@ users/{userId}/connections/{connectionId}: {
 }
 ```
 
-#### Projects (Automation Configs)
-```javascript
-users/{userId}/projects/{projectId}: {
-  name: string,
-  description: string,
-  sourceConnection: connectionId,
-  destinationConnection: connectionId,
-  active: boolean,
-  createdAt: timestamp,
-  updatedAt: timestamp,
-  configuration: ConfigurationObject,
-  stats: StatsObject,
-  lastError: string | null,
-  nextRun: timestamp
-}
-```
-
 #### Discord Bot Instances
 ```javascript
+// Planned for future implementation
 discord_bots/{botId}: {
   serverId: string,
   serverName: string,
@@ -295,29 +314,53 @@ match /discord_bots/{botId} {
 - **Radix UI** - Accessible components
 
 ### Backend API Routes
+
+#### Currently Implemented Endpoints
 ```
+GET    /health                      - Health check endpoint
+GET    /dashboard/{user_id}         - Get project data by user ID
+POST   /reddit/configs              - Update Reddit configuration
+```
+
+#### Planned Endpoints (Not Yet Implemented)
+```
+# Authentication
 POST   /api/auth/[provider]          - Initiate OAuth flow
 GET    /api/auth/callback/[provider] - Handle OAuth callback
 POST   /api/auth/logout              - Clear session
 
+# User Management
 GET    /api/user/profile             - Get user data
 PUT    /api/user/onboarding          - Update onboarding status
 
+# Connection Management
 POST   /api/connections              - Add new connection
 DELETE /api/connections/[id]         - Remove connection
 POST   /api/connections/refresh      - Refresh OAuth tokens
 
+# Reddit Integration
 GET    /api/reddit/subreddits        - Search/validate subreddits
 GET    /api/reddit/user/subreddits   - Get user's subreddits
 
+# Discord Integration
 POST   /api/discord/bot-webhook      - Bot join confirmation
 GET    /api/discord/servers          - List user's servers
 GET    /api/discord/channels/[serverId] - Get server channels
 
+# Project Management
 POST   /api/projects                 - Create project
 PUT    /api/projects/[id]            - Update project
 DELETE /api/projects/[id]            - Delete project
 POST   /api/projects/[id]/test       - Test configuration
+
+# Additional Endpoints (Commented in code)
+GET    /projects                     - List all projects
+GET    /projects/{project_id}        - Get specific project
+GET    /keywords                     - List keywords
+POST   /keywords                     - Create keyword
+DELETE /keywords/{keyword_id}        - Delete keyword
+GET    /messages                     - List messages
+GET    /messages/{message_id}        - Get specific message
 ```
 
 ### Environment Variables

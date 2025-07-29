@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { FirestoreAdapter } from "@auth/firebase-adapter"
 import { cert } from "firebase-admin/app"
+import type { Adapter } from "next-auth/adapters"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -23,25 +24,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL!,
       privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY!.replace(/\\n/g, '\n'),
     })
-  }),
+  }) as Adapter,
   session: {
-    strategy: "jwt"
+    strategy: "database"
   },
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        return {
-          ...token,
-          provider: account.provider,
-          userId: user.id,
-        }
-      }
-      return token
-    },
-    async session({ session, token }) {
+    async session({ session, user }) {
+      // With database sessions, we get the user object directly
       if (session.user) {
-        session.user.id = token.userId as string
-        session.user.provider = token.provider as string
+        session.user.id = user.id
       }
       return session
     },
