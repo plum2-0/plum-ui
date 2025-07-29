@@ -1,13 +1,32 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['firebase-admin'],
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals = [...(config.externals || []), 'firebase-admin'];
+  webpack: (config, { isServer, webpack }) => {
+    if (!isServer) {
+      // Client-side configuration
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        path: false,
+        os: false,
+        stream: false,
+        buffer: false,
+      };
+      
+      // Ignore node: protocol imports on client
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /^node:/,
+        })
+      );
     }
+    
     return config;
-  }
+  },
+  serverExternalPackages: ['firebase-admin']
 };
 
 export default nextConfig;

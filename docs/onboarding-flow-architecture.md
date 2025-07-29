@@ -16,11 +16,11 @@ A comprehensive 4-step wizard for onboarding users, connecting OAuth accounts, a
    - Most universal, widely adopted
    - Clean permission model
    - Reliable API
-   
+
 2. **GitHub**
    - Developer-friendly
    - Good for technical users
-   
+
 3. **Microsoft**
    - Enterprise users
    - Azure AD integration
@@ -202,7 +202,7 @@ users/{userId}: {
   email: string,
   displayName: string,
   photoURL: string,
-  provider: 'google' | 'github' | 'microsoft',
+  provider: '**google**' | 'github' | 'microsoft',
   createdAt: timestamp,
   lastLogin: timestamp,
   onboardingComplete: boolean,
@@ -265,11 +265,11 @@ discord_bots/{botId}: {
 // Users can only read/write their own data
 match /users/{userId} {
   allow read, write: if request.auth.uid == userId;
-  
+
   match /connections/{connectionId} {
     allow read, write: if request.auth.uid == userId;
   }
-  
+
   match /projects/{projectId} {
     allow read, write: if request.auth.uid == userId;
   }
@@ -368,7 +368,7 @@ interface OnboardingState {
     reddit?: Connection;
     discord?: Connection;
   };
-  
+
   // Actions
   nextStep: () => void;
   previousStep: () => void;
