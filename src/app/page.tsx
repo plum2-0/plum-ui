@@ -1,32 +1,22 @@
-"use client";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { PlumLogo } from "@/components/PlumLogo";
 
-import Image from "next/image";
-
-// Plum Icon Component
-const PlumIcon = () => (
-  <Image
-    src="/plum-logo.png"
-    alt="Plum Logo"
-    width={120}
-    height={40}
-    priority
-    className="h-10 w-auto"
-  />
-);
-
-export default function Home() {
-  const handleDiscordLogin = () => {
-    // TODO: Implement Discord OAuth login
-    console.log("Discord login clicked");
-  };
+export default async function Home() {
+  const session = await auth();
+  
+  // If user is already authenticated, redirect to onboarding
+  if (session?.user) {
+    redirect('/onboarding');
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col">
       {/* Header with Logo */}
       <header className="p-6 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <PlumIcon />
-          <span className="text-2xl font-bold text-white">Plum</span>
+          <PlumLogo />
         </div>
       </header>
 
@@ -43,12 +33,12 @@ export default function Home() {
               <p className="text-lg md:text-xl text-purple-200 mb-8 max-w-2xl">
                 Monitor Reddit conversations in real-time and get instant notifications when your brand is mentioned
               </p>
-              <button
-                onClick={handleDiscordLogin}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-6 md:py-4 md:px-8 rounded-full text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              <Link
+                href="/auth/signin"
+                className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-6 md:py-4 md:px-8 rounded-full text-base md:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Get Started
-              </button>
+              </Link>
             </div>
             
             {/* Right Side - Flow Image */}

@@ -1,0 +1,17 @@
+<svg width="120" height="40" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="plumGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+  </defs>
+  <g>
+    <!-- Plum shape -->
+    <circle cx="20" cy="18" r="12" fill="url(#plumGradient)" />
+    <ellipse cx="20" cy="30" rx="6" ry="8" fill="url(#plumGradient)" opacity="0.8" />
+    <path d="M20 6 Q22 4 24 5 Q23 6.5 22 7.5 L20 8 Z" fill="#34D399" />
+    
+    <!-- Text -->
+    <text x="45" y="26" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="url(#plumGradient)">Plum</text>
+  </g>
+</svg>
