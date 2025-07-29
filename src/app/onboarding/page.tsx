@@ -1,13 +1,48 @@
-import { auth } from "@/lib/auth"
-import { redirect } from "next/navigation"
+'use client'
+
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { redirect, useSearchParams } from "next/navigation"
 import { SignOutButton } from "@/components/SignOutButton"
 import { PlumLogo } from "@/components/PlumLogo"
+import { OnboardingNavigationButton } from "@/components/OnboardingNavigationButton"
 
-export default async function OnboardingPage() {
-  const session = await auth()
+export default function OnboardingPage() {
+  const { data: session, status } = useSession()
+  const searchParams = useSearchParams()
+  const [projectName, setProjectName] = useState('')
+  
+  useEffect(() => {
+    if (status === 'loading') return
+    if (!session?.user) {
+      redirect('/auth/signin')
+    }
+    
+    // Check if redirected from Reddit callback
+    const step = searchParams.get('step')
+    const redditStatus = searchParams.get('reddit')
+    if (step === '2' && redditStatus === 'connected') {
+      redirect('/onboarding/reddit?reddit=connected')
+    }
+    
+    // Load existing data from localStorage
+    const savedData = localStorage.getItem('onboardingData')
+    if (savedData) {
+      const parsedData = JSON.parse(savedData)
+      setProjectName(parsedData.projectName || '')
+    }
+  }, [session, status, searchParams])
+  
+  if (status === 'loading') {
+    return <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700" />
+  }
   
   if (!session?.user) {
-    redirect('/auth/signin')
+    return null
+  }
+  
+  const handleProjectNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProjectName(e.target.value)
   }
 
   return (
@@ -87,12 +122,16 @@ export default async function OnboardingPage() {
             </p>
             
             <div className="bg-white/10 rounded-lg p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">Your Account Details:</h3>
-              <div className="space-y-2 text-purple-100">
-                <p>Email: {session.user.email}</p>
-                <p>Name: {session.user.name}</p>
-                <p>Provider: Google</p>
-              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Enter Your Project Name:</h3>
+              <p className="text-purple-100 mb-4">This will help us personalize your monitoring experience.</p>
+              <input
+                type="text"
+                value={projectName}
+                onChange={handleProjectNameChange}
+                placeholder="e.g., My Awesome SaaS"
+                className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-purple-200 border border-white/30 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-colors"
+                required
+              />
             </div>
 
             <div className="flex justify-between">
@@ -102,15 +141,7 @@ export default async function OnboardingPage() {
               >
                 ← Previous
               </button>
-              <button 
-                className="bg-white hover:bg-gray-100 text-purple-600 font-semibold py-3 px-6 rounded-lg transition-colors"
-                onClick={() => {
-                  // TODO: Navigate to next step
-                  console.log('Next step')
-                }}
-              >
-                Continue to Reddit Connection →
-              </button>
+              <OnboardingNavigationButton projectName={projectName} />
             </div>
           </div>
         </div>

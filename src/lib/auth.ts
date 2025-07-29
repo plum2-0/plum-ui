@@ -1,52 +1,43 @@
 import NextAuth from "next-auth"
-import Google from "next-auth/providers/google"
 import { FirestoreAdapter } from "@auth/firebase-adapter"
-import { cert } from "firebase-admin/app"
+import { initializeApp, cert, getApps } from "firebase-admin/app"
+import { getFirestore } from "firebase-admin/firestore"
 import type { Adapter } from "next-auth/adapters"
+import authConfig from "./auth.config"
+
+// Initialize Firebase Admin with the plummy database
+const app = getApps().length === 0 ? initializeApp({
+  credential: cert({
+    projectId: process.env.FIREBASE_ADMIN_PROJECT_ID!,
+    clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL!,
+    privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+  })
+}) : getApps()[0]
+
+// Get Firestore instance with the 'plummy' database
+const firestore = getFirestore(app, 'plummy')
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
-    })
-  ],
-  adapter: FirestoreAdapter({
-    credential: cert({
-      projectId: process.env.FIREBASE_ADMIN_PROJECT_ID!,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL!,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-    })
-  }) as Adapter,
+  ...authConfig,
+  adapter: FirestoreAdapter(firestore) as Adapter,
+  // Even with database adapter, we use JWT strategy to maintain compatibility with edge runtime
   session: {
-    strategy: "database"
+    strategy: "jwt"
   },
   callbacks: {
-    async session({ session, user }) {
-      // With database sessions, we get the user object directly
-      if (session.user) {
-        session.user.id = user.id
+    ...authConfig.callbacks,
+    async jwt({ token, user, account, trigger }) {
+      // When user signs in, save user data from database to token
+      if (account && user) {
+        return {
+          ...token,
+          id: user.id,
+          provider: account.provider,
+        }
       }
-      return session
+      
+      // For subsequent requests, the token already has the user data
+      return token
     },
-    async redirect({ url, baseUrl }) {
-      // Redirect to onboarding after sign in
-      if (url === baseUrl) {
-        return `${baseUrl}/onboarding`
-      }
-      return url.startsWith(baseUrl) ? url : baseUrl
-    }
-  },
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
-  debug: process.env.NODE_ENV === 'development',
+  }
 })

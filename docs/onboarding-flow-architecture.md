@@ -207,9 +207,6 @@ projects/{projectId}: {
     created_at: timestamp,
     updated_at: timestamp
   }],
-  google_auth: {
-    auth_token: string
-  },
   source: {
     reddit: {
       oauth_token: string,
@@ -247,9 +244,29 @@ subreddits/{subredditId}: {
 
 #### OAuth Connections
 ```javascript
-// Planned for future implementation
+// Current implementation (Google Auth integrated into User/Project models)
+projects/{projectId}: {
+  project_id: string,
+  users: User[],
+  destination: Destination,
+  source: Source,
+  created_at: timestamp,
+  updated_at: timestamp,
+  status: string // default: "active"
+}
+
+users/{userId}: {
+  user_id: string,
+  google_auth: {
+    auth_token: string // Google authentication token
+  },
+  created_at: timestamp,
+  updated_at: timestamp
+}
+
+// Planned for future implementation - Extended OAuth support
 users/{userId}/connections/{connectionId}: {
-  platform: 'reddit' | 'discord' | 'slack' | 'gmail',
+  platform: 'reddit' | 'discord' | 'slack' | 'gmail' | 'google',
   accountId: string,
   username: string,
   displayName: string,
