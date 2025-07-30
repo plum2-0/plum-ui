@@ -86,9 +86,9 @@ export async function GET() {
       currentStep = 3;
       redirectTo = "/onboarding/configure";
     } else {
-      // Configuration is complete, redirect to review page
+      // Configuration is complete, redirect to dashboard
       currentStep = 4;
-      redirectTo = `/projects/${projectDoc.id}/review`;
+      redirectTo = `/dashboard`;
     }
 
     const state: OnboardingState = {

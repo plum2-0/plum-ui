@@ -74,10 +74,10 @@ export function useOnboardingState(autoRedirect: boolean = true): UseOnboardingS
         
         // Only redirect if we're on a different onboarding page than we should be
         // But don't redirect if we're already on the target page to prevent loops
-        // Also handle redirects to the review page when config is complete
+        // Also handle redirects to the dashboard when config is complete
         const shouldRedirect = (
           (currentPath.startsWith("/onboarding") && currentPath !== data.redirectTo) ||
-          (data.hasCompleteConfig && !currentPath.startsWith("/projects"))
+          (data.hasCompleteConfig && currentPath !== "/dashboard" && !currentPath.startsWith("/projects"))
         );
         
         if (shouldRedirect &&

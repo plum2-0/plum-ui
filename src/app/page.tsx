@@ -6,9 +6,9 @@ import { PlumLogo } from "@/components/PlumLogo";
 export default async function Home() {
   const session = await auth();
   
-  // If user is already authenticated, redirect to onboarding
+  // If user is already authenticated, redirect to dashboard
   if (session?.user) {
-    redirect('/onboarding');
+    redirect('/dashboard');
   }
 
   return (

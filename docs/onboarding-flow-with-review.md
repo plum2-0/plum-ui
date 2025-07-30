@@ -1,8 +1,8 @@
-# Updated Onboarding Flow with Reddit Post Review
+# Updated Onboarding Flow with Dashboard
 
 ## Overview
 
-The onboarding flow has been updated to automatically redirect users to the Reddit Post Review page once they have completed their configuration.
+The onboarding flow has been updated to automatically redirect users to a comprehensive dashboard once they have completed their configuration. From the dashboard, users can access all features including the Reddit Post Review.
 
 ## Flow Diagram
 
@@ -18,9 +18,11 @@ The onboarding flow has been updated to automatically redirect users to the Redd
    - Define topics
    - Create AI prompt
    ↓
-5. Reddit Post Review (/projects/[projectId]/review) ← NEW!
-   - Review matched posts
-   - Take actions on AI responses
+5. Dashboard (/dashboard) ← NEW!
+   - Overview of project stats
+   - Quick access to all features
+   - Navigate to Reddit Post Review
+   - Access configuration settings
 ```
 
 ## Implementation Details
@@ -35,26 +37,26 @@ The `/api/onboarding/state` endpoint now checks for complete configuration:
 When all conditions are met:
 - `hasCompleteConfig: true`
 - `currentStep: 4`
-- `redirectTo: "/projects/[projectId]/review"`
+- `redirectTo: "/dashboard"`
 
 ### 2. **Auto-Redirect Logic**
-Users are automatically redirected to the review page when:
+Users are automatically redirected to the dashboard when:
 - They complete the configuration step
-- They visit `/demo` with a complete configuration
+- They visit the home page while authenticated
 - They visit any onboarding page with a complete configuration
 
 ### 3. **Configure Page Update**
 The "Complete Setup" button now redirects to:
 ```javascript
-window.location.href = `/projects/${projectId}/review`;
+window.location.href = `/dashboard`;
 ```
 
-### 4. **Demo Page Enhancement**
-The demo page now:
-- Checks authentication status
-- Fetches onboarding state
-- Auto-redirects to review page if configuration is complete
-- Falls back to demo project ID if no active project
+### 4. **Dashboard Features**
+The dashboard now provides:
+- Project overview with quick stats
+- Direct access to Reddit Post Review
+- Configuration management
+- Future features placeholders (Analytics, Templates)
 
 ## Testing the Flow
 
@@ -63,31 +65,35 @@ The demo page now:
    npm run dev
    # Visit http://localhost:3000
    # Complete onboarding steps
-   # Automatically land on review page
+   # Automatically land on dashboard
    ```
 
 2. **Returning User with Complete Config**:
    ```bash
-   # Visit http://localhost:3000/demo
-   # Auto-redirects to /projects/[projectId]/review
+   # Visit http://localhost:3000
+   # Auto-redirects to /dashboard
+   # Click "Review Posts" → /projects/[projectId]/review
    ```
 
-3. **Demo Mode** (not authenticated):
+3. **Direct Dashboard Access**:
    ```bash
-   # Visit http://localhost:3000/demo
-   # Click "Try Demo" → /projects/demo-project-123/review
+   # Visit http://localhost:3000/dashboard
+   # See project overview and stats
+   # Access all features from one place
    ```
 
 ## Benefits
 
-1. **Seamless Experience**: Users immediately see the value of the product
-2. **No Dead Ends**: No confusion about what to do after configuration
-3. **Action-Oriented**: Users can start reviewing posts right away
-4. **Smart Routing**: Returning users go directly to their work
+1. **Central Hub**: Dashboard serves as the main control center
+2. **Overview First**: Users see their project status at a glance
+3. **Easy Navigation**: All features accessible from one place
+4. **Growth Oriented**: Stats motivate continued engagement
+5. **Smart Routing**: Returning users land on their personalized dashboard
 
 ## Future Enhancements
 
-1. **Dashboard**: Add a proper dashboard with analytics
-2. **Multiple Projects**: Support project switching
-3. **Notifications**: Badge for pending post count
-4. **Quick Actions**: Keyboard shortcuts for power users
+1. **Real Analytics**: Connect actual metrics from backend
+2. **Multiple Projects**: Support project switching in dashboard
+3. **Live Updates**: Real-time notifications for new posts
+4. **Response Templates**: Quick access from dashboard
+5. **Export Reports**: Download engagement metrics
