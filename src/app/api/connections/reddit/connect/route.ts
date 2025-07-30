@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
       state: state,
       redirect_uri: `${process.env.NEXTAUTH_URL}/api/connections/reddit/callback`,
       duration: "permanent", // Request refresh token
-      scope: "identity read mysubreddits",
+      scope:
+        "identity edit flair history modconfig modflair modlog modposts modwiki mysubreddits privatemessages read report save submit subscribe vote wikiedit wikiread",
     });
 
     // Generate Reddit authorization URL

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { redirect, useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PlumLogo } from "@/components/PlumLogo";
 import { getProjectIdFromCookie } from "@/lib/cookies";
+import { useOnboardingState } from "@/hooks/useOnboardingState";
 
 export default function RedditOnboardingPage() {
   const { data: session, status } = useSession();
@@ -14,21 +15,39 @@ export default function RedditOnboardingPage() {
   const [redditConnected, setRedditConnected] = useState(false);
   const [redditUsername, setRedditUsername] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const {
+    state: onboardingState,
+    loading: stateLoading,
+    refetch,
+  } = useOnboardingState(false);
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session?.user) {
-      redirect("/auth/signin");
+  const fetchRedditUsername = useCallback(async () => {
+    try {
+      const response = await fetch("/api/projects/source");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.source?.reddit?.username) {
+          setRedditUsername(data.source.reddit.username);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch Reddit username:", error);
     }
+  }, []);
 
-    // Check URL parameters for connection status
+  // Handle URL parameters separately to avoid re-triggers
+  useEffect(() => {
     const redditStatus = searchParams.get("reddit");
     const errorParam = searchParams.get("error");
 
-    if (redditStatus === "connected") {
+    if (redditStatus === "connected" && !redditConnected) {
       setRedditConnected(true);
       // Fetch Reddit username from project data
       fetchRedditUsername();
+      // Refresh onboarding state after connection with a delay to ensure DB is updated
+      setTimeout(() => {
+        refetch();
+      }, 2000);
     }
 
     if (errorParam) {
@@ -46,6 +65,25 @@ export default function RedditOnboardingPage() {
         errorMessages[errorParam] || "An error occurred. Please try again."
       );
     }
+  }, [searchParams, redditConnected, refetch, fetchRedditUsername]);
+
+  // Handle authentication and onboarding state
+  useEffect(() => {
+    if (status === "loading" || stateLoading) return;
+    if (!session?.user) {
+      redirect("/auth/signin");
+    }
+
+    // Check if user has project - if not, redirect to step 1
+    if (onboardingState && !onboardingState.hasProject) {
+      redirect("/onboarding");
+    }
+
+    // Check if user already has Reddit connected
+    if (onboardingState?.hasRedditConfig && !redditConnected) {
+      setRedditConnected(true);
+      fetchRedditUsername();
+    }
 
     // Store project name in cookie for callback
     const projectName = localStorage.getItem("onboardingData");
@@ -54,25 +92,20 @@ export default function RedditOnboardingPage() {
         JSON.parse(projectName).projectName
       }; path=/; max-age=600`;
     }
-  }, [session, status, searchParams]);
+  }, [
+    session,
+    status,
+    onboardingState,
+    stateLoading,
+    redditConnected,
+    fetchRedditUsername,
+  ]);
 
-  const fetchRedditUsername = async () => {
-    try {
-      const response = await fetch("/api/projects/source");
-      if (response.ok) {
-        const data = await response.json();
-        if (data.source?.reddit?.username) {
-          setRedditUsername(data.source.reddit.username);
-        }
-      }
-    } catch {
-      console.error("Failed to fetch Reddit username");
-    }
-  };
-
-  if (status === "loading") {
+  if (status === "loading" || stateLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
     );
   }
 
@@ -95,7 +128,7 @@ export default function RedditOnboardingPage() {
         setError("Failed to generate authorization URL");
         setIsConnecting(false);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to connect to Reddit. Please try again.");
       setIsConnecting(false);
     }
@@ -217,14 +250,28 @@ export default function RedditOnboardingPage() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-green-400 mr-2">✓</span>
-                      View your subscribed subreddits
+                      View your subscribed subreddits and history
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-orange-400 mr-2">⚠</span>
+                      Post, edit, and vote on your behalf
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-orange-400 mr-2">⚠</span>
+                      Access private messages and inbox
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-orange-400 mr-2">⚠</span>
+                      Moderation capabilities (if you&apos;re a moderator)
                     </li>
                   </ul>
 
-                  <div className="mt-4 p-3 bg-white/10 rounded">
-                    <p className="text-sm text-purple-200">
-                      <strong>Privacy Note:</strong> We only read public posts
-                      and never post on your behalf.
+                  <div className="mt-4 p-3 bg-amber-600/20 border border-amber-500/50 rounded">
+                    <p className="text-sm text-amber-200">
+                      <strong>⚠️ Extended Permissions:</strong> These
+                      permissions include full read/write access to your Reddit
+                      account. Only approve if you trust this application with
+                      complete access.
                     </p>
                   </div>
                 </div>

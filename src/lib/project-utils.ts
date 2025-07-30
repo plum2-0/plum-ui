@@ -1,15 +1,6 @@
 import { Timestamp } from "firebase-admin/firestore";
 import { adminDb } from "./firebase-admin";
 
-interface UserInProject {
-  user_id: string;
-  google_auth?: {
-    auth_token: string;
-  };
-  created_at: Timestamp;
-  updated_at: Timestamp;
-}
-
 interface RedditSource {
   oauth_token?: string;
   oauth_token_expires_at?: number;
@@ -22,7 +13,7 @@ interface RedditSource {
 interface Project {
   project_id?: string;
   project_name?: string;
-  users: UserInProject[];
+  user_ids: string[]; // Changed to match actual data structure
   source?: {
     reddit?: RedditSource;
   };
@@ -64,9 +55,9 @@ export async function findOrCreateProject(
       );
     }
 
-    // First, try to find an existing project for this user
-    const querySnapshot = await projectsRef
-      .where("users", "array-contains", { user_id: userId })
+    // First, try to find an existing project for this user with new structure
+    let querySnapshot = await projectsRef
+      .where("user_ids", "array-contains", userId)
       .limit(1)
       .get();
 
@@ -75,16 +66,33 @@ export async function findOrCreateProject(
       return querySnapshot.docs[0].id;
     }
 
+    // Try to find with old structure (for backward compatibility)
+    const allProjects = await projectsRef.get();
+    for (const doc of allProjects.docs) {
+      const data = doc.data();
+      // Check if this is an old structure project with users array
+      if (data.users && Array.isArray(data.users)) {
+        const hasUser = data.users.some((u: any) => 
+          (typeof u === 'string' && u === userId) || 
+          (u && typeof u === 'object' && u.user_id === userId)
+        );
+        if (hasUser) {
+          // Migrate to new structure
+          await doc.ref.update({
+            user_ids: data.users.map((u: any) => 
+              typeof u === 'string' ? u : u.user_id
+            ),
+            updated_at: Timestamp.now()
+          });
+          return doc.id;
+        }
+      }
+    }
+
     // Create a new project (this will create the collection if it doesn't exist)
-    const newProject: Project = {
+    const newProject = {
       project_name: projectName || "My Project",
-      users: [
-        {
-          user_id: userId,
-          created_at: Timestamp.now(),
-          updated_at: Timestamp.now(),
-        },
-      ],
+      user_ids: [userId],
       created_at: Timestamp.now(),
       updated_at: Timestamp.now(),
       status: "active",
@@ -169,5 +177,5 @@ export async function userBelongsToProject(
   const project = await getProject(projectId);
   if (!project) return false;
 
-  return project.users.some((user: UserInProject) => user.user_id === userId);
+  return project.user_ids.includes(userId);
 }

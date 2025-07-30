@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface OnboardingNavigationButtonProps {
   projectName?: string;
@@ -15,6 +15,28 @@ export function OnboardingNavigationButton({
   const { data: session } = useSession();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingProjectId, setExistingProjectId] = useState<string | null>(null);
+
+  // Check if user already has a project on component mount
+  useEffect(() => {
+    const checkExistingProject = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const response = await fetch("/api/onboarding/state");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasProject && data.projectId) {
+            setExistingProjectId(data.projectId);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking existing project:", err);
+      }
+    };
+
+    checkExistingProject();
+  }, [session?.user?.id]);
 
   const handleNavigation = async () => {
     if (!session?.user?.id) {
@@ -22,6 +44,24 @@ export function OnboardingNavigationButton({
       return;
     }
 
+    // If user already has a project, just navigate
+    if (existingProjectId) {
+      // Update localStorage with existing project info
+      const existingData = localStorage.getItem("onboardingData");
+      const onboardingData = existingData ? JSON.parse(existingData) : {};
+
+      onboardingData.projectId = existingProjectId;
+      localStorage.setItem("onboardingData", JSON.stringify(onboardingData));
+
+      // Set cookie for project ID
+      document.cookie = `project_id=${existingProjectId}; path=/; max-age=${60 * 60 * 24 * 7}`;
+
+      // Navigate to Reddit connection page
+      router.push("/onboarding/reddit");
+      return;
+    }
+
+    // Otherwise, create new project
     if (!projectName?.trim()) {
       setError("Project name is required");
       return;
@@ -56,6 +96,9 @@ export function OnboardingNavigationButton({
       onboardingData.projectId = data.project_id;
       localStorage.setItem("onboardingData", JSON.stringify(onboardingData));
 
+      // Set cookie for project ID
+      document.cookie = `project_id=${data.project_id}; path=/; max-age=${60 * 60 * 24 * 7}`;
+
       // Navigate to Reddit connection page
       router.push("/onboarding/reddit");
     } catch (err) {
@@ -77,16 +120,18 @@ export function OnboardingNavigationButton({
         className="bg-white hover:bg-gray-100 text-purple-600 font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         onClick={handleNavigation}
         disabled={
-          (projectName !== undefined && !projectName.trim()) || isCreating
+          (!existingProjectId && projectName !== undefined && !projectName.trim()) || isCreating
         }
       >
         {isCreating ? (
           <>
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-            Creating Project...
+            {existingProjectId ? "Loading..." : "Creating Project..."}
           </>
         ) : (
-          "Continue to Reddit Connection →"
+          <>
+            {existingProjectId ? "Continue →" : "Continue to Reddit Connection →"}
+          </>
         )}
       </button>
     </div>

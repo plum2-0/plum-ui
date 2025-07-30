@@ -39,14 +39,14 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error("Reddit OAuth error:", error);
       return NextResponse.redirect(
-        new URL("/onboarding?error=reddit_denied", request.url)
+        new URL("/onboarding/reddit?error=reddit_denied", request.url)
       );
     }
 
     // Validate required parameters
     if (!code || !state) {
       return NextResponse.redirect(
-        new URL("/onboarding?error=invalid_request", request.url)
+        new URL("/onboarding/reddit?error=invalid_request", request.url)
       );
     }
 
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     if (!clientId || !clientSecret) {
       console.error("Reddit OAuth credentials not configured");
       return NextResponse.redirect(
-        new URL("/onboarding?error=configuration_error", request.url)
+        new URL("/onboarding/reddit?error=configuration_error", request.url)
       );
     }
 
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
         await tokenResponse.text()
       );
       return NextResponse.redirect(
-        new URL("/onboarding?error=token_exchange_failed", request.url)
+        new URL("/onboarding/reddit?error=token_exchange_failed", request.url)
       );
     }
 
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
         await userResponse.text()
       );
       return NextResponse.redirect(
-        new URL("/onboarding?error=user_info_failed", request.url)
+        new URL("/onboarding/reddit?error=user_info_failed", request.url)
       );
     }
 
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Reddit OAuth callback error:", error);
     return NextResponse.redirect(
-      new URL("/onboarding?error=callback_error", request.url)
+      new URL("/onboarding/reddit?error=callback_error", request.url)
     );
   }
 }

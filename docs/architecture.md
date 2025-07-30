@@ -145,16 +145,15 @@ providers: [
 - Show subreddit preview (icon, member count)
 - Warn if subreddit is private/quarantined
 
-#### Keyword Manager
-- Add/edit/delete keywords
-- Support for regex patterns
-- Case sensitivity toggle
-- Negative keywords (exclusions)
-- Keyword grouping
+#### Topic Manager
+- Add/edit/delete topics
+- Simple text-based topic matching
+- Topic validation and suggestions
+- Topic organization and categorization
 
 #### AI Prompt Builder
 - Template library
-- Variable insertion ({{subreddit}}, {{keyword}})
+- Variable insertion ({{subreddit}}, {{topic}})
 - Tone selection (professional, casual, informative)
 - Preview generated responses
 
@@ -164,33 +163,6 @@ providers: [
 - Default channel fallback
 - Channel permission validation
 
-### Configuration Schema
-```javascript
-{
-  name: "Tech News Monitor",
-  sourceConnection: "reddit_connection_id",
-  destinationConnection: "discord_connection_id",
-  active: true,
-  configuration: {
-    subreddits: ["technology", "programming", "webdev"],
-    keywords: [
-      { term: "AI", isRegex: false, caseSensitive: false },
-      { term: "\\bmachine learning\\b", isRegex: true, caseSensitive: false }
-    ],
-    aiPrompt: "Summarize this Reddit post professionally...",
-    channelMappings: {
-      "technology": "tech-news-channel-id",
-      "programming": "dev-channel-id",
-      "default": "general-channel-id"
-    },
-    postingSchedule: {
-      timezone: "America/New_York",
-      quietHours: { start: 0, end: 6 },
-      maxPostsPerHour: 5
-    }
-  }
-}
-```
 
 ## Firebase Data Model
 
@@ -205,9 +177,14 @@ projects/{projectId}: {
       oauth_token: string,
       oauth_token_expires_at: number,
       refresh_token: string,
-      subreddits: string[],
-      keywords: string[]
-    }
+      subreddits: string[]
+    },
+    configs: {
+      [configId: string]: {
+        topics: string[],
+        prompt: string
+      }
+    },
   },
   destination: {
     discord: {
@@ -216,6 +193,7 @@ projects/{projectId}: {
       bot_token: string
     }
   },
+
   created_at: timestamp,
   updated_at: timestamp,
   status: string // default: "active"
@@ -356,9 +334,9 @@ POST   /api/projects/[id]/test       - Test configuration
 # Additional Endpoints (Commented in code)
 GET    /projects                     - List all projects
 GET    /projects/{project_id}        - Get specific project
-GET    /keywords                     - List keywords
-POST   /keywords                     - Create keyword
-DELETE /keywords/{keyword_id}        - Delete keyword
+GET    /topics                       - List topics
+POST   /topics                       - Create topic
+DELETE /topics/{topic_id}            - Delete topic
 GET    /messages                     - List messages
 GET    /messages/{message_id}        - Get specific message
 ```
@@ -403,8 +381,8 @@ interface OnboardingState {
   completedSteps: number[];
   formData: {
     selectedSubreddits: string[];
-    keywords: Keyword[];
-    aiPrompt: string;
+    topics: string[];
+    prompt: string;
     channelMappings: Record<string, string>;
   };
   connections: {

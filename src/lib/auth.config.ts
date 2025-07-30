@@ -41,11 +41,21 @@ export default {
       return session
     },
     async redirect({ url, baseUrl }) {
-      // Redirect to onboarding after sign in
-      if (url === baseUrl) {
-        return `${baseUrl}/onboarding`
+      // If there's a specific callback URL with parameters (like OAuth callbacks), preserve it
+      const urlObj = new URL(url);
+      const searchParams = urlObj.searchParams;
+      
+      // Preserve OAuth callback redirects with parameters
+      if (searchParams.has('reddit') || searchParams.has('error') || searchParams.has('callbackUrl')) {
+        return url.startsWith(baseUrl) ? url : baseUrl;
       }
-      return url.startsWith(baseUrl) ? url : baseUrl
+      
+      // Only redirect to onboarding for initial sign-in (when URL is just the baseUrl)
+      if (url === baseUrl) {
+        return `${baseUrl}/onboarding`;
+      }
+      
+      return url.startsWith(baseUrl) ? url : baseUrl;
     }
   },
   pages: {

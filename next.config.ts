@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
         stream: false,
         buffer: false,
       };
-      
+
       // Ignore node: protocol imports on client
       config.plugins.push(
         new webpack.IgnorePlugin({
@@ -23,10 +23,32 @@ const nextConfig: NextConfig = {
         })
       );
     }
-    
+
     return config;
   },
-  serverExternalPackages: ['firebase-admin']
+  serverExternalPackages: ["firebase-admin"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "graph.microsoft.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
