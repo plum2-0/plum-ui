@@ -5,6 +5,8 @@ import {
   updateProjectRedditCredentials,
 } from "@/lib/project-utils";
 import { auth } from "@/lib/auth";
+import { adminDb } from "@/lib/firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 
 interface RedditTokenResponse {
   access_token: string;
@@ -130,11 +132,34 @@ export async function GET(request: NextRequest) {
       username: redditUser.name,
     });
 
-    // Clear OAuth cookies
+    // Store projectId in user document for API access
+    const firestore = adminDb();
+    if (firestore) {
+      const userRef = firestore.collection("users").doc(userId);
+      await userRef.set(
+        {
+          user_id: userId,
+          project_id: projectId,
+          updated_at: Timestamp.now(),
+        },
+        { merge: true }
+      );
+    }
+
+    // Clear OAuth cookies and set project cookie
     const response = NextResponse.redirect(
-      new URL("/onboarding?step=2&reddit=connected", request.url)
+      new URL("/onboarding/reddit?reddit=connected", request.url)
     );
     response.cookies.delete("reddit_oauth_state");
+
+    // Store projectId in secure cookie for frontend access
+    response.cookies.set("project_id", projectId, {
+      httpOnly: false, // Allow frontend access
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: "/",
+    });
 
     return response;
   } catch (error) {

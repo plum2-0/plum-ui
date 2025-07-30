@@ -199,14 +199,7 @@ providers: [
 #### Projects Collection (Main Entity)
 ```javascript
 projects/{projectId}: {
-  users: [{
-    user_id: string,
-    google_auth: {
-      auth_token: string
-    },
-    created_at: timestamp,
-    updated_at: timestamp
-  }],
+  users_ids: string[],
   source: {
     reddit: {
       oauth_token: string,
@@ -242,24 +235,14 @@ subreddits/{subredditId}: {
 
 ### Planned Collections (Not Yet Implemented)
 
-#### OAuth Connections
 ```javascript
-// Current implementation (Google Auth integrated into User/Project models)
-projects/{projectId}: {
-  project_id: string,
-  users: User[],
-  destination: Destination,
-  source: Source,
-  created_at: timestamp,
-  updated_at: timestamp,
-  status: string // default: "active"
-}
 
 users/{userId}: {
   user_id: string,
   google_auth: {
     auth_token: string // Google authentication token
   },
+  project_id: string,
   created_at: timestamp,
   updated_at: timestamp
 }
