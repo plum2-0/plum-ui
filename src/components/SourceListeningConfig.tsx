@@ -279,10 +279,13 @@ export function SourceListeningConfig({
   const addTopic = () => {
     if (!newTopicInput.trim()) return;
 
-    if (newTopicInput.trim().length > 50) {
+    if (newTopicInput.trim().length > 200) {
       setState((prev) => ({
         ...prev,
-        errors: { ...prev.errors, topics: "Topic must be under 50 characters" },
+        errors: {
+          ...prev.errors,
+          topics: "Topic must be under 200 characters",
+        },
       }));
       return;
     }

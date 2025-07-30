@@ -461,7 +461,6 @@ interface ErrorHandling {
   topic: {
     empty: "Topic cannot be empty";
     duplicate: "Topic already added";
-    tooLong: "Topic must be under 50 characters";
   };
   prompt: {
     tooLong: "Prompt must be under 2000 characters";

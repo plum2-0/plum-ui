@@ -77,8 +77,12 @@ export default function ConfigureOnboardingPage() {
 
     console.log("Configuration completed:", finalConfigData);
 
-    // Navigate to dashboard or success page
-    redirect("/");
+    // Navigate to the Reddit post review page
+    if (onboardingState?.projectId) {
+      window.location.href = `/projects/${onboardingState.projectId}/review`;
+    } else {
+      redirect("/");
+    }
   };
 
   const isValid =

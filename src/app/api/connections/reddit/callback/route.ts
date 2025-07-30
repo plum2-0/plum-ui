@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
 
     // Update project with Reddit credentials
     await updateProjectRedditCredentials(projectId, {
-      accessToken: encryptedAccessToken,
-      refreshToken: encryptedRefreshToken,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
       expiresAt: Date.now() + tokens.expires_in * 1000,
       username: redditUser.name,
     });

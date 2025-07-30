@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface OnboardingState {
-  currentStep: 1 | 2 | 3;
+  currentStep: 1 | 2 | 3 | 4;
   hasProject: boolean;
   projectId: string | null;
   projectName: string | null;
   hasRedditConfig: boolean;
-  redirectTo: "/onboarding" | "/onboarding/reddit" | "/onboarding/configure";
+  hasCompleteConfig: boolean;
+  redirectTo: "/onboarding" | "/onboarding/reddit" | "/onboarding/configure" | string;
 }
 
 interface UseOnboardingStateReturn {
@@ -73,8 +74,13 @@ export function useOnboardingState(autoRedirect: boolean = true): UseOnboardingS
         
         // Only redirect if we're on a different onboarding page than we should be
         // But don't redirect if we're already on the target page to prevent loops
-        if (currentPath.startsWith("/onboarding") && 
-            currentPath !== data.redirectTo &&
+        // Also handle redirects to the review page when config is complete
+        const shouldRedirect = (
+          (currentPath.startsWith("/onboarding") && currentPath !== data.redirectTo) ||
+          (data.hasCompleteConfig && !currentPath.startsWith("/projects"))
+        );
+        
+        if (shouldRedirect &&
             !justConnectedReddit &&
             !hasError &&
             !recentlyRedirected &&
