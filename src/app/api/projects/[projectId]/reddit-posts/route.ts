@@ -3,13 +3,27 @@ import { auth } from "@/lib/auth";
 import { adminDb } from "@/lib/firebase-admin";
 import { RedditPost, RedditPostsResponse } from "@/types/reddit";
 
+// Helper function to format time ago
+function formatTimeAgo(createdUtc: number): string {
+  const now = Math.floor(Date.now() / 1000);
+  const diffInSeconds = now - createdUtc;
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600)
+    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  return `${Math.floor(diffInSeconds / 86400)} days ago`;
+}
+
 // Mock data for development - replace with actual backend call
 const generateMockPosts = (count: number): RedditPost[] => {
   const postTemplates = [
     {
       title: "How do I get started with machine learning as a web developer?",
       subreddit: "learnmachinelearning",
-      content: "I've been doing web development for 5 years and want to transition into ML. Where should I start?",
+      content:
+        "I've been doing web development for 5 years and want to transition into ML. Where should I start?",
       topics: ["Machine Learning", "Career Advice"],
       llm_response: `Great question! As a web developer, you already have valuable programming skills. Here's a roadmap:
 
@@ -20,12 +34,13 @@ const generateMockPosts = (count: number): RedditPost[] => {
 5. **Web + ML**: Explore TensorFlow.js to leverage your web skills
 
 Your web dev background is actually an advantage - you can build end-to-end ML applications!`,
-      confidence_score: 0.92
+      confidence_score: 0.92,
     },
     {
       title: "My anxiety is ruining my relationship - need advice",
       subreddit: "relationship_advice",
-      content: "I constantly worry my partner will leave me, even though they've given me no reason to think this.",
+      content:
+        "I constantly worry my partner will leave me, even though they've given me no reason to think this.",
       topics: ["Mental Health", "Relationships"],
       llm_response: `I understand how overwhelming relationship anxiety can be. Here are some strategies that might help:
 
@@ -36,12 +51,13 @@ Your web dev background is actually an advantage - you can build end-to-end ML a
 5. **Consider therapy**: A therapist can help you work through attachment issues
 
 Remember, vulnerability can actually strengthen relationships when shared appropriately.`,
-      confidence_score: 0.88
+      confidence_score: 0.88,
     },
     {
       title: "Best practices for React performance optimization?",
       subreddit: "reactjs",
-      content: "Our React app is getting slower as it grows. What are the most effective optimization techniques?",
+      content:
+        "Our React app is getting slower as it grows. What are the most effective optimization techniques?",
       topics: ["React", "Web Development"],
       llm_response: `Here are the most impactful React performance optimizations:
 
@@ -53,12 +69,13 @@ Remember, vulnerability can actually strengthen relationships when shared approp
 6. **Production build**: Ensure you're testing with optimized production builds
 
 Pro tip: Use React DevTools Profiler to identify performance bottlenecks before optimizing!`,
-      confidence_score: 0.95
+      confidence_score: 0.95,
     },
     {
       title: "How to implement authentication in Next.js 14?",
       subreddit: "nextjs",
-      content: "I'm building a new app with Next.js 14 and need to add authentication. What's the best approach?",
+      content:
+        "I'm building a new app with Next.js 14 and need to add authentication. What's the best approach?",
       topics: ["Next.js", "Web Development"],
       llm_response: `For Next.js 14, here are the recommended authentication approaches:
 
@@ -81,12 +98,13 @@ Pro tip: Use React DevTools Profiler to identify performance bottlenecks before 
    - Good for specific requirements
 
 For most projects, I'd recommend starting with NextAuth.js!`,
-      confidence_score: 0.91
+      confidence_score: 0.91,
     },
     {
       title: "Is TypeScript worth learning in 2024?",
       subreddit: "webdev",
-      content: "I'm comfortable with JavaScript but my team wants to switch to TypeScript. Is it worth the effort?",
+      content:
+        "I'm comfortable with JavaScript but my team wants to switch to TypeScript. Is it worth the effort?",
       topics: ["TypeScript", "Web Development"],
       llm_response: `Absolutely! TypeScript is definitely worth learning in 2024. Here's why:
 
@@ -102,11 +120,16 @@ Start small:
 - Learn as you go - you don't need to master everything upfront
 
 The productivity gains are worth the initial learning curve!`,
-      confidence_score: 0.89
-    }
+      confidence_score: 0.89,
+    },
   ];
 
-  const actions: Array<'pending' | 'reply' | 'ignore' | 'edit'> = ['pending', 'reply', 'ignore', 'edit'];
+  const actions: Array<"pending" | "reply" | "ignore" | "edit"> = [
+    "pending",
+    "reply",
+    "ignore",
+    "edit",
+  ];
   const posts: RedditPost[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -119,31 +142,41 @@ The productivity gains are worth the initial learning curve!`,
       title: template.title,
       author: `user_${Math.floor(Math.random() * 10000)}`,
       subreddit: template.subreddit,
-      created_utc: Math.floor(Date.now() / 1000) - (hoursAgo * 3600),
-      time_ago: hoursAgo === 1 ? '1 hour ago' : `${hoursAgo} hours ago`,
+      created_utc: Math.floor(Date.now() / 1000) - hoursAgo * 3600,
+      time_ago: hoursAgo === 1 ? "1 hour ago" : `${hoursAgo} hours ago`,
       score: Math.floor(Math.random() * 1000) + 50,
       upvote_ratio: 0.7 + Math.random() * 0.3,
       comment_count: Math.floor(Math.random() * 200) + 5,
-      link_flair: Math.random() > 0.5 ? ['Question', 'Discussion', 'Help', 'Resource'][Math.floor(Math.random() * 4)] : '',
+      link_flair:
+        Math.random() > 0.5
+          ? ["Question", "Discussion", "Help", "Resource"][
+              Math.floor(Math.random() * 4)
+            ]
+          : "",
       domain: `self.${template.subreddit}`,
       url: `https://reddit.com/r/${template.subreddit}/comments/abc${i}/`,
-      thumbnail: '',
-      permalink: `/r/${template.subreddit}/comments/abc${i}/${template.title.toLowerCase().replace(/\s+/g, '_')}/`,
+      thumbnail: "",
+      permalink: `/r/${template.subreddit}/comments/abc${i}/${template.title
+        .toLowerCase()
+        .replace(/\s+/g, "_")}/`,
       is_self: true,
       is_video: false,
-      user_action: i < 3 ? 'pending' : actions[i % actions.length],
+      user_action: i < 3 ? "pending" : actions[i % actions.length],
       llm_response: template.llm_response,
-      confidence_score: template.confidence_score + (Math.random() * 0.1 - 0.05),
+      confidence_score:
+        template.confidence_score + (Math.random() * 0.1 - 0.05),
       matched_topics: template.topics,
-      parent_comment: hasParentComment ? {
-        id: `comment_${Date.now()}_${i}`,
-        author: `commenter_${Math.floor(Math.random() * 1000)}`,
-        body: "This is exactly what I was looking for! I've been struggling with the same issue. Did you find any good resources?",
-        created_utc: Math.floor(Date.now() / 1000) - ((hoursAgo - 1) * 3600),
-        score: Math.floor(Math.random() * 100) + 1,
-        parent_id: `t3_abc${i}`,
-        permalink: `/r/${template.subreddit}/comments/abc${i}/comment_${i}/`
-      } : undefined
+      parent_comment: hasParentComment
+        ? {
+            id: `comment_${Date.now()}_${i}`,
+            author: `commenter_${Math.floor(Math.random() * 1000)}`,
+            body: "This is exactly what I was looking for! I've been struggling with the same issue. Did you find any good resources?",
+            created_utc: Math.floor(Date.now() / 1000) - (hoursAgo - 1) * 3600,
+            score: Math.floor(Math.random() * 100) + 1,
+            parent_id: `t3_abc${i}`,
+            permalink: `/r/${template.subreddit}/comments/abc${i}/comment_${i}/`,
+          }
+        : undefined,
     });
   }
 
@@ -166,9 +199,9 @@ export async function GET(
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status') || 'all';
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const status = searchParams.get("status") || "all";
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const offset = parseInt(searchParams.get("offset") || "0", 10);
 
     // Get Firestore instance
     const firestore = adminDb();
@@ -195,31 +228,113 @@ export async function GET(
       );
     }
 
-    // TODO: Replace with actual backend API call
-    // const backendUrl = process.env.BACKEND_API_URL || 'http://localhost:8001';
-    // const response = await fetch(`${backendUrl}/admin/reddit/posts/project/${projectId}`);
-    // const data = await response.json();
+    // Fetch RedditPostTracker directly from Firestore
+    try {
+      // Query the reddit_post_tracker collection for this project
+      const trackerRef = firestore
+        .collection("reddit_post_tracker")
+        .doc(projectId);
+      const trackerDoc = await trackerRef.get();
 
-    // For now, return mock data
-    const allPosts = generateMockPosts(50);
-    let filteredPosts = allPosts;
+      let allPosts: RedditPost[] = [];
 
-    if (status === 'pending') {
-      filteredPosts = allPosts.filter(post => post.user_action === 'pending');
-    } else if (status === 'reviewed') {
-      filteredPosts = allPosts.filter(post => post.user_action !== 'pending');
+      if (trackerDoc.exists) {
+        const trackerData = trackerDoc.data();
+        console.log(
+          `Found reddit_post_tracker for project ${projectId}:`,
+          trackerData
+        );
+
+        if (trackerData?.posts && Array.isArray(trackerData.posts)) {
+          allPosts = trackerData.posts.map((post: any) => ({
+            // Map the backend post structure to frontend types
+            title: post.title || "No title",
+            author: post.author || "unknown",
+            subreddit: post.subreddit || "unknown",
+            created_utc: post.created_utc || Date.now() / 1000,
+            time_ago:
+              post.time_ago ||
+              formatTimeAgo(post.created_utc || Date.now() / 1000),
+            score: post.score || 0,
+            upvote_ratio: post.upvote_ratio || 0.5,
+            comment_count: post.comment_count || 0,
+            link_flair: post.link_flair || "",
+            domain: post.domain || "",
+            url: post.url || "",
+            thumbnail: post.thumbnail || "",
+            permalink: post.permalink || "",
+            is_self: post.is_self || true,
+            is_video: post.is_video || false,
+            post_id: post.post_id || `post_${Date.now()}`,
+            user_action: post.user_action || "pending",
+            llm_response: post.llm_response || "No response generated yet",
+            // Additional UI fields
+            confidence_score: post.confidence_score || 0,
+            matched_topics: post.matched_topics || [],
+            parent_comment: post.parent_comment || undefined,
+          }));
+        }
+      } else {
+        console.log(`No reddit_post_tracker found for project ${projectId}`);
+      }
+
+      // Apply frontend filtering
+      let filteredPosts = allPosts;
+      if (status === "pending") {
+        filteredPosts = allPosts.filter(
+          (post) => post.user_action === "pending"
+        );
+      } else if (status === "reviewed") {
+        filteredPosts = allPosts.filter(
+          (post) => post.user_action !== "pending"
+        );
+      }
+
+      // Apply pagination
+      const paginatedPosts = filteredPosts.slice(offset, offset + limit);
+
+      const response: RedditPostsResponse = {
+        success: true,
+        posts: paginatedPosts,
+        total_count: filteredPosts.length,
+        has_more: offset + limit < filteredPosts.length,
+      };
+
+      console.log(
+        `Returning ${paginatedPosts.length} posts for project ${projectId}`
+      );
+      return NextResponse.json(response, { status: 200 });
+    } catch (firestoreError) {
+      console.warn(
+        "Firestore query failed, falling back to mock data:",
+        firestoreError
+      );
+
+      // Fallback to mock data if Firestore is unavailable
+      const allPosts = generateMockPosts(50);
+      let filteredPosts = allPosts;
+
+      if (status === "pending") {
+        filteredPosts = allPosts.filter(
+          (post) => post.user_action === "pending"
+        );
+      } else if (status === "reviewed") {
+        filteredPosts = allPosts.filter(
+          (post) => post.user_action !== "pending"
+        );
+      }
+
+      const paginatedPosts = filteredPosts.slice(offset, offset + limit);
+
+      const response: RedditPostsResponse = {
+        success: true,
+        posts: paginatedPosts,
+        total_count: filteredPosts.length,
+        has_more: offset + limit < filteredPosts.length,
+      };
+
+      return NextResponse.json(response, { status: 200 });
     }
-
-    const paginatedPosts = filteredPosts.slice(offset, offset + limit);
-
-    const response: RedditPostsResponse = {
-      success: true,
-      posts: paginatedPosts,
-      total_count: filteredPosts.length,
-      has_more: offset + limit < filteredPosts.length,
-    };
-
-    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error("Error fetching Reddit posts:", error);
     return NextResponse.json(

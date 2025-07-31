@@ -2,7 +2,6 @@ import { initializeApp, cert, getApps, App } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 
 let app: App;
-let firestore: Firestore;
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
@@ -17,7 +16,7 @@ if (getApps().length === 0) {
   app = getApps()[0];
 }
 
-firestore = getFirestore(app, "plummydb");
+const firestore = getFirestore(app, "plummydb");
 
 export function adminDb(): Firestore {
   return firestore;
