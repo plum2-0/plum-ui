@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { redirect, useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -8,7 +8,7 @@ import { PlumLogo } from "@/components/PlumLogo";
 import { getProjectIdFromCookie } from "@/lib/cookies";
 import { useOnboardingState } from "@/hooks/useOnboardingState";
 
-export default function RedditOnboardingPage() {
+function RedditOnboardingContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const [isConnecting, setIsConnecting] = useState(false);
@@ -358,5 +358,19 @@ export default function RedditOnboardingPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function RedditOnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      }
+    >
+      <RedditOnboardingContent />
+    </Suspense>
   );
 }

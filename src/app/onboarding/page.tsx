@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { redirect, useSearchParams } from "next/navigation";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
@@ -8,7 +8,7 @@ import { ProgressIndicator } from "@/components/onboarding/ProgressIndicator";
 import { StepContent } from "@/components/onboarding/StepContent";
 import { useOnboardingState } from "@/hooks/useOnboardingState";
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const [projectName, setProjectName] = useState("");
@@ -79,5 +79,19 @@ export default function OnboardingPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700 flex items-center justify-center">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      }
+    >
+      <OnboardingContent />
+    </Suspense>
   );
 }

@@ -56,7 +56,7 @@ export async function findOrCreateProject(
     }
 
     // First, try to find an existing project for this user with new structure
-    let querySnapshot = await projectsRef
+    const querySnapshot = await projectsRef
       .where("user_ids", "array-contains", userId)
       .limit(1)
       .get();

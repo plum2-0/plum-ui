@@ -5,10 +5,6 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth
   const { pathname } = req.nextUrl
 
-  // Public routes that don't require authentication
-  const publicRoutes = ['/', '/auth/signin', '/auth/error']
-  const isPublicRoute = publicRoutes.includes(pathname)
-
   // Protected routes that require authentication
   const protectedRoutes = ['/onboarding', '/dashboard', '/projects']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))

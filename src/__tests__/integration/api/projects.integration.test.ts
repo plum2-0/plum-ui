@@ -10,21 +10,24 @@ import {
   cleanupTestFirestore,
   getTestFirestore 
 } from "@/test-utils/firestore-emulator";
+import { auth } from "@/lib/auth";
 
 // Mock the auth module
 jest.mock("@/lib/auth", () => ({
   auth: jest.fn()
 }));
 
+// Create a variable to hold the getTestFirestore function
+let getTestFirestoreRef: typeof getTestFirestore;
+
 // Mock the firebase-admin module to use our test instance
 jest.mock("@/lib/firebase-admin", () => ({
   adminDb: jest.fn(() => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getTestFirestore } = require("@/test-utils/firestore-emulator");
     return getTestFirestore();
   })
 }));
-
-import { auth } from "@/lib/auth";
 
 describe("Projects API Integration Tests", () => {
   beforeAll(async () => {

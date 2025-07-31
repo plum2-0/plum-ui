@@ -5,6 +5,8 @@ import Select, {
   components,
   OptionProps,
   SingleValueProps,
+  StylesConfig,
+  GroupBase,
 } from "react-select";
 import {
   useSubredditSearch,
@@ -87,8 +89,8 @@ export function SubredditAutocomplete({
       }
     : null;
 
-  const customStyles = {
-    control: (base: React.CSSProperties) => ({
+  const customStyles: StylesConfig<SubredditOption, false, GroupBase<SubredditOption>> = {
+    control: (base) => ({
       ...base,
       backgroundColor: "rgba(255, 255, 255, 0.2)",
       borderColor: "rgba(255, 255, 255, 0.3)",
@@ -97,29 +99,29 @@ export function SubredditAutocomplete({
         borderColor: "white",
       },
     }),
-    input: (base: React.CSSProperties) => ({
+    input: (base) => ({
       ...base,
       color: "white",
     }),
-    placeholder: (base: React.CSSProperties) => ({
+    placeholder: (base) => ({
       ...base,
       color: "rgba(233, 213, 255, 0.8)",
     }),
-    singleValue: (base: React.CSSProperties) => ({
+    singleValue: (base) => ({
       ...base,
       color: "white",
     }),
-    menu: (base: React.CSSProperties) => ({
+    menu: (base) => ({
       ...base,
       backgroundColor: "rgba(75, 0, 130, 0.95)",
       backdropFilter: "blur(10px)",
       zIndex: 9999,
     }),
-    menuPortal: (base: React.CSSProperties) => ({
+    menuPortal: (base) => ({
       ...base,
       zIndex: 9999,
     }),
-    option: (base: React.CSSProperties, state: { isFocused: boolean }) => ({
+    option: (base, state) => ({
       ...base,
       backgroundColor: state.isFocused
         ? "rgba(255, 255, 255, 0.1)"
@@ -129,11 +131,11 @@ export function SubredditAutocomplete({
         backgroundColor: "rgba(255, 255, 255, 0.1)",
       },
     }),
-    loadingIndicator: (base: React.CSSProperties) => ({
+    loadingIndicator: (base) => ({
       ...base,
       color: "white",
     }),
-    noOptionsMessage: (base: React.CSSProperties) => ({
+    noOptionsMessage: (base) => ({
       ...base,
       color: "rgba(255, 255, 255, 0.7)",
     }),
