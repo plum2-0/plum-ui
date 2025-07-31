@@ -19,7 +19,52 @@ export default {
   session: {
     strategy: "jwt",
   },
+  cookies: {
+    pkceCodeVerifier: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 15, // 15 minutes
+        ...(process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL
+          ? { domain: new URL(process.env.NEXTAUTH_URL).hostname.startsWith("www.")
+              ? new URL(process.env.NEXTAUTH_URL).hostname.substring(4)
+              : new URL(process.env.NEXTAUTH_URL).hostname }
+          : {}),
+      },
+    },
+    // Also configure the state cookie for consistency
+    state: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 15, // 15 minutes
+        ...(process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL
+          ? { domain: new URL(process.env.NEXTAUTH_URL).hostname.startsWith("www.")
+              ? new URL(process.env.NEXTAUTH_URL).hostname.substring(4)
+              : new URL(process.env.NEXTAUTH_URL).hostname }
+          : {}),
+      },
+    },
+  },
   callbacks: {
+    async signIn({ account }) {
+      // Add error handling for OAuth sign-in
+      try {
+        if (account?.provider === "google") {
+          return true;
+        }
+        return true;
+      } catch (error) {
+        console.error("Sign-in error:", error);
+        return false;
+      }
+    },
     async jwt({ token, user, account }) {
       // Initial sign in
       if (account && user) {
@@ -81,4 +126,5 @@ export default {
     error: "/auth/error",
   },
   debug: process.env.NODE_ENV === "development",
+  trustHost: true,
 } satisfies NextAuthConfig;
