@@ -1,48 +1,145 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PlumLogo } from "@/components/PlumLogo";
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useRedditPosts } from "@/hooks/useRedditPosts";
+import { usePostActions } from "@/hooks/usePostActions";
+import { RedditPostCard } from "@/components/reddit/RedditPostCard";
+import { UserAction } from "@/types/reddit";
 
-export default async function DashboardPage() {
-  // Check if user is authenticated
-  const session = await auth();
-  
-  if (!session?.user) {
-    redirect("/auth/signin");
-  }
-  
-  // Get project ID from cookie
-  const cookieStore = await cookies();
-  const projectId = cookieStore.get("project_id")?.value;
-  
-  if (!projectId) {
-    redirect("/onboarding");
-  }
-  
-  // Get onboarding state to check if setup is complete
-  let projectName = "Your Project";
-  let isConfigComplete = false;
-  
-  try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/onboarding/state`, {
-      headers: {
-        cookie: cookieStore.toString(),
-      },
-    });
-    
-    if (response.ok) {
-      const state = await response.json();
-      projectName = state.projectName || "Your Project";
-      isConfigComplete = state.hasCompleteConfig || false;
-      
-      // If config is not complete, redirect to appropriate onboarding step
-      if (!isConfigComplete && state.redirectTo && state.redirectTo !== "/dashboard") {
-        redirect(state.redirectTo);
+type FilterStatus = "all" | "pending" | "reviewed";
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState("Your Project");
+  const [, setIsConfigComplete] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [isFetchingNewPosts, setIsFetchingNewPosts] = useState(false);
+  const limit = 20;
+
+  // Check authentication
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session?.user) {
+      router.push("/auth/signin");
+    }
+  }, [session, status, router]);
+
+  // Get project info
+  useEffect(() => {
+    async function fetchProjectInfo() {
+      try {
+        // Get project ID from cookie
+        const cookieResponse = await fetch("/api/cookies/project_id");
+        if (!cookieResponse.ok) {
+          router.push("/onboarding");
+          return;
+        }
+        const { value: projectIdValue } = await cookieResponse.json();
+        if (!projectIdValue) {
+          router.push("/onboarding");
+          return;
+        }
+        setProjectId(projectIdValue);
+
+        // Get onboarding state
+        const stateResponse = await fetch("/api/onboarding/state");
+        if (stateResponse.ok) {
+          const state = await stateResponse.json();
+          setProjectName(state.projectName || "Your Project");
+          setIsConfigComplete(state.hasCompleteConfig || false);
+
+          if (
+            !state.hasCompleteConfig &&
+            state.redirectTo &&
+            state.redirectTo !== "/dashboard"
+          ) {
+            router.push(state.redirectTo);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching project info:", error);
       }
     }
-  } catch (error) {
-    console.error("Error fetching onboarding state:", error);
+
+    if (session?.user) {
+      fetchProjectInfo();
+    }
+  }, [session, router]);
+
+  const { data, isLoading, error, refetch } = useRedditPosts({
+    projectId: projectId || "",
+    status: filterStatus,
+    limit,
+    offset: currentOffset,
+  });
+
+  const { mutate: updatePostAction, isPending } = usePostActions({
+    projectId: projectId || "",
+    onSuccess: () => {
+      console.log("Post action updated successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to update post action:", error);
+    },
+  });
+
+  const handleAction = (
+    postId: string,
+    action: UserAction,
+    editedResponse?: string
+  ) => {
+    updatePostAction({ postId, action, editedResponse });
+  };
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  const handleLoadMore = () => {
+    setCurrentOffset((prev) => prev + limit);
+  };
+
+  const handleFetchNewPosts = async () => {
+    if (!projectId) return;
+
+    setIsFetchingNewPosts(true);
+    try {
+      const response = await fetch(`/api/reddit/fetch-posts/${projectId}`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch new posts");
+      }
+
+      // Refresh the posts list after fetching
+      await refetch();
+    } catch (error) {
+      console.error("Error fetching new posts:", error);
+    } finally {
+      setIsFetchingNewPosts(false);
+    }
+  };
+
+  const filterTabs: Array<{ value: FilterStatus; label: string }> = [
+    { value: "all", label: "All" },
+    { value: "pending", label: "Pending" },
+    { value: "reviewed", label: "Reviewed" },
+  ];
+
+  if (status === "loading" || !projectId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
+        <div className="animate-pulse text-white">Loading...</div>
+      </div>
+    );
   }
 
   return (
@@ -54,8 +151,10 @@ export default async function DashboardPage() {
             <PlumLogo />
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-white/80 text-sm">Welcome, {session.user.name || session.user.email}</span>
-            <Link 
+            <span className="text-white/80 text-sm">
+              Welcome, {session?.user?.name || session?.user?.email}
+            </span>
+            <Link
               href="/api/auth/signout"
               className="text-white/60 hover:text-white text-sm"
             >
@@ -67,54 +166,31 @@ export default async function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Welcome Section */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              {projectName} Dashboard
-            </h1>
-            <p className="text-purple-200 text-lg mb-8">
-              Manage your Reddit monitoring and engagement
-            </p>
-          </div>
-
+        <div className="max-w-6xl mx-auto space-y-8">
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Reddit Post Review */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 hover:bg-white/20 transition-colors">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    Reddit Post Review
-                  </h3>
-                  <p className="text-purple-200 text-sm mb-4">
-                    Review AI-matched Reddit posts and take actions on responses
-                  </p>
-                  <Link
-                    href={`/projects/${projectId}/review`}
-                    className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium"
-                  >
-                    Review Posts
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
             {/* Source Configuration */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 hover:bg-white/20 transition-colors">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                 </div>
                 <div className="flex-1">
@@ -129,76 +205,246 @@ export default async function DashboardPage() {
                     className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium"
                   >
                     Configure
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </Link>
                 </div>
               </div>
             </div>
 
-            {/* Analytics (Coming Soon) */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 opacity-60">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+            {/* Quick Stats */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Quick Stats
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">
+                    {data?.posts?.filter((p) => p.user_action === "pending")
+                      .length || 0}
+                  </div>
+                  <div className="text-purple-200 text-xs">Pending</div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    Analytics Dashboard
-                  </h3>
-                  <p className="text-purple-200 text-sm mb-4">
-                    Track engagement metrics and response effectiveness
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-gray-400 font-medium">
-                    Coming Soon
-                  </span>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">
+                    {data?.posts?.filter((p) => p.user_action === "replied")
+                      .length || 0}
+                  </div>
+                  <div className="text-purple-200 text-xs">Replied</div>
                 </div>
-              </div>
-            </div>
-
-            {/* Response Templates (Coming Soon) */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 opacity-60">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    Response Templates
-                  </h3>
-                  <p className="text-purple-200 text-sm mb-4">
-                    Save and reuse common response patterns
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-gray-400 font-medium">
-                    Coming Soon
-                  </span>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">
+                    {data?.posts?.filter((p) => p.user_action === "skipped")
+                      .length || 0}
+                  </div>
+                  <div className="text-purple-200 text-xs">Skipped</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-white mb-2">15</div>
-              <div className="text-purple-200 text-sm">Pending Reviews</div>
+          {/* Reddit Post Action Manager */}
+          <div className="space-y-6">
+            {/* Header with filters */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex gap-2">
+                  {filterTabs.map((tab) => (
+                    <button
+                      key={tab.value}
+                      onClick={() => {
+                        setFilterStatus(tab.value);
+                        setCurrentOffset(0);
+                      }}
+                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                        filterStatus === tab.value
+                          ? "bg-purple-600 text-white"
+                          : "bg-white/20 text-purple-200 hover:bg-white/30"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-purple-200">
+                    {data?.total_count || 0} items
+                  </span>
+                  <button
+                    onClick={handleFetchNewPosts}
+                    disabled={isFetchingNewPosts}
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors disabled:opacity-50"
+                  >
+                    <svg
+                      className={`w-4 h-4 ${
+                        isFetchingNewPosts ? "animate-spin" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    {isFetchingNewPosts ? "Fetching..." : "Fetch New Posts"}
+                  </button>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-white/20 hover:bg-white/30 text-purple-200 rounded-md transition-colors disabled:opacity-50"
+                  >
+                    <svg
+                      className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    Refresh
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-white mb-2">47</div>
-              <div className="text-purple-200 text-sm">Posts Replied</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-              <div className="text-3xl font-bold text-white mb-2">89%</div>
-              <div className="text-purple-200 text-sm">Response Rate</div>
-            </div>
+
+            {/* Error state */}
+            {error && (
+              <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-4">
+                <p className="text-red-300">
+                  Error loading Reddit posts: {error.message}
+                </p>
+                <button
+                  onClick={handleRefresh}
+                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Loading state */}
+            {isLoading && currentOffset === 0 && (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-white/10 backdrop-blur-sm rounded-lg p-6"
+                  >
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-purple-300/20 rounded w-1/4 mb-4"></div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <div className="h-6 bg-purple-300/20 rounded w-3/4"></div>
+                          <div className="h-4 bg-purple-300/20 rounded w-1/2"></div>
+                          <div className="h-20 bg-purple-300/20 rounded"></div>
+                        </div>
+                        <div className="h-32 bg-purple-300/20 rounded"></div>
+                      </div>
+                      <div className="h-10 bg-purple-300/20 rounded w-1/3 mt-4"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Posts list */}
+            {!isLoading && data?.posts && (
+              <>
+                <div className="space-y-6">
+                  {data.posts.map((post) => (
+                    <div
+                      key={post.post_id}
+                      className="bg-white/10 backdrop-blur-sm rounded-lg"
+                    >
+                      <RedditPostCard
+                        post={post}
+                        onAction={handleAction}
+                        isLoading={isPending}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* No posts message */}
+                {data.posts.length === 0 && (
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
+                    <p className="text-purple-200">
+                      No posts found matching your criteria.
+                    </p>
+                    <p className="text-purple-300 text-sm mt-2">
+                      Posts will appear here once they are processed by the
+                      matcher service.
+                    </p>
+                    <button
+                      onClick={handleFetchNewPosts}
+                      disabled={isFetchingNewPosts}
+                      className="mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors disabled:opacity-50"
+                    >
+                      {isFetchingNewPosts
+                        ? "Fetching..."
+                        : "Fetch New Posts Now"}
+                    </button>
+                  </div>
+                )}
+
+                {/* Load more button */}
+                {data.has_more && (
+                  <div className="flex justify-center pt-4">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoading}
+                      className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? "Loading..." : "Load More"}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </main>
+
+      {/* Scroll to top button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="fixed bottom-6 right-6 p-3 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+        aria-label="Scroll to top"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 10l7-7m0 0l7 7m-7-7v18"
+          />
+        </svg>
+      </button>
     </div>
   );
 }

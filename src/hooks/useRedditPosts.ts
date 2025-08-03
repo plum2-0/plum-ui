@@ -31,7 +31,19 @@ export function useRedditPosts({
         throw new Error('Failed to fetch Reddit posts');
       }
 
-      return response.json();
+      const data: RedditPostsResponse = await response.json();
+      
+      // Filter out ignored posts
+      const filteredPosts = data.posts.filter(post => post.user_action !== 'ignore');
+      
+      // Update total count to reflect filtered results
+      const ignoredCount = data.posts.length - filteredPosts.length;
+      
+      return {
+        ...data,
+        posts: filteredPosts,
+        total_count: data.total_count - ignoredCount,
+      };
     },
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes

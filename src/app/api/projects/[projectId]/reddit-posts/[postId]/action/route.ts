@@ -70,20 +70,18 @@ export async function POST(
     const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8001";
 
     try {
-      const backendResponse = await fetch(
-        `${backendUrl}/admin/reddit/posts/${postId}/action`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: body.action,
-            edited_response: body.edited_response,
-            project_id: projectId,
-          }),
-        }
-      );
+      const backendResponse = await fetch(`${backendUrl}/reddit/action`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          project_id: projectId,
+          post_id: postId,
+          action: body.action,
+          content: body.edited_response,
+        }),
+      });
 
       if (!backendResponse.ok) {
         throw new Error(

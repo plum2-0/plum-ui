@@ -1,36 +1,48 @@
 "use client";
 
-import React, { useState } from 'react';
-import { RedditPost, UserAction } from '@/types/reddit';
-import { PostContextThread } from './PostContextThread';
-import { LLMResponsePanel } from './LLMResponsePanel';
-import { ActionButtonGroup } from './ActionButtonGroup';
+import React, { useState } from "react";
+import { RedditPost, UserAction } from "@/types/reddit";
+import { PostContextThread } from "./PostContextThread";
+import { LLMResponsePanel } from "./LLMResponsePanel";
+import { ActionButtonGroup } from "./ActionButtonGroup";
 
 interface RedditPostCardProps {
   post: RedditPost;
-  onAction: (postId: string, action: UserAction, editedResponse?: string) => void;
+  onAction: (
+    postId: string,
+    action: UserAction,
+    editedResponse?: string
+  ) => void;
   isLoading?: boolean;
 }
 
-export function RedditPostCard({ post, onAction, isLoading = false }: RedditPostCardProps) {
+export function RedditPostCard({
+  post,
+  onAction,
+  isLoading = false,
+}: RedditPostCardProps) {
   const [isEditMode, setIsEditMode] = useState(false);
-  const [pendingAction, setPendingAction] = useState<UserAction>(post.user_action);
+  const [pendingAction, setPendingAction] = useState<UserAction>(
+    post.user_action
+  );
 
   const handleAction = (action: UserAction) => {
-    if (action === 'edit') {
+    if (action === "edit") {
       setIsEditMode(true);
-      setPendingAction('edit');
+      setPendingAction("edit");
     } else {
       setIsEditMode(false);
       setPendingAction(action);
-      onAction(post.post_id, action);
+      // For reply actions, send the original LLM response as content
+      const content = action === "reply" ? post.llm_response : undefined;
+      onAction(post.post_id, action, content);
     }
   };
 
   const handleSaveEdit = (editedResponse: string) => {
     setIsEditMode(false);
-    setPendingAction('reply');
-    onAction(post.post_id, 'reply', editedResponse);
+    setPendingAction("reply");
+    onAction(post.post_id, "reply", editedResponse);
   };
 
   const handleCancelEdit = () => {
@@ -40,10 +52,10 @@ export function RedditPostCard({ post, onAction, isLoading = false }: RedditPost
 
   const getStatusIndicator = () => {
     const statusConfig = {
-      pending: { color: 'bg-orange-500', text: 'Pending Review' },
-      reply: { color: 'bg-green-500', text: 'Response Sent' },
-      ignore: { color: 'bg-gray-500', text: 'Ignored' },
-      edit: { color: 'bg-blue-500', text: 'Response Edited' },
+      pending: { color: "bg-orange-500", text: "Pending Review" },
+      reply: { color: "bg-green-500", text: "Response Sent" },
+      ignore: { color: "bg-gray-500", text: "Ignored" },
+      edit: { color: "bg-blue-500", text: "Response Edited" },
     };
 
     const config = statusConfig[post.user_action];
