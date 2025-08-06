@@ -1,0 +1,504 @@
+{
+	"id": "21a14e66-ef96-4529-bba3-cca8abce8fa6",
+	"name": "TechFlow Solutions",
+	"website": "https://techflowsolutions.com",
+	"image": null,
+	"detail": null,
+	"target_use_cases": [
+		{
+			"id": "6f73d9fa-0e37-4a47-b1d1-00aa83fe2fb8",
+			"title": "Technical Documentation",
+			"description": "Provide guidance on technical documentation, tutorials, and code examples",
+			"hot_features_summary": null,
+			"competitor_summary": null,
+			"created_at": "2025-08-05T15:41:54.983339Z",
+			"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6",
+			"subreddit_posts": []
+		},
+		{
+			"id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+			"title": "Product Feature Questions",
+			"description": "Address questions about our product features, capabilities, and use cases",
+			"hot_features_summary": "Here's an analysis of the Reddit posts, focusing on actionable insights for TechFlow Solutions' \"Product Feature Questions\" use case:\n\n*   **Hot Features/Capabilities:** Customers are interested in solutions that facilitate:\n    *   **Information Gathering & Preservation:**  Documenting and sharing information, especially recipes, family history, and community data (like gas prices). This suggests a need for features like easy content creation, categorization, and sharing capabilities.\n    *   **Community-driven information:** The mobile app in Post 6 highlights the value of user-generated content, validation, and collaborative information gathering. This indicates a demand for features that enable this, such as user ratings, reviews, and crowdsourcing capabilities.\n    *   **Accessibility and ease of use:** The focus on solving problems in unfamiliar places and dealing with outdated information suggests a need for features that provide clear, concise, and up-to-date information.\n\n*   **Trending Topics/Emerging Needs:** There's a growing interest in:\n    *   **Preserving cultural heritage:**  Documenting and sharing family traditions and recipes, pointing to the importance of features that facilitate the preservation and sharing of personal and cultural information.\n    *   **Hyperlocal information:**  The focus on gas prices and the challenges of unfamiliar places highlights the need for real-time, community-driven information relevant to users' immediate surroundings.\n\n*   **Pain Points/Problems:** Customers are actively trying to solve:\n    *   **Loss of valuable information:** The posts about family recipes and the need for historical documentation reveal a fear of losing important knowledge and traditions.\n    *   **Difficulty finding reliable information:** The need for up-to-date gas prices and assistance with game development indicates frustrations with outdated, incomplete, or inaccurate information.\n    *   **Inefficiency in everyday tasks:** The app for finding gas stations highlights the inconvenience of dealing with outdated or incomplete information in daily tasks.\n\n*   **Popular Alternatives/Solutions:** While not explicitly listed, the posts suggest that:\n    *   **Community-driven solutions** are highly valued. The gas price app shows how user-generated content and validation can be very effective.\n    *   **Traditional methods** like calling family members or searching the internet are still used, but face limitations in terms of efficiency, accuracy, and accessibility.",
+			"competitor_summary": null,
+			"created_at": "2025-08-05T15:41:54.983331Z",
+			"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6",
+			"subreddit_posts": [
+				{
+					"id": "15b3ec7a-d869-49dd-b9cc-b3cb918c7a73",
+					"post_id": "1mh8la8",
+					"subreddit": "woodworkwithslides",
+					"title": "I used these hinges to make a platform with foldable legs to help our Bernese Mountain Dog puppy climb into the back seat of our vehicle.",
+					"author": "Leafloat",
+					"content": "",
+					"created_at": "2025-08-04T17:14:23Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/woodworkwithslides/comments/1mh8la8/i_used_these_hinges_to_make_a_platform_with/",
+					"image": "https://i.redd.it/5puwplx5zygf1.png",
+					"up_votes": 1,
+					"down_votes": 0,
+					"num_comments": 0,
+					"llm_explanation": "User is seeking advice on alternative paints for a specific use case (vivarium), which relates to a product feature/capability.",
+					"llm_response": {
+						"index": 19,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": false,
+						"neutral_sentiment": true
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "27b85e9a-3d06-47da-816d-7f8263e046c4",
+					"post_id": "1mesgty",
+					"subreddit": "Unity2D",
+					"title": "2D RPG game basics",
+					"author": "AcapRisyaht",
+					"content": "Hi all developers, do you have any suggestions on where I can learn the basics of making 2D RPG games?",
+					"created_at": "2025-08-01T18:03:14Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/Unity2D/comments/1mesgty/2d_rpg_game_basics/",
+					"image": null,
+					"up_votes": 0,
+					"down_votes": 0,
+					"num_comments": 9,
+					"llm_explanation": "User is explicitly looking for an economy plugin with specific features. This is a feature request and indicates potential interest in a product that offers such features.",
+					"llm_response": {
+						"index": 7,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": true,
+						"neutral_sentiment": false
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "3a75e705-8595-4b50-908a-9c0d573927d6",
+					"post_id": "1mfa2du",
+					"subreddit": "AgingParents",
+					"title": "My 59yo mom is convinced she needs round the clock care. She doesn’t. How do I work with this.",
+					"author": "brassninja",
+					"content": "My mom never liked working. This isn’t the first time she has convinced herself she’s owed a cushy retirement. I don’t know how to make her understand that she’s not 85 years old. \n\n\n\n\nAbout 8 years ago she had a stroke, also had to undergo surgery for a swollen blood vessel in her brain that could have killed her. Her recovery was miraculous. You would never have known she experienced those things had you met her. The only issue was some blurred vision at times. One day she decided to sit down on the couch and basically never got up again. Fast forward 8 years and here we are today. Her 3rd husband divorced her, she has absolutely nothing to her name besides the home she just inherited from her now deceased parents. She DOES NOT live alone. My cousin lives with her, she has family and friends visiting regularly, she has help for bathing, she can use the bathroom on her own, get up and sit down by herself, etc. My sister and I have been trying to get her back into regular communication with her doctors but she’s been canceling appointments behind our backs, even Telehealth\n\n\n\n\n\nShe has this expectation that my sister and I will be surrogate husbands for her. Keep her comfortable and run her entire life for her. She’s expecting us to spend decades caring for her, we will be approaching 70yo ourselves by the actual end stages of her life. I don’t know what to think. It makes me feel sick that she doesn’t care about our future and security. ",
+					"created_at": "2025-08-02T06:21:03Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/AgingParents/comments/1mfa2du/my_59yo_mom_is_convinced_she_needs_round_the/",
+					"image": null,
+					"up_votes": 113,
+					"down_votes": 0,
+					"num_comments": 35,
+					"llm_explanation": "This post discusses a technical problem (powering a computer) and the user is seeking technical advice. While the use case is related to technology, it doesn't directly align with product feature questions for TechFlow Solutions.",
+					"llm_response": {
+						"index": 18,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": false,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": false,
+						"neutral_sentiment": true
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "5ffa1401-a223-46c3-913c-617548403df1",
+					"post_id": "1mdkwev",
+					"subreddit": "SunoAI",
+					"title": "A musicians perspective on AI. I would love to hear your thoughts...",
+					"author": "BimmySchmendrix",
+					"content": "Edit: I will stop responding soon because i really need to go to bed (i'll be back tomorrow obvisously). I never expected this to blow up like this to be honest but so far it's been a lot of fun to talk about this with y'all especially because we (respectfully) disagree on so many points. I certainly feel like having a better perspective on the topic now which is always valueable. So for now thanks for having me i guess :)\n\nSoooo i always wanted to write something like an essay about AI in music. Not neccessarily so anybody else can read it but more so that i can kind of define my own perspective better if that makes sense. That being said i don't like being in echo chambers in general so i kind of like the idea of doing this in \"the lion's den\" of people who may disagree with me. I don't want this to be a shouting match or anything just a respecful exchange of ideas hopefully and i would like to hear different perspectives on the topic. I will probably piss off some people since the \"real musician vs AI musician\" divide has grown pretty wide at this point and people have their guards up but it's not my intention to do so, i'm just trying to be as honest as i can. I'm just trying to communicate where i am at with this and would like to listen to \"the other side\" in this. Also i will probably not read your reply if it contains a suspicious amount of em-dashes ;)\n\nAlso i will probably edit this a few times due to spelling errors (like the missing ' in the title, damnit) and some thoughts i may have forgotten to include...\n\nThat being said here are my thoughts on the matter:\n\nI feel like AI tools to wholesale create music are immoral in the way they came to be. Not in a generalized sense that i don't want anything like this to exist mind you but the fundamental thing about those tools is that they are based on learning algorithms based on the work of human musicians that were not asked if they were ok with this sort of thing. In my opinion at least this is different from how human artists influence other human artists because of the scale it is happening on (no human musician can listen to all of the music that's available online) and the fact that an AI can not come up with anything new when putting out a song. So whatever the AI is putting out will always be a remix of things that already existed before and things that do belong to humans who made it which to me becomes a problem the moment those platforms charge their users for those songs.\n\nThat being said i'm not sure if and how much i would hold any of this against the users of those platforms. I know that eating meat is a moral failing for example with all the industrial farming and it's impact on the environment and more importantly the animals themselves but i still do it anyway which is a bit how i would conceptualize this. On a spectrum of breaking a blade of gras to nuking the entire galaxy making an AI song is probably not that much of a problem. I would still much rather see independent artists get paid instead of tech platforms...\n\nAI music feels sad to me\n\nMy main feeling when thinking about the users of those platforms is a kind of undefined sadness though and maybe you can help me dispell this a bit. I get that lonely people find solace in talking to chatbots since isolation and loneliness is such an epidemic. I don't really get the same thing with music though and listening to an AI song feels like basically the same as talking to a bot to me. Or like giving up on dating to marry a Real Doll. I think the concept of the uncanny valley probably describes how i experience AI on a fundamental emotional level. To me music is about the expressing of a human being that gets somewhere transfered over to another in ways you could not achieve with spoken words along. To get this from what is basically a robot singing a song for me just feels like some sort of creature that is not human trying to wear human skin while interacting with me as if it were human. And i get that AI is getting better and better at this which only makes this feeling darker to me if that makes sense.\n\nThat being said i am a punk rock guy at heart so i am very particular about ethics in music and i love music that is pretty raw and real in it's aproach which is something i feel like AI will not replace anytime soon because there is not much of a market for it. On the other hand i see a lot of larger bands in rock and metal sound so polished and overproduced (and boring in my opinion) that they do not differ that much from AI songs anymore. If you want to you are more than welcome to give my own music a spin (it's on my profile) but i think i am pretty safe from being replaced by AI. Not because my music is \"just way too good bro\" but because it's not produced super well, has transitions that may be a bit jarring and because it has a loooot of imperfections which represent me as a person (i play all instruments and handle production myself).\n\nWhat drives the users?\n\nWhich leaves me at probably the most interesting point of this all: I don't really get what people get out of using those tools and listening to the songs to be honest with you. I absolutely get what drives a musician to look back in pride at a song they just finished because it's their own work that went into it. Like there is a difference between taking a break after having mowed your entire lawn and taking a break after your lawnmower robot did it, you know?\n\nAnd i feel like there are two opposing views on this in the AI community. One group which i don't really take much issue with is people who like playing around with this sort of tool. They think it's a fun way to engage with technology and think it's fun to listen to whatever the machine comes up with when you type in certain things. Maybe some of the older people on here remember the punkomatic website from the early internet where you could use building blocks for different instruments to kind of build your own track from those blocks. I don't think people in this group would say stuff like \"i made this\" or \"how do i make money from this?\" which are things the second group (and i think this one is way smaller) would say. And i think those are the people a lot of human artists are taking issue with. It's a lot of work to write and record a song and it feels like those people want the same accolades while taking shortcuts if that makes sense. And the spectrum from \"i typed in three keywords\" to \"i put hours and hours into editing those AI stems\" is still not the same as writing and performing a song yourself which by definition means \"i/my band did all of this myself/ourself\". To illustrate this it kind of feels like trying to paid somebody else to paint a picture for an art contest to your specifications and then acting like you painted it yourself at the exhibition...\n\nWhy do you listen to machine made music?\n\nWhich brings me to my last point: Listening to AI music. First of all i feel like people who actually listen to AI generated music listen almost exclusively to stuff they produced themselves. Maybe i'm wrong about this but i feel like there is this sort of undercurrent of rejection towards AI music in general even in the community that encompasses everything that other people had the AI put out (i almost used an em-dash here myself :D). I don't really know what to make of this but i think it's a weird phenomenom. If you were to say \"i only listen to my own stuff\" as a human musician people would probably cruficy you. What feels more important to me is that people listening to music that's basically machine-made are not listening to what their fellow humans are making which feels kind of sad to me. It's a bit of a \"there are rescues full of animals waiting for adoption yet you buy from a breeder\" taste if that makes any sense. I get that you can be very specific with what you want tools like Suno to spit out for you but i am pretty sure that subreddits or the Spotify algorithm could spill out human music that is taylored to very specific tastes. I myself am making tracks that are rarely even cracking a hundred views because they are in a genre i am well aware of 95 percent of people do not like (like punk rock/hardcore/screamo type music without clean vocals) so i don't really have to compete with AI tracks i feel like. But if i were to imagine that i was making some sort of acoustic pop music i would probably feel terrible if i knew people were rather listening to machines than to songs i poured my hard work and soul in...\n\nAs you can probably tell by the length of all this i am terrible at finding a point to end texts like this. So sorry if i offended anybody that is not my intention here but i would love to hear counters and different opinions on this sort of thing. Sorry about the length of the whole thing, maybe ChatGPT can summarize it for y'all :D",
+					"created_at": "2025-07-31T06:43:07Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/SunoAI/comments/1mdkwev/a_musicians_perspective_on_ai_i_would_love_to/",
+					"image": null,
+					"up_votes": 32,
+					"down_votes": 0,
+					"num_comments": 443,
+					"llm_explanation": "The post is about a musician's perspective on AI, a neutral discussion of the topic.",
+					"llm_response": {
+						"index": 10,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": false,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": false,
+						"neutral_sentiment": true
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "6c5b3200-478d-4f43-bcea-a5bc00ccb76e",
+					"post_id": "1mgikpy",
+					"subreddit": "arbitragebetting",
+					"title": "Building an Arbitrage Bot for Indian Bookies",
+					"author": "Deep-Ad1034",
+					"content": "**TL;DR:** I was curious about arbitrage betting but found no tools for Indian bookmakers. So, despite having no coding experience, I built my own bot to find risk-free opportunities. I'm now looking for beta testers to help me refine it.\n\nHey everyone,\n\nI've been a lurker in this community for a while, and I wanted to share a project I've been working on.\n\nLike many of you, I first saw some video guaranteeing money through \"arbitrage betting\" and was pretty skeptical. It seemed too good to be true. But the concept of finding a guaranteed profit opportunity by betting on all possible outcomes fascinated me. I later learned about how it works and realized that while the concept is simple, the execution is incredibly difficult due to the speed at which odds change.\n\nThis led me down a rabbit hole of research, where I discovered that many software tools, websites, and bots exist for arbitrage. However, a major issue I found was that almost all of these tools focus on bookmakers in the US or Europe. I couldn't find a single reliable solution that had good coverage of Indian bookies like Mostbet, 1xBet, and Dafabet.\n\nSo, I decided to take on the challenge myself. With no coding background, I taught myself what I needed to build a solution. It was a tough process—facing all sorts of errors and technical roadblocks—but I managed to get a working bot together.\n\nThe bot's core function is to scan for arbitrage opportunities across these Indian bookmakers. I'm intentionally not adding any links or talking about its specific features here, as my goal isn't to self-promote.\n\nI'm posting this because I'm looking for a few people from this community to test it out. I believe the best way to improve a tool like this is with feedback from people who will actually use it. If you're interested in helping me test the bot and providing feedback, please let me know.",
+					"created_at": "2025-08-03T20:56:16Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/arbitragebetting/comments/1mgikpy/building_an_arbitrage_bot_for_indian_bookies/",
+					"image": "https://i.redd.it/n7c42p2kxsgf1.png",
+					"up_votes": 1,
+					"down_votes": 0,
+					"num_comments": 10,
+					"llm_explanation": "Post describes a project, but doesn't express a need for a product feature or show direct interest in TechFlow's solutions.",
+					"llm_response": {
+						"index": 1,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": false,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": false,
+						"neutral_sentiment": true
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "805dede2-06c4-4470-be36-b092d51e7072",
+					"post_id": "1mfmf9p",
+					"subreddit": "TwoHotTakes",
+					"title": "AITA for saying I will kick my bf out if he doesn’t do “my chores”",
+					"author": "Which-Expression-134",
+					"content": "My boyfriend and I moved in together last year when I accepted a job in another city and he decided to move with me (he works remote and his company have an office in our current city).\n\n\nBefore this kicked off, I was doing around 75% of the household chores (sometimes more if he would forget to do some of his).\n\n\nIt was honestly kind of a drag because I’m a doctor and work 12 hour shifts so to then come home and have to do the majority of the housework when he works 8 hour shifts from home was tiring. But I got on with it because technically I was still doing less than when I lived alone, and I gave him a lot of grace due to his diagnosed and medicated ADHD. He forgets to do a lot of stuff and I genuinely thought he was trying his best, so I was happy to pick up the slack.\n\n\nA few weeks ago I went on a work trip to Europe to go to a medical conference, I was going away for two weeks and since I didn’t want to come home to a backlog of cleaning, I arranged a cleaning service to come and left money for my boyfriend to pay them with.\n\n\nI came back from the trip and my apartment was sparkling clean, so I made a comment about how great the cleaning service were, which is when he admitted he ended up cleaning and used the money to go out with his friends because he thought “it was a waste to pay someone to do something he could do”.\n\n\nI was pissed, for months I have been doing practically everything house wise because I genuinely thought he was trying his best, but no, he is more than capable of doing things “if he has no other option” (his words).\n\n\nI got angry and said he did have another option, because I had arranged another option, he just chose to do it because it benefited him as he had more disposable income.\n\n\nI said going forward, the chores will be split 50/50 and if he doesn’t do his, I will kick him out even though I love him because he’s not pulling his weight.\n\n\nHe said that wasn’t fair and that I should have more compassion due to his disability and he shouldn’t “face homelessness” just because he forgets to clean. To which I said, you said you can do it if you have no other option, so I’m giving you no other option. \n\n\nHe said if I don’t want to do “my” chores anymore I should hire a cleaning service long term because I can afford to, which I can, but I would rather save me money than throw it away because he’s lazy. He said he can’t afford to pay for a cleaner (he doesn’t make as much as I do but he does have disposable income, he just chooses to spend it on other stuff).\n\n\nThis was a few days ago and he’s been pissy since, and his mom even texted me saying that I should feel ashamed that as a doctor, I’m not supporting someone with a medical condition.\n\n\nFor context before someone says “why did you move in with him if he can’t clean”, when he had his own apartment it was always clean, however I found out a few months ago that his mom would come over every week to clean for him, she doesn’t live close enough to do that anymore.\n\n\nSo am I overreacting or is this just really selfish behaviour from him?\n\n\nEDIT: thank you all for your thoughts, he has been away at his brothers overnight so I am going to try and broach the subject again when he gets home. On reflection I think I wasn’t right to issue an ultimatum, I think that made him go on the defensive a lot more. That being said, I can’t keep doing this much around the house, so I am going to try and work with him to find a solution that’s fair and works best for us both.\nI didn’t mention in the original post but when we first moved in together and this issue first started, I did attempt to work with him on it and we tried a variety of methods. I even offered to pay for his therapy if he wanted to go but he refused.\nI will try to readdress that with him and try to make him see that I really need more support from him if we are going to make it long term.\n\n\nEDIT 2: My BF is still not home yet but I got a call from his brother firstly to say he’s on his way home but he also wanted to “give me a heads up” that he was essentially bashing me the whole time he was at his brothers and saying I was selfish. His brother tried to tell him he was in the wrong and to “grow up” but he just flipped out at him and drove off. Apparently when his brother asked him why he doesn’t just step up and do his fair share he said “why would I do that when she’ll just fold once things get too messy and do it herself”. His brother said he felt the need to tell me as he doesn’t want to be part of enabling him (he’s the eldest sibling and my bf is the youngest so he had a lot more responsibility growing up.\n\n\nHe also dropped something in at the end which is freaking me out, he said to ask my bf “what he really spent the money on”. I asked him to tell me but he said he wouldn’t and I needed to speak to bf directly about it.\n\n\nI can’t believe I have been so stupid and allowed myself to be played like this. I am planning on telling him he needs to move out by the end of the month when he gets home. I’m honestly even willing to tell him to not pay his portion of the bills this month so he can use it for a deposit on his own place. I know y’all will say to not do that for him but honestly at this point it’s a gift to myself to get him gone.\n\n\n\nEDIT 3: He finally made it home so I told him I knew what he told his brother and that I wouldn’t put up with his disrespect anymore and he needed to leave. There was a lot of back and forth but he finally agreed to leave by the end of the month at the latest, and he will be sleeping in the guest room until then. I don’t trust him to follow through so I will be formally giving him an eviction notice tomorrow.\n\n\nOnce he finally accepted he couldn’t convince me to let him stay, he had the audacity to ask what we were going to do about the vacation we had planned for September. I paid for the vacation in full, so I told him that I would be going with a friend or even just alone, but he absolutely will not be going on the trip. He got angry about that and stormed outside for a walk “to clear his head”.\n\n\nHe must have called his brother again because 20 minutes later I got a call from him and he told me that if he gave me any bother about moving out to let him know and he would remove him himself if he had to.\n\n\nAnd for the update a lot of you are probably very curious about, what did he spend the money on? Well if you guessed drugs or sex workers you would be wrong, the answer was…….massive credit card debt!\n\n\nApparently he has racked up over $30,000 of credit card debt over the past three years and whenever he has been asking me for money for things it’s actually because I wouldn’t be able to cover the minimum monthly payments.\n\n\nI asked him why on earth he was only making minimum payments when his job offers overtime and this asshole actually said that he was just making the minimum payments because he “assumed we would get married soon” and that I would just use my savings to pay it off because it would then be my debt too.\n\n\nApparently he came clean to his brother a couple of months ago and he has been trying to convince him to tell me but obviously he never did.\n\n\nSo yes, turns out there are many things I’m good at, but spotting assholes isn’t one of them. I’m looking forward to being single and maybe I’ll run credit checks on any future boyfriends lol.\n\n\nI am upset about the whole situation and it will be stressful, I have no idea what we are going to do about the dogs because he can’t afford to look after them but it’s not fair them living here when I am working so much, but I will work something out.\n\n\nThank you all for your help making me realise I can do better. Take care of yourselves &lt;3",
+					"created_at": "2025-08-02T17:32:49Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/TwoHotTakes/comments/1mfmf9p/aita_for_saying_i_will_kick_my_bf_out_if_he/",
+					"image": null,
+					"up_votes": 1342,
+					"down_votes": 0,
+					"num_comments": 424,
+					"llm_explanation": "The post advertises a code generation model (Qwen3-Coder-Flash) and its features, thus potentially attracting users interested in such capabilities.",
+					"llm_response": {
+						"index": 3,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": true,
+						"negative_sentiment": false,
+						"neutral_sentiment": false
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "8dd5d84c-280c-47c1-ac18-72c1b74feac0",
+					"post_id": "1mh3gxg",
+					"subreddit": "BestofRedditorUpdates",
+					"title": "AITA for asking for my dead sisters ring back after my brother used it to propose",
+					"author": "Choice_Evidence1983",
+					"content": "**I am NOT OOP, OOP is** u/Classic-Amphibian963\n\n**Originally posted to r/AmItheAsshole**\n\n**AITA for asking for my dead sisters ring back after my brother used it to propose**\n\n**Editor’s note: made small edits for ease of readability. Had to remove the original BoRU due to the new details that took place within the seven-day waiting period**\n\n**Trigger Warnings:** &gt;!theft, manipulation, favoritism!&lt;\n\n**Mood Spoilers:** &gt;!sad for OOP!&lt;\n \n----\n\n[Original Post](https://www.reddit.com/r/AmItheAsshole/s/UaQXyCst6b): **July 21, 2025**\n\nmy sister died when I was like 6 and she was 17. we weren’t super close or anything but I still remember little bits of her. her laugh, how she always painted her nails, her posters. she was like this perfect angel to my mum after she passed. I barely remember the funeral.\n\nwhen I was like 12 I found this old ring in her stuff. nothing fancy, just a silver ring w a small stone. it fit me and idk why but I kept it. it wasn’t some big dramatic thing, I didn’t steal it or anything, I just… took it and started keeping it. I didn’t wear it loads or flaunt it, just had it in this little box and sometimes i’d look at it when I missed her. it kinda became this one thing that felt like mine, like my piece of her\n\nso anyway last weekend we had this family lunch and my brother (27m) brings his gf who everyone knew he was gonna propose to. and yeah, he stands up, does the big speech and pulls out THE ring. my sister’s ring. the one I’ve kept for like 7 years\n\nI literally froze. his gf starts crying, ppl are clapping, i’m just sat there like wtf. I look at my mum and she just smiles at me like nothing happened. after dinner I ask her was that the ring and she’s like yeah, your brother asked me and dad and we said it was fine. she said it was sweet and symbolic and my sister would’ve wanted it passed down or whatever\n\nand I was like ??? it was never yours to give tho??? like I’ve had it for years?? and she just goes oh come on it’s just a ring don’t be dramatic. but like when I had it, it wasn’t “just a ring”\n\nso yeah I kinda snapped. waited till ppl were outside and told my brother I wanted it back. he laughed at first then was like no wtf and I said ok well then I’ll tell your gf where it came from and let her decide. he got mad said I was ruining his proposal and making it about me like always. my mum dragged me into the kitchen saying everyone noticed I wasn’t happy and that I left halfway thru dinner. yeah bc I was crying in the bathroom like ????\n\ndad tried to calm it down but my brother kept going on about how selfish I was and that i’d been weird about my sister for years. I didn’t even say anything I just left early and haven’t spoken to any of them since. mum rang me yesterday saying have I calmed down and am I ready to say sorry and I said not really and she hung up\n\nmy cousin texted me later saying it was actually super messed up and she doesn’t blame me but idk. I probably could’ve handled it better but I just felt so blindsided. it’s not even about the stupid ring it’s just like. they acted like it didn’t matter to me. like I didn’t matter\n\nso yeah. aita?\n\n**Verdict: Not the Asshole**\n\n**Relevant Comments**\n\n**Commenter 1:** NTA. How did he even get the ring? It’s not a family heirloom because that’s his sister. He probably just found an easier way to propose to his girlfriend without paying anything. Honestly the whole situation is weird. Of all the rings in the world, why this one?\n\n&gt; **OOP:** Well I often leave it in a small unlocked box\n&gt; \n&gt; It’s an inexpensive ring but it is extremely pretty and if someone proposed to me with that ring without knowing the context I would be quite happy.\n\n**Commenter 2:** NTA. I'm sorry for both of your losses. The only way you are going to get it back is to tell the fiancee, but it will probably mean ruining your relationship with your brother and causing more stress in your relationship with your mother.\n\n&gt; **OOP:** I feel like such an arshole for telling her tho like I’ve just ruined her day she’s already posted the ring and everything\n\n**Commenter 3:** INFO: How did he get the ring from you?\n\n&gt; **OOP:** I don’t always wear it I usually keep it in a little box\n&gt; \n&gt; I wear it on when I’m having bad days or stressful times like during exams it really helps me feel better kinda like I’m doing this for her aswell as me\n&gt; \n&gt; I don’t keep the box locked or guarded or anything I wouldn’t expect anyone to take it it’s just sat underneath by bed\n\n**Commenter 4:** This whole post makes very little sense. How did the brother even know about the ring if OP has been wearing it for years? How did he get it? Why would he propose with a random (presumably kind of cheap) ring?\n\n&gt; **OOP:** It’s not super cheap ring I’m not sure on the exact price I just know it’s not super expensive\n&gt; \n&gt; Why he chose to propose with it I do not know maybe he thought it was sentimental\n\n**Downvoted Commenter:** ESH. It wasn't your ring, any more than it was your brother's. The ring belonged to your parents, and they had the right to do with it what they wanted. They let you play with it for a while and then they gifted it to your brother. Pretty normal with things in the household. Where they become the jerks is that they did it without even talking to you about it.\n\n&gt; **OOP:** It doesn’t belong to my parents at least I don’t think it ever did and she’s gone now and I don’t Exactly think she would be upset at the idea I kept it\n\n**How old is OOP?**\n\n&gt; **OOP:** 19\n\n**Did OOP have the ring appraised?**\n\n&gt; **OOP:** Idk I’ve never had it like professional appraised or anything\n&gt; \n&gt; It’s price or even looks wasn’t why I kept it even though it is a pretty ring I had it because it reminded me off her and it really does help having it on bad days\n\n&amp;nbsp;\n\n[Update](https://www.reddit.com/r/AITAH/s/k0Cnrovu3X): **July 22, 2025 (next day)**\n\nThe mods on the other AITA subreddit refused my post saying updates that don’t resolve the conflict aren’t welcome so I’m giving a shot here\n\nHere’s a link to the original post if anyone’s wonders -https://www.reddit.com/r/AmItheAsshole/s/cSDNMcWN7i\n\nWhile the final judgment of my last post seemed to be NTA I’m still so confused with the overwhelming amount of comments that said I was in the wrong ???\n\nBut one thing that a lot people did say is that I need to tell my brothers fiancée and I guess that’s right as it did feel like I ruined her day with my strop so afterwards I messaged apologised and asked her to meet up for lunch as apology for the other day. I wasn’t gonna ask for the ring bakc I just wanted for her to atleast know my side of the story I guess????\n\nAnyway we meet up for lunch blah blah small talk or whatever. And she shows me the ring and tells me that oh it’s so pretty I know it’s not expensive but if it means so much to ur brother for me to have it means so much to me like???? ok just miss out crucial info when telling u future wife then I guess.\n\nI kinda just stared at the ring and didn’t know what to say and I guess she must a noticed because she began apologising a lot saying “I didn’t know I’m sorry” and I finally got “my” ring back or whoever’s ring you wanna call it.\n\nI was near tears she took me back to my friends house as I thought that was gonna be it\n\nLater I get a call from my bro where he says that “im selfish” and “I’m so weird about my sister” and that I couldn’t let him have his day and it had to be about me telling me that I just ruined his marriage and that I can’t claim anything with my sister because I was way to young to have a relationship\n\nHe ended the call and I tried calling both my parents but they wouldn’t pick up till my dad called later telling me he’s “disappointed” how I handle things and that I’ve blown up my brothers relationship over a person I barely knew\n\nand honestly idk at this point I feel it’s all gone a bit too far I don’t think I can ever fave coming home and I’ve just ruined my brothers marriage\n\naita???\n\n**Top Comments**\n\n**Commenter 1:** If simply knowing the full truth was enough to make her leave, it means your brother was manipulating her anyways. You saved that woman. Nta\n\n**Commenter 2:** What a bunch of fucking assholes. Of course a young child is going to look up to her older sister. I’m guessing that she was kinder to you than this bunch of ghouls.\n\nThey knew what they were doing was wrong because they didn’t tell you they were doing it beforehand. Pretending you have no relationship to your dead sister because you were young is just unfathomably cruel.\n\nNo surprise the fiancé bailed. She saw how they treated you and realized that this would be her future if she stayed with your brother. Her actual feelings never mattering, only what he thought they should be.\n\nBest of futures to you. Sorry you lost your sister and have such a shitty family.\n\n**Commenter 3:** Idk I think your brother ruined his marriage by stealing the ring and using it to propose and then lying about it to his gf. If his gf doesn't wanna marry him for his own actions then that's on him.\n\n**Commenter 4:** I think that you have to express that you're upset about them not asking you to grab the ring, also, your brother accusing you of \"blowing\" his marriage, like dude? He didn't even say the truth to his fiancée that's the problem.\n\nI'm pretty sure this wouldn't have been an issue if you, your parents, and brother had a conversation before just giving the ring, explaining why he wanted to propose with the ring and what it meant to him. Deciding whether to give the ring or not as a family. (I think that the ring doesn't belong to anyone, but to everyone in your family as a way to remember your sister. So if someone opposes giving it, simply don't give it).\n\n&amp;nbsp;\n\n[Update #2](https://www.reddit.com/r/relationship_advice/s/xwpqMi2kkL): **July 28, 2025 (six days later)**\n\n**My (19f) parents (55m 53f) blame me for ruining my brothers (27m) marriage over my dead sisters ring and idk how to repair our relationship?**\n\nMy parents blame me for ruining my brothers marriage over my dead sisters ring\n\nIf you want the full context it?s here - https://www.reddit.com/r/AmItheAsshole/s/T5HXjVsYS1\n\nBut essentially after I told my brothers ex fiancée that the ring he used to propose was a keepsake I kept of my late sister she gave it back and I presume broke up with him \n\nAs of now I've been staying at my friends house and will be moving in to stay with my bf for a bit when he comes back from holiday \n\nMy parents have taken his side and they want nothing to do with me my brother is the same \n\nNo one in my family even if they are sympathetic can get through to them and amend stuff. It seems the only way to repair the relationship would be to give the ring back but even then I don't think I can \n\nI'm at a lost and idk what to do and how to go about it feels like I'll never be able to come home. \n\n**Top Comments**\n\n**Commenter 1:** Here's the thing\n\nYour golden child brother is not going to pan out as a functioning adult in life\n\nAnd he won't be able to take care of your parents as they get older\n\nSo live your life, do the best you can...and just wait\n\nYour parents will come crawling back one day\n\nBTW...the fiance broke up with your brother because he was so cheap he STOLE a ring from his baby sister...that belonged to his deceased sister that the living sister used as comfort\n\nThe kind of man that can do that is not the kind of many any woman of merit will ever want to be with\n\n**Commenter 2:** You just found out that your brother is the golden child.\n\nIf the ring is \"just a ring\" then why did brother need it in the first place? Why is it \"just a ring\" when you want it, but it's meaningful when he wants it? Clearly, there is some cognitive dissonance going on from their side.\n\nYou are navigating this correctly. You just saved some poor girl from being married to a man who steals from his little sister without empathy or remorse. Good job.\n\n**Commenter 3:** Do **not** back down. If your brother was a sister and wanted it for an engagement ring, that might justify wanting the ring, but he wants to give it to someone outside your family, who presumably had no special relationship with your sister. It's your **reminder** of your sister, it's not up to anyone else to decide how important it should be to you and it wasn't anyone else's to give away.\n\nYou're moving out, you'll have space, they'll have space. Once things have cooled off, feel free to reach out in a casual way. If the ring comes up, explain once why it's important to you and make it clear you're not giving it back, then say something to the effect of, \"I want to move past this, but I don't feel you think I have a right to mourn my sister in my own way.\" If they don't care after that, it's a wasted effort.\n\n&amp;nbsp;\n\n**DO NOT COMMENT IN LINKED POSTS OR MESSAGE OOPs – BoRU Rule #7**\n\n**THIS IS A REPOST SUB - I AM NOT OOP**",
+					"created_at": "2025-08-04T12:00:06Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/BestofRedditorUpdates/comments/1mh3gxg/aita_for_asking_for_my_dead_sisters_ring_back/",
+					"image": null,
+					"up_votes": 2120,
+					"down_votes": 0,
+					"num_comments": 294,
+					"llm_explanation": "The post expresses negative sentiment about the game's balance, indicating a pain point that could be addressed by a competing or improved product. The focus is on game mechanics.",
+					"llm_response": {
+						"index": 15,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": false,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": true,
+						"neutral_sentiment": true
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "9471ffbf-1432-41cc-afbe-a5ce2f17b5db",
+					"post_id": "1mgrrxd",
+					"subreddit": "OnTheTipOfMyTounge",
+					"title": "Oh man, If you know this song I will be out of mind, thrilled",
+					"author": "TrainerRealistic4643",
+					"content": "So,  it's a song I used to sing with the radio when I was a preteen/teen (early naights/2000). It was already an oldies song but my dad hasn't been able to help me figure out out and I was under the impression he knew all the oldies songs.\n\nI don't tremendously much except the chorus has something to do with wanting to escape to an island or somewhere that there's \"no ringing of the telephone\" because ?your friends can cant call or reach you.. ? I dont know. \n\nI truly don't know.  Please help?\n\nIt was not a country song\nIt was sad and lonely and heartbreaking, wanting to isolate yourself.... there was a mention of an island and no one calling on the \"telephone line\"\n\nPretty sure it was old alternative rock more in the way James Taylor's \"fire and rain,\" not motley crue",
+					"created_at": "2025-08-04T03:15:06Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/OnTheTipOfMyTounge/comments/1mgrrxd/oh_man_if_you_know_this_song_i_will_be_out_of/",
+					"image": null,
+					"up_votes": 72,
+					"down_votes": 0,
+					"num_comments": 310,
+					"llm_explanation": "The post is about cheating in university, a negative issue.",
+					"llm_response": {
+						"index": 17,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": false,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": true,
+						"neutral_sentiment": false
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "974f5f6b-353e-4cff-9621-a9a541c86b54",
+					"post_id": "1me4jpa",
+					"subreddit": "Vivarium",
+					"title": "I could use some advice for rock paint",
+					"author": "Charalin-",
+					"content": "I really like the results people are getting making fake rocks out of foam covered with grout/cement. My problem is, is that so far I've only seen people use drylok to paint details on top of this and on surrounding expanding foam. I'm in the EU and drylok isn't really available here unless you're willing to pay a lot of money. \n\nMy question is: does anybody know of a different type of paint that can be tinted and does not need to be sealed to hold up/be safe in a vivarium. I haven't found a sealant yet that wouldn't be smooth/glossy which is a little counterproductive when making fake rocks.\n\nThanks in advance ",
+					"created_at": "2025-07-31T23:25:24Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/Vivarium/comments/1me4jpa/i_could_use_some_advice_for_rock_paint/",
+					"image": null,
+					"up_votes": 1,
+					"down_votes": 0,
+					"num_comments": 4,
+					"llm_explanation": "User is asking about a product feature (4K gaming) and its implications, which is relevant to understanding user needs in the tech space.",
+					"llm_response": {
+						"index": 18,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": false,
+						"neutral_sentiment": true
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "b130e0d0-65a4-4ff2-a46a-ee93b1190f38",
+					"post_id": "1mgp0hx",
+					"subreddit": "Fauxmoi",
+					"title": "Less than a month after Charles and Diana announced their engagement, Diana, aged 19, met Princess Grace. After divulging her fears about a royal future, Grace patted her cheek and tenderly replied: \"Don't worry, it'll only get worse.\" 18 months later Grace Kelly died in a car accident.",
+					"author": "voguediaries",
+					"content": "Less than a month after Prince Charles and Diana Spencer announced their engagement in February 1981, Diana met the woman who, up until Diana’s own arrival, was by most estimations the most famous princess in the world—Princess Grace of Monaco, or, as she was known prior to marrying Prince Rainier in 1956, Grace Kelly, the American actress. (Kelly won an Academy Award for Best Actress for her role in 1954’s *The Country Girl*, released one year before she met Rainier while overseas for the Cannes Film Festival.)\n\n&amp;nbsp;\n\nIn 1981, Grace and Rainier were celebrating their 25-year wedding anniversary, neither knowing that Grace had just about a year and a half left to live. When Diana and Grace met on March 7, 1981, at London’s Goldsmiths Hall—attending a fundraising concert and reception for the Royal Opera House—neither knew that both of them would lose their lives in car accidents 15 years apart, both far before their time. (Grace, at her death on September 14, 1982, was 52 years old; Diana, when she died on August 31, 1997, was just 36.)\n\n&amp;nbsp;\n\nThe paparazzi—as would become the norm—went wild for her. But Diana wasn’t used to this treatment yet, if one ever does get used to it. “Diana’s panic was still evident at a reception afterward at Buckingham Palace. Concerned for her, Grace asked if she would like to accompany her and Gwen \\[Robyns, Grace’s companion that evening\\] to the ladies’ room for a chat. Similar though they were, they were also quite different: “Whereas Diana was a princess who became a star, Princess Grace was a star who became a princess.\" \n\n&amp;nbsp;\n\nWhen they met and became engaged to their respective husbands—both after short courtships—“Grace was far more worldly than Diana, even as a young princess. Diana was a kindergarten teacher. Grace was a star, financially independent, widely traveled, and prone to moving in sophisticated circles.” Diana was 19 when she met Grace in March 1981 and would barely have turned 20 on her July 29, 1981 wedding day to a 32-year-old Charles; Grace was 26 when she married Rainier, who, like Charles, was also 32.\n\n&amp;nbsp;\n\nAccording to Robyns—who was there that night—Diana burst into tears to Grace while she was touching up her makeup in the ladies’ room mirror. The dress she was wearing was so revealing, Diana explained, because it was two sizes too small; her intended outfit had not arrived in time, “an unnerving situation to occur for her first formal appearance. She also said that she now realized more than ever how unbearable it would be to have so many people jostling for her attention, asking questions, not only of her, but of anyone who knew her. She foresaw a life totally devoid of privacy. She was frightened. What could she do? She was certainly asking the right woman for advice. Grace had always known how to use her celebrity to her advantage, whereas Diana seemed to shrivel under the spotlight’s glare.”\n\n&amp;nbsp;\n\nGrace, then 51, put her arms around 19-year-old Diana and patted her on the shoulder. She then put one hand on each of Diana’s cheeks, cupping her face. “Don’t worry, dear,” Grace told Diana with a gentle smile. “You see, it’ll only get worse.”\n\n&amp;nbsp;\n\nDiana later told her biographer Andrew Morton that she found Grace to be “wonderful and serene,” but concluded “there was troubled water under her. I saw that.”\n\n&amp;nbsp;\n\nGrace attended Charles and Diana’s wedding four months later at St. Paul’s Cathedral in London; Rainier was due to attend with his wife but fell ill and, much to his dismay, had to send his son Prince Albert, then 23, in his place. Grace and Albert stayed as guests of Queen Elizabeth’s at Buckingham Palace, and led a procession of royals from around the world down the Mall, across Trafalgar Square, down the Strand and Fleet Street, and finally climbing Ludgate Hill to St. Paul’s. While Charles and Diana were given opulent gifts from royals and dignitaries from around the globe, Grace and Rainier were more modest in their gift, giving the newlyweds a simple silver picture frame, which Grace thought was “quite lovely” and which Taraborrelli wrote could not have cost more than a few hundred dollars, if that. (For comparison’s sake, President Ronald Reagan and First Lady Nancy Reagan’s gift to the Prince and Princess of Wales was a Steuben glass bowl valued at $75,000.) \n\n&amp;nbsp;\n\nLess than a year after her wedding, Diana gave birth to Prince William on June 21, 1982; three months later, on September 18, Grace’s funeral from injuries sustained in a car accident was the first official function that Diana would attend as Princess of Wales. At the event in Monaco, Diana wore a black dress and a black boater hat with a netted veil; she also wore a heart-shaped diamond necklace, a gift from Charles to mark the birth of William three months prior. \n\n&amp;nbsp;\n  \n“I hope she was happy at the end,” Diana reportedly said of Grace after the service. Less than 15 years later, on September 6, 1997, Diana’s own funeral would be held at Westminster Abbey, she too having lost her life after injuries sustained in a car accident.\n\nhttps://www.marieclaire.com/celebrity/royals/when-diana-spencer-met-princess-grace-of-monaco/",
+					"created_at": "2025-08-04T01:26:59Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/Fauxmoi/comments/1mgp0hx/less_than_a_month_after_charles_and_diana/",
+					"image": null,
+					"up_votes": 2294,
+					"down_votes": 0,
+					"num_comments": 126,
+					"llm_explanation": "The user is seeking assistance with mod compatibility, suggesting a need for a product feature. Though specific to a game, the underlying need is relevant.",
+					"llm_response": {
+						"index": 15,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": false,
+						"neutral_sentiment": true
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "b7d73cfc-f15d-439a-a42b-a03324fe1a55",
+					"post_id": "1mgc9uq",
+					"subreddit": "WhitePeopleTwitter",
+					"title": "old man who calls himself \"The Chosen One\" wants to know why Charlamagne is \"allowed\" to use \" [the] GOD\" in a 2am rant...",
+					"author": "ms_directed",
+					"content": "(delete and repost for my stupid typo in the title 🤦‍♀️)",
+					"created_at": "2025-08-03T14:28:41Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/WhitePeopleTwitter/comments/1mgc9uq/old_man_who_calls_himself_the_chosen_one_wants_to/",
+					"image": "https://i.redd.it/h8fppxdq0rgf1.jpeg",
+					"up_votes": 1884,
+					"down_votes": 0,
+					"num_comments": 491,
+					"llm_explanation": "The post describes a negative experience with a 'luxury glamping' service, expressing pain points and a potential need for a better product (in this case, a reliable heating system). This qualifies as a potential customer expressing a need and negative sentiment.",
+					"llm_response": {
+						"index": 11,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": false,
+						"negative_sentiment": true,
+						"neutral_sentiment": false
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "c22f5f64-e4a7-45c8-b430-086f70a785be",
+					"post_id": "1mca8le",
+					"subreddit": "MaliciousCompliance",
+					"title": "If I don't like it, tell it to the news? I guess we're going to the news then (video evidence)",
+					"author": "CasyD",
+					"content": "My mother was a truly inspiring woman. Her favorite phrase was \"why say bleed when you can say hemorrhage\" because she never did anything halfway when she knew she could go all the way. We couldn't even ask for help with homework because you'd be up till 3 am on a school night, adding one more thing. Then you'd go to school with this magnum opus while everyone around you phoned it in and still got an A. She would rarely get angry, but if you activated her righteous indignation, the repercussions would be legendary. There was one such story of malicious compliance that she always loved to tell, and I just found the receipts, so I wanted to share it with everyone.\n\nIt all started one day when I found a dagger in my brother's room. It was an ornate sort of fantasy-style dagger. Not something you would find just anywhere, and it was very sharp. We were not old enough to have something like that at the time; he was only 11. Immediately, my mother walked up behind me and caught me red-handed, so I did what any self-respecting little brother would do and threw him under the bus. My brother wasn't at home at the time, so she went through everything and found more of these knives. She laid them out on the table, and she was psyching herself up for the hell she was going to bring down upon him. By the time my brother gets home, he walks in and sees her sitting there with the knives out. He goes white as a sheet. She immediately asks where he got them. \n\nThis was the late 90s, and my brother was pretty into Magic: The Gathering. The card shop he went to for his fix was just down the street. He spent a great deal of time there and bought boxes and boxes of these cards from them, so they knew him and knew he was too young. They had sold it to him, knowing full well that he was underage, no questions asked. My mother's jaw dropped, and moments later, we were pulling up to the place. \n\nShe drags my brother into the store and puts the knives down in front of the woman who owns the place. She tells her that they had sold it to him. \"Yeah, so what?\" \"He is not 18, and he shouldn't have access to these. You need to tell your employees to check IDs before they sell weapons to minors.\" She was willing to give her the benefit of the doubt before she snapped back with \"It's a joke, it's humor, don't you get it?\" ahhh so the problem is you. \"I am his mother, and I don't think it is funny. If you won't follow the law at the very least, I need you to stop selling weapons to my son.\" \"I'll do whatever I want! If you don't like it, TELL THE NEWS!\" Surely this woman doesn't know who she is talking to, or the lengths that my mom was willing to go for her kids. I don't know why on earth that would be the phrase you'd use. Now you are just asking for it. Mom gives her one last chance before the hammer drops. \"So you are saying that even without my permission, having asked you not to personally, and knowing it is illegal, you would still sell a knife to him?\" \"Of course, this is a business; maybe raise him better if you don't like what he is doing.\"\n\nIt was like the air left the room. There were 3 of us boys in Elementary, Middle school, and High School around the time. She was president of all 3 PTAs for 3 different schools miles apart from each other. She was practically moming as a sport and crushing it by every conceivable standard. This woman had just slighted her to her core, and now had to deal with the consequences of her ignorance. My mom didn't say another word. She gathered the knives, and we walked out. Even the woman behind the desk looked a little shocked that she was just walking out. So was I. We all went back to the car, and no one said a word. Then you could almost visibly see the resolve set in, and she says, \"I guess we are going to the news then.\" I don't remember her saying another word the rest of the night.\n\nThe next day, I woke up and she had papers all around her that she had downloaded and printed off, and highlighted. She was on the phone explaining the story to a news station who'd just opened and responding to emails she'd sent overnight. I don't think she slept. She had been up researching the laws and building her case. The first reporters she talked to didn't seem to see what she saw in the story, and told her they wouldn't pick it up. Every time she was told no, she would ask for references to someone who would do something like this. It took weeks of phone tag. She called the next reporter, then another, then another, leaving messages and following up. Finally, she found an investigative reporter who would work with her. \n\nThey decided that the best course of action was to put a hidden camera on my brother to send him undercover to buy something larger. Believe me, I am well aware of how outlandish that sounds. They met up down the street and gave my brother some money to buy the biggest weapon he could get. I seem to remember it being 120 dollars. Wired him up with a microphone and a spy camera they'd bought at a Radio Shack, and he went in and he bought a legit full sword from the place. They jokingly told him not to kill anyone with it as he was walking out, and never asked to see an ID.\n\nAfterwards, the reporter interviewed the store owner, who stuck with her old fallback of it being funny to sell deadly weapons to kids. Then they interviewed my mom outside the shop, and the two of them argued on camera. Maybe because they had already caught her on a hidden camera, she felt the need to double down. She had to think people would side with her for some reason. She was irate. My mom just kept feeding her the rope to hang herself with, and the shop owner tied the whole thing into a neatly wrapped bow for the reporter. Just a spectacular failure on her part; it's hard to imagine how it could have gone worse. Sure, it is just a local news report from the 90s. For my mom, it was her hero moment. She knew she was right, and she knew this person had to be stopped, and she did it all the way. Just like everything she ever did. \n\nIn the report, they say that they went back, and the place was already closed. Within a month, it was completely out of business. The reporter won an award for the piece, and the righteous indignation was satiated for the time being. My mom recorded the airing of the report on a VHS tape, and every chance she got, she would parade it around to show people her crowning achievement. She would tell the whole story and we'd all watch the tape until it was lost to time and became legend. Through some effort, I have found the video, and I know that she would want everyone to see it. So here it is: [https://youtu.be/ozXJiO\\_ZGq0?si=I6VWoA9U5fxfY5YA](https://youtu.be/ozXJiO_ZGq0?si=I6VWoA9U5fxfY5YA) ",
+					"created_at": "2025-07-29T20:35:30Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/MaliciousCompliance/comments/1mca8le/if_i_dont_like_it_tell_it_to_the_news_i_guess/",
+					"image": null,
+					"up_votes": 11980,
+					"down_votes": 0,
+					"num_comments": 733,
+					"llm_explanation": "The user is seeking advice on a PC build, indicating a need for a solution. This could align with TechFlow's services if the company provides tech consulting services.",
+					"llm_response": {
+						"index": 10,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": true,
+						"negative_sentiment": false,
+						"neutral_sentiment": false
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "c4d0c58e-4d97-4a44-ad91-aaebe0fac1aa",
+					"post_id": "1mchjxh",
+					"subreddit": "phcars",
+					"title": "Gumawa ako ng app",
+					"author": "gas-phorg",
+					"content": "Gumawa po ako ng mobile app kasi madalas hassle maghanap ng gas station — lalo na kung unfamiliar yung lugar, o kung minsan outdated ang info lalo na sa probinsya.\n\n🛠️ **Features ng app:**\n\n* Community-reported fuel prices\n* Validated prices by users confirmation count (upvote)\n* Users can add, report and update stations\n* Price hike watcher\n* Station finder with filters by brand\n* Find nearest gas stations\n\n📱 **Available na sa:**\n\n* Google Play Store\n* Apple App Store \n* Website: [GAS-PH](https://gas-ph.com)\n* Free[](https://gas-ph.com)\n\n**The goal of the app** is to help the community have **updated information**, make **trip planning a bit easier**, and offer more useful features for everyday drivers.\n\n**Heads up lang** — the app is still new, so some stations or prices might not be fully updated yet.  \nThat’s why **every contribution helps** — your reports make a big difference for fellow drivers.\n\n**Sana makatulong sa inyo!**  \n  \nTry it out and feel free to share feedback!",
+					"created_at": "2025-07-30T01:21:36Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/phcars/comments/1mchjxh/gumawa_ako_ng_app/",
+					"image": null,
+					"up_votes": 716,
+					"down_votes": 0,
+					"num_comments": 76,
+					"llm_explanation": "The post describes a mobile app with features and functionality of interest to users. It is a positive sentiment related to the features of the app.",
+					"llm_response": {
+						"index": 11,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": false,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": true,
+						"negative_sentiment": false,
+						"neutral_sentiment": false
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				},
+				{
+					"id": "f5aa920f-dba0-4fd9-a5d0-a73c456c0a9d",
+					"post_id": "1mcwewk",
+					"subreddit": "IndianFood",
+					"title": "Preserving our Family Culinary Heritage – Looking for Feedback!",
+					"author": "Yogi_Warrior",
+					"content": "Hey everyone,\n\nLiving away from my family, I often find myself calling my mother or grandma for her special recipes. Flavours that remind me of my childhood. On my last trip home, I realized how many beloved recipes from my mom and grandma are at risk of fading away over time.\n\nI decided to do something about it, and I am in the process of creating an app that allows our elders to record their **recipes in their voice** so we never lose our priceless culinary heritage. Key features include:\n\n* **No typing:** Just tap “Record,” speak each step, and you’re done.\n* **Add a photo:** Snap a quick pic of the finished dish or the handwritten note.\n* **Share or keep private:** Share it in a family group or send it to friends.\n\nMy goal is to make it so simple that even my grandma can record and pass on her recipes without struggling with menus or forms. And I’d love your input:\n\n* How do you currently preserve your culinary heritage?\n* Would this app help you save your family’s recipes?\n* Are there any specific features you’d like?\n* Would you be interested in being an early tester on iOS or Android (completely free)?\n\nYour honest thoughts would mean a lot.\n\nThanks in advance!\n\n",
+					"created_at": "2025-07-30T11:46:56Z",
+					"updated_at": null,
+					"link": "https://reddit.com/r/IndianFood/comments/1mcwewk/preserving_our_family_culinary_heritage_looking/",
+					"image": null,
+					"up_votes": 2,
+					"down_votes": 0,
+					"num_comments": 10,
+					"llm_explanation": "The user is exploring a tool that could potentially benefit from TechFlow's services by providing real-time feedback on a product idea, indicating potential customer interest.",
+					"llm_response": {
+						"index": 3,
+						"model": "openai-chat"
+					},
+					"status": null,
+					"tags": {
+						"potential_customer": true,
+						"competitor_mention": false,
+						"own_mention": false,
+						"positive_sentiment": true,
+						"negative_sentiment": false,
+						"neutral_sentiment": false
+					},
+					"use_case_id": "96b9c8cd-58c9-42f1-8ed6-48eb3ed1eac3",
+					"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6"
+				}
+			]
+		},
+		{
+			"id": "d539d75d-c6ba-4652-8414-71728f114e30",
+			"title": "API Integration Support",
+			"description": "Help developers integrate our APIs into their applications with best practices and troubleshooting guidance",
+			"hot_features_summary": null,
+			"competitor_summary": null,
+			"created_at": "2025-08-05T15:41:54.983314Z",
+			"brand_id": "21a14e66-ef96-4529-bba3-cca8abce8fa6",
+			"subreddit_posts": []
+		}
+	],
+	"users": [],
+	"created_at": "2025-08-05T16:23:00.507045",
+	"updated_at": "2025-08-05T16:23:00.507049",
+	"brand_configs": [
+		{
+			"response_tone": "professional",
+			"response_target": "all",
+			"target_demographics": {
+				"platforms": [
+					"reddit",
+					"stack_overflow",
+					"github",
+					"developer_forums"
+				],
+				"industry_focus": "technology",
+				"experience_level": "intermediate_to_advanced",
+				"primary_audience": "developers",
+				"interests": [
+					"programming",
+					"software_development",
+					"api_integration",
+					"technical_solutions"
+				],
+				"age_range": "25-45",
+				"geographic_focus": "global"
+			},
+			"created_at": "2025-08-05T15:41:54.520882Z",
+			"updated_at": "2025-08-05T15:41:54.520885Z"
+		}
+	]
+}

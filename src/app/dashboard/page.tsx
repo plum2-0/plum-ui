@@ -238,17 +238,17 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">
-                    {data?.posts?.filter((p) => p.user_action === "replied")
+                    {data?.posts?.filter((p) => p.user_action === "reply")
                       .length || 0}
                   </div>
-                  <div className="text-purple-200 text-xs">Replied</div>
+                  <div className="text-purple-200 text-xs">Reply</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">
-                    {data?.posts?.filter((p) => p.user_action === "skipped")
+                    {data?.posts?.filter((p) => p.user_action === "ignore")
                       .length || 0}
                   </div>
-                  <div className="text-purple-200 text-xs">Skipped</div>
+                  <div className="text-purple-200 text-xs">Ignored</div>
                 </div>
               </div>
             </div>

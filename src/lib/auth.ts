@@ -32,14 +32,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user, account, trigger }) {
+    async jwt({ token, user, account }) {
       // When user signs in, save user data from database to token
       if (account && user) {
-        return {
-          ...token,
-          id: user.id,
-          provider: account.provider,
-        };
+        // Load brandId from Firestore on sign-in
+        try {
+          const userRef = firestore.collection("users").doc(user.id!);
+          const userDoc = await userRef.get();
+          const userData = userDoc.data();
+
+          return {
+            ...token,
+            id: user.id,
+            provider: account.provider,
+            brandId: userData?.brand_id || null,
+          };
+        } catch (error) {
+          console.error("Failed to load user data in JWT callback:", error);
+          return {
+            ...token,
+            id: user.id,
+            provider: account.provider,
+            brandId: null,
+          };
+        }
       }
 
       // For subsequent requests, the token already has the user data
@@ -50,6 +66,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token) {
         session.user.id = token.id as string;
         session.user.provider = token.provider as string;
+        session.user.brandId = token.brandId as string | null;
       }
       return session;
     },
