@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlumLogo } from "@/components/PlumLogo";
+import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -112,7 +112,7 @@ export default function Dashboard2Page() {
       <header className="p-6 bg-white/10 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <PlumLogo />
+            <PlumSproutLogo className="w-8 h-8" />
           </div>
           <div className="flex items-center gap-4">
             <span className="text-white/80 text-sm">

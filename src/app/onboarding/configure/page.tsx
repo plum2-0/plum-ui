@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { SignOutButton } from "@/components/SignOutButton";
-import { PlumLogo } from "@/components/PlumLogo";
+import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import { SourceListeningConfig } from "@/components/SourceListeningConfig";
 import { useOnboardingState } from "@/hooks/useOnboardingState";
 
@@ -89,7 +89,7 @@ export default function ConfigureOnboardingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700">
       <header className="p-6 flex justify-between items-center">
-        <PlumLogo />
+        <PlumSproutLogo className="w-8 h-8" />
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">

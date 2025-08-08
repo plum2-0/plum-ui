@@ -1,26 +1,154 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;900&family=Nunito:wght@400;600&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ——— THEME TOKENS ——— */
+@theme {
+  --color-farm-sage: #BFD8C1;
+  --color-farm-wheat: #F2E4B6;
+  --color-farm-sky: #DCEBFF;
+  --color-farm-mint: #C4FFD9;
+  --color-farm-soil: #8D6B4D;
+  --color-farm-night: #2C3528;
+  --color-sprout-accent: #78E8A1;
+      /* fresh bud mint */
+
+  --font-heading: "Cinzel", serif;
+  --font-body: "Nunito", sans-serif;
+
+  --shadow-glow: 0 0 12px rgba(196, 255, 217, .6);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── THEME PATCHES ─────────────────────────────────────────── */
+@theme {
+  /* darker text tone for light backgrounds */
+  --color-farm-ink: #1F2420;
+  /* almost-black spruce */
+
+  /* subtle pastel overlays */
+  --color-overlay-light: rgba(255, 255, 255, 0.60);
+  /* for hero nav */
+  --color-overlay-dark: rgba(44, 53, 40, 0.82);
+  /* for sections over hero */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --color-nav-glass: rgba(220, 235, 255, .55);
+  /* pastel sky w/ 55% opacity */
+  --color-nav-border: rgba(191, 216, 193, .65);
+  /* sage line */
+}
+
+/* ── COMPONENTS ────────────────────────────────────────────── */
+@layer components {
+
+  @layer components {
+      .nav-glass {
+        @apply sticky top-0 z-30 flex items-center justify-between px-6 py-4 backdrop-blur-lg bg-[color:var(--color-nav-glass)] border-b border-[color:var(--color-nav-border)];
+      }
+
+      .nav-link {
+        @apply font-body font-semibold text-sm md:text-base text-farm-night hover:text-farm-mint transition;
+      }
+    }
+
+  /* NAVBAR */
+  .nav-farm {
+    @apply sticky top-0 z-20 flex items-center justify-between px-6 py-4 backdrop-blur-md text-farm-night bg-[color:var(--color-overlay-light)];
+  }
+
+  .nav-link {
+    @apply font-body font-semibold text-sm md:text-base text-farm-night hover:text-farm-mint transition;
+  }
+
+  /* HOW-IT-WORKS section wrapper */
+  .howit-wrapper {
+    @apply rounded-2xl px-6 lg:px-12 py-12 bg-[color:var(--color-overlay-dark)];
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ——— COMPONENTS ——— */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-heading text-lg tracking-wide bg-farm-sage text-farm-night shadow-glow hover:bg-farm-mint transition;
+  }
+
+  .btn-secondary {
+    /* kept for later */
+  }
+
+  .card-farm {
+    @apply bg-white/70 backdrop-blur-md border border-farm-sage/30 rounded-2xl p-6 shadow-lg;
+  }
+
+  .hero-farm {
+    background: linear-gradient(180deg, theme('colors.farm-sky'), theme('colors.farm-wheat'));
+    @apply text-center;
+  }
+}
+
+/* ——— UTILITIES ——— */
+@layer utilities {
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .text-sprout {
+    color: var(--color-sprout-accent);
+  }
+
+  .bg-sprout {
+    background-color: var(--color-sprout-accent);
+  }
+
+  /* brand text: sky ➜ mint ➜ wheat */
+  .text-brand-gradient {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-farm-sky via-farm-mint to-farm-wheat transition;
+  }
+
+  /* gentle glow on hover */
+  .hover\:glow:hover {
+    text-shadow: 0 0 6px var(--color-sprout-accent),
+      0 0 12px var(--color-sprout-accent);
+  }
+
+    /* brand badge wrapper  */
+    .brand-bg {
+      position: relative;
+      /* establish containing block */
+      display: inline-block;
+      padding: .25rem .5rem;
+      /* little breathing room */
+    }
+
+    .brand-bg::before {
+      /* the diffused pillow */
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: .5rem;
+      /* soft corners */
+      background: rgba(31, 36, 32, 0.20);
+      /* farm-night at 20 % */
+      backdrop-filter: blur(6px);
+      /* frosted */
+      z-index: -1;
+      /* sit behind the text */
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
+      /* subtle lift */
+    }
+
+
+
+  /* ▶ NEW: pastel badge backgrounds for numbered steps */
+  .step-bg-1 {
+    @apply bg-farm-sage;
+  }
+
+  .step-bg-2 {
+    @apply bg-farm-mint;
+  }
+
+  .step-bg-3 {
+    @apply bg-farm-wheat;
+  }
 }

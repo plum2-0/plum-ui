@@ -1,5 +1,5 @@
 import { Session } from "next-auth";
-import { PlumLogo } from "@/components/PlumLogo";
+import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import { SignOutButton } from "@/components/SignOutButton";
 
 interface OnboardingHeaderProps {

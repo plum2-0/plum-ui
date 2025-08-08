@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { redirect, useSearchParams } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
-import { PlumLogo } from "@/components/PlumLogo";
+import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import { getProjectIdFromCookie } from "@/lib/cookies";
 import { useOnboardingState } from "@/hooks/useOnboardingState";
 
@@ -157,7 +157,7 @@ function RedditOnboardingContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700">
       <header className="p-6 flex justify-between items-center">
-        <PlumLogo />
+        <PlumSproutLogo className="w-8 h-8" />
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
