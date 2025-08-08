@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createTokenEncryption } from "@/lib/crypto";
-import {
-  findOrCreateProject,
-  updateProjectRedditCredentials,
-} from "@/lib/project-utils";
 import { auth } from "@/lib/auth";
 import { adminDb } from "@/lib/firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
+import { getBrandIdFromRequest } from "@/lib/cookies";
 
 interface RedditTokenResponse {
   access_token: string;
@@ -115,46 +111,63 @@ export async function GET(request: NextRequest) {
 
     const redditUser: RedditUserResponse = await userResponse.json();
 
-    // Encrypt tokens
-    const encryption = createTokenEncryption();
-    const encryptedAccessToken = encryption.encrypt(tokens.access_token);
-    const encryptedRefreshToken = encryption.encrypt(tokens.refresh_token);
+    // Resolve brandId (session → cookie → Firestore)
+    let brandId: string | null = session.user.brandId || null;
+    if (!brandId) {
+      brandId = getBrandIdFromRequest(request);
+    }
 
-    // Find or create project for user
-    const projectName = request.cookies.get("project_name")?.value;
-    const projectId = await findOrCreateProject(userId, projectName);
-
-    // Update project with Reddit credentials
-    await updateProjectRedditCredentials(projectId, {
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
-      expiresAt: Date.now() + tokens.expires_in * 1000,
-      username: redditUser.name,
-    });
-
-    // Store projectId in user document for API access
     const firestore = adminDb();
-    if (firestore) {
-      const userRef = firestore.collection("users").doc(userId);
-      await userRef.set(
-        {
-          user_id: userId,
-          project_id: projectId,
-          updated_at: Timestamp.now(),
-        },
-        { merge: true }
+    if (!brandId && firestore) {
+      try {
+        const userRef = firestore.collection("users").doc(userId);
+        const userDoc = await userRef.get();
+        const userData = userDoc.data();
+        if (userData?.brand_id) {
+          brandId = userData.brand_id as string;
+        }
+      } catch (err) {
+        console.error("Failed to lookup brandId for user:", err);
+      }
+    }
+
+    if (!brandId) {
+      return NextResponse.redirect(
+        new URL("/onboarding?error=brand_not_found", request.url)
       );
     }
 
-    // Clear OAuth cookies and set project cookie
+    // Persist Reddit credentials under brand
+    if (!firestore) {
+      return NextResponse.redirect(
+        new URL("/onboarding/reddit?error=db_unavailable", request.url)
+      );
+    }
+
+    const brandRef = firestore.collection("brands").doc(brandId);
+    await brandRef.set(
+      {
+        brand_id: brandId,
+        source: {
+          reddit: {
+            oauth_token: tokens.access_token,
+            oauth_token_expires_at: Date.now() + tokens.expires_in * 1000,
+            refresh_token: tokens.refresh_token,
+            username: redditUser.name,
+          },
+        },
+        updated_at: Timestamp.now(),
+      },
+      { merge: true }
+    );
+
+    // Clear OAuth cookies and set brand cookie
     const response = NextResponse.redirect(
       new URL("/onboarding/reddit?reddit=connected", request.url)
     );
     response.cookies.delete("reddit_oauth_state");
-
-    // Store projectId in secure cookie for frontend access
-    response.cookies.set("project_id", projectId, {
-      httpOnly: false, // Allow frontend access
+    response.cookies.set("brand_id", brandId, {
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days

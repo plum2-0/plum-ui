@@ -47,6 +47,37 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      // Reddit and common image hosts
+      {
+        protocol: "https",
+        hostname: "i.redd.it",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "preview.redd.it",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "external-preview.redd.it",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "styles.redditmedia.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "i.imgur.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

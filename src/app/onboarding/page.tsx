@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
+import { useOnboardingState } from "@/hooks/useOnboardingState";
 
 interface UseCase {
   title: string;
@@ -12,6 +13,8 @@ interface UseCase {
 
 function OnboardingContent() {
   const { data: session, status } = useSession();
+  // Auto-redirect users to the correct onboarding step or dashboard if complete
+  useOnboardingState(true);
   const router = useRouter();
   const [formData, setFormData] = useState({
     brandName: "",
@@ -22,27 +25,27 @@ function OnboardingContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
 
-  const loadingMessages = [
-    "🚀 Setting up your brand profile...",
-    "🔍 Analyzing your brand information...",
-    "🎯 Configuring your monitoring preferences...",
-    "✨ Preparing your dashboard...",
-    "🎉 Almost there! Finalizing setup..."
-  ];
-
   useEffect(() => {
     if (isSubmitting) {
+      const messages = [
+        "🚀 Setting up your brand profile...",
+        "🔍 Analyzing your brand information...",
+        "🎯 Configuring your monitoring preferences...",
+        "✨ Preparing your dashboard...",
+        "🎉 Almost there! Finalizing setup...",
+      ] as const;
+
       let messageIndex = 0;
-      setLoadingMessage(loadingMessages[0]);
-      
+      setLoadingMessage(messages[0]);
+
       const interval = setInterval(() => {
-        messageIndex = (messageIndex + 1) % loadingMessages.length;
-        setLoadingMessage(loadingMessages[messageIndex]);
+        messageIndex = (messageIndex + 1) % messages.length;
+        setLoadingMessage(messages[messageIndex]);
       }, 2000);
 
       return () => clearInterval(interval);
     }
-  }, [isSubmitting, loadingMessages]);
+  }, [isSubmitting]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -146,8 +149,8 @@ function OnboardingContent() {
       const result = await response.json();
       console.log("Brand profile created successfully:", result);
 
-      // Redirect to dashboard2 after successful onboarding
-      router.push("/dashboard2");
+      // Redirect to dashboard after successful onboarding
+      router.push("/dashboard");
     } catch (error) {
       console.error("Failed to submit onboarding data:", error);
       alert(
@@ -178,12 +181,12 @@ function OnboardingContent() {
             <div className="mb-8 flex justify-center">
               <div className="w-16 h-16 border-4 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
             </div>
-            
+
             {/* Loading Message */}
             <p className="text-2xl font-semibold text-white mb-4">
               {loadingMessage}
             </p>
-            
+
             <p className="text-white/80">
               This usually takes about a minute...
             </p>

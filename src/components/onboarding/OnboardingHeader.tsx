@@ -9,7 +9,7 @@ interface OnboardingHeaderProps {
 export function OnboardingHeader({ session }: OnboardingHeaderProps) {
   return (
     <header className="p-6 flex justify-between items-center">
-      <PlumLogo />
+      <PlumSproutLogo />
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
           {session.user?.image && (

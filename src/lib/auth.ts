@@ -58,7 +58,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
-      // For subsequent requests, the token already has the user data
+      // For subsequent requests, lazily hydrate brandId if missing
+      if ((token as any).brandId == null) {
+        try {
+          const userId = (token as any).id || (token as any).sub;
+          if (userId) {
+            const userRef = firestore.collection("users").doc(String(userId));
+            const userDoc = await userRef.get();
+            const userData = userDoc.data();
+            return {
+              ...token,
+              brandId: userData?.brand_id || null,
+            };
+          }
+        } catch (error) {
+          console.error(
+            "Failed to lazily hydrate brandId in JWT callback:",
+            error
+          );
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

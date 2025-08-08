@@ -21,7 +21,9 @@ export default {
   },
   cookies: {
     pkceCodeVerifier: {
-      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.pkce.code_verifier`,
+      name: `${
+        process.env.NODE_ENV === "production" ? "__Secure-" : ""
+      }next-auth.pkce.code_verifier`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -29,15 +31,21 @@ export default {
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 15, // 15 minutes
         ...(process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL
-          ? { domain: new URL(process.env.NEXTAUTH_URL).hostname.startsWith("www.")
-              ? new URL(process.env.NEXTAUTH_URL).hostname.substring(4)
-              : new URL(process.env.NEXTAUTH_URL).hostname }
+          ? {
+              domain: new URL(process.env.NEXTAUTH_URL).hostname.startsWith(
+                "www."
+              )
+                ? new URL(process.env.NEXTAUTH_URL).hostname.substring(4)
+                : new URL(process.env.NEXTAUTH_URL).hostname,
+            }
           : {}),
       },
     },
     // Also configure the state cookie for consistency
     state: {
-      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.state`,
+      name: `${
+        process.env.NODE_ENV === "production" ? "__Secure-" : ""
+      }next-auth.state`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -45,9 +53,13 @@ export default {
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 15, // 15 minutes
         ...(process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL
-          ? { domain: new URL(process.env.NEXTAUTH_URL).hostname.startsWith("www.")
-              ? new URL(process.env.NEXTAUTH_URL).hostname.substring(4)
-              : new URL(process.env.NEXTAUTH_URL).hostname }
+          ? {
+              domain: new URL(process.env.NEXTAUTH_URL).hostname.startsWith(
+                "www."
+              )
+                ? new URL(process.env.NEXTAUTH_URL).hostname.substring(4)
+                : new URL(process.env.NEXTAUTH_URL).hostname,
+            }
           : {}),
       },
     },
@@ -110,6 +122,11 @@ export default {
         searchParams.has("error") ||
         searchParams.has("callbackUrl")
       ) {
+        return url.startsWith(baseUrl) ? url : baseUrl;
+      }
+
+      // Check if the URL is for an invite page - preserve these
+      if (urlObj.pathname.startsWith("/invite/")) {
         return url.startsWith(baseUrl) ? url : baseUrl;
       }
 
