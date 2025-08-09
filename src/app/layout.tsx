@@ -15,8 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Plum - Reddit Monitoring for Business",
-  description: "Monitor Reddit conversations and engage with your audience",
+  title: "PlumSprout - Amplify your Brand's Presence",
+  description: "Multiply your marketing team with PlumSprout AI to listen and sprout your Brand's Community",
+  icons: {
+    icon: [
+      { url: '/plum-favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' }
+    ],
+    shortcut: '/plum-favicon.svg',
+    apple: '/plum-favicon.svg',
+  },
 };
 
 export default function RootLayout({
