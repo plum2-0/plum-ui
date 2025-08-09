@@ -27,6 +27,7 @@ export default function RedditPostListItem({
   const [replyText, setReplyText] = useState("");
   const [showGenerateOptions, setShowGenerateOptions] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -65,6 +66,39 @@ export default function RedditPostListItem({
   const contentToRender = post.content?.trim()?.length ? post.content : "";
 
   const stopPropagation = (e: MouseEvent) => e.stopPropagation();
+
+  async function submitPostAction(action: "reply" | "ignore", text?: string) {
+    try {
+      setIsSubmittingAction(true);
+      const payload: Record<string, unknown> = {
+        brand_id: post.brand_id,
+        use_case_id: post.use_case_id,
+        subreddit_post_id: post.id,
+        post_id: post.post_id,
+        user_content_action: action,
+      };
+      if (action === "reply" && text) {
+        payload.content = text;
+      }
+
+      const resp = await fetch("/api/brand/post/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.warn("Failed to submit post action:", errText);
+        return;
+      }
+
+      // Optional: handle response
+      // const data = await resp.json();
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  }
 
   return (
     <div
@@ -396,7 +430,12 @@ export default function RedditPostListItem({
               aria-label="Ignore this post"
               onClick={(e) => {
                 e.stopPropagation();
-                if (onIgnore) onIgnore(post);
+                if (onIgnore) {
+                  onIgnore(post);
+                  return;
+                }
+                // Default behavior: call backend to mark as ignored
+                submitPostAction("ignore");
               }}
             >
               Ignore
@@ -405,13 +444,19 @@ export default function RedditPostListItem({
               type="button"
               className="px-4 py-2 text-sm bg-[#4FBCFF] hover:bg-[#3FAAE9] text-black font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Send reply"
-              disabled={!replyText.trim()}
+              disabled={!replyText.trim() || isSubmittingAction}
               onClick={(e) => {
                 e.stopPropagation();
                 const text = replyText.trim();
                 if (!text) return;
                 ensureRedditConnectedOrRedirect().then((ok) => {
-                  if (ok && onSend) onSend(post, text);
+                  if (!ok) return;
+                  if (onSend) {
+                    onSend(post, text);
+                    return;
+                  }
+                  // Default behavior: call backend to send reply
+                  submitPostAction("reply", text);
                 });
               }}
             >
