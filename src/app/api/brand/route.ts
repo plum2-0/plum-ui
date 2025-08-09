@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log("session", session);
     const userId = session.user.id;
     let brandId: string | null = null;
 
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
         const firestore = adminDb();
         if (firestore) {
           try {
+            console.log("userId - - ", userId);
             const userRef = firestore.collection("users").doc(userId);
             const userDoc = await userRef.get();
             const userData = userDoc.data();

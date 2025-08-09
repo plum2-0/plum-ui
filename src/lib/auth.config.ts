@@ -104,7 +104,7 @@ export default {
       }
 
       // If URL is relative or invalid, handle it safely
-      let urlObj;
+      let urlObj: URL;
       try {
         // Try to create URL object, handle both absolute and relative URLs
         urlObj = url.startsWith("http") ? new URL(url) : new URL(url, baseUrl);
@@ -116,12 +116,24 @@ export default {
 
       const searchParams = urlObj.searchParams;
 
-      // Preserve OAuth callback redirects with parameters
-      if (
-        searchParams.has("reddit") ||
-        searchParams.has("error") ||
-        searchParams.has("callbackUrl")
-      ) {
+      // If a callbackUrl param is present, redirect to that value instead of the current URL
+      if (searchParams.has("callbackUrl")) {
+        const target = searchParams.get("callbackUrl") || "/";
+        try {
+          const targetUrl = target.startsWith("http")
+            ? new URL(target)
+            : new URL(target, baseUrl);
+          // Only allow same-origin redirects
+          return targetUrl.origin === new URL(baseUrl).origin
+            ? targetUrl.toString()
+            : baseUrl;
+        } catch {
+          return baseUrl;
+        }
+      }
+
+      // Preserve OAuth flows or error displays with parameters on the URL
+      if (searchParams.has("reddit") || searchParams.has("error")) {
         return url.startsWith(baseUrl) ? url : baseUrl;
       }
 
@@ -130,11 +142,7 @@ export default {
         return url.startsWith(baseUrl) ? url : baseUrl;
       }
 
-      // Only redirect to onboarding for initial sign-in (when URL is just the baseUrl)
-      if (url === baseUrl) {
-        return `${baseUrl}/onboarding`;
-      }
-
+      // Default: keep URL if same-origin, otherwise fall back to baseUrl
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },

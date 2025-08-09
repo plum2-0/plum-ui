@@ -41,7 +41,7 @@ export function initializeTestFirestore(): Firestore {
 export async function clearFirestore() {
   if (!testFirestore) return;
   
-  const collections = ["projects", "users"];
+  const collections = ["projects", "users", "brands", "brand_invites"];
   
   for (const collection of collections) {
     const snapshot = await testFirestore.collection(collection).get();

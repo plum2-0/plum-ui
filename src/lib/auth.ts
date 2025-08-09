@@ -34,6 +34,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig.callbacks,
     async jwt({ token, user, account }) {
       // When user signs in, save user data from database to token
+      console.log("jwt", { token, user, account });
       if (account && user) {
         // Load brandId from Firestore on sign-in
         try {
@@ -59,7 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // For subsequent requests, lazily hydrate brandId if missing
-      if ((token as any).brandId == null) {
+      if (token) {
         try {
           const userId = (token as any).id || (token as any).sub;
           if (userId) {

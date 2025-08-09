@@ -9,7 +9,11 @@ interface OnboardingState {
   projectName: string | null;
   hasRedditConfig: boolean;
   hasCompleteConfig: boolean;
-  redirectTo: "/onboarding" | "/onboarding/reddit" | "/onboarding/configure" | string;
+  redirectTo:
+    | "/onboarding"
+    | "/onboarding/reddit"
+    | "/onboarding/configure"
+    | string;
 }
 
 export async function GET() {
@@ -21,7 +25,6 @@ export async function GET() {
     }
 
     const userId = session.user.id;
-    
 
     // Get Firestore instance
     const firestore = adminDb();
@@ -32,16 +35,15 @@ export async function GET() {
       );
     }
 
-    // Query for user's projects
-    const projectsRef = firestore.collection("projects");
-    const querySnapshot = await projectsRef
+    // Query for user's brands
+    const brandsRef = firestore.collection("brands");
+    const querySnapshot = await brandsRef
       .where("user_ids", "array-contains", userId)
       .limit(1)
       .get();
 
     if (querySnapshot.empty) {
-      console.log("No project found");
-      // Also check the legacy user_ids field
+      console.log("No brand found");
       const state: OnboardingState = {
         currentStep: 1,
         hasProject: false,
@@ -54,26 +56,30 @@ export async function GET() {
       return NextResponse.json(state, { status: 200 });
     }
 
-    // Project found
+    // Brand found
 
-    const projectDoc = querySnapshot.docs[0];
-    const projectData = projectDoc.data();
-    console.log(JSON.stringify(projectData, null, 2));
+    const brandDoc = querySnapshot.docs[0];
+    const brandData = brandDoc.data();
+    console.log(JSON.stringify(brandData, null, 2));
 
-    // Check if project has Reddit configuration
-    const hasRedditConfig = !!projectData.source?.reddit?.oauth_token;
-    
-    // Check if project has complete configuration (subreddits, topics, and prompt)
-    const hasSubreddits = projectData.source?.reddit?.subreddits?.length > 0;
-    const hasConfigs = projectData.source?.configs && Object.keys(projectData.source.configs).length > 0;
+    // Check if brand has Reddit configuration
+    const hasRedditConfig = !!brandData.source?.reddit?.oauth_token;
+
+    // Check if brand has complete configuration (subreddits, topics, and prompt)
+    const hasSubreddits = brandData.source?.reddit?.subreddits?.length > 0;
+    const hasConfigs =
+      brandData.source?.configs &&
+      Object.keys(brandData.source.configs).length > 0;
     let hasTopicsAndPrompt = false;
-    
+
     if (hasConfigs) {
-      const firstConfig = Object.values(projectData.source.configs)[0] as any;
-      hasTopicsAndPrompt = firstConfig?.topics?.length > 0 && !!firstConfig?.prompt;
+      const firstConfig = Object.values(brandData.source.configs)[0] as any;
+      hasTopicsAndPrompt =
+        firstConfig?.topics?.length > 0 && !!firstConfig?.prompt;
     }
-    
-    const hasCompleteConfig = hasRedditConfig && hasSubreddits && hasTopicsAndPrompt;
+
+    const hasCompleteConfig =
+      hasRedditConfig && hasSubreddits && hasTopicsAndPrompt;
 
     // Determine current step and redirect location
     let currentStep: 1 | 2 | 3 | 4;
@@ -93,17 +99,17 @@ export async function GET() {
 
     const state: OnboardingState = {
       currentStep,
-      hasProject: true,
-      projectId: projectDoc.id,
-      projectName: projectData.project_name || null,
+      hasProject: true, // Keep this name for backward compatibility
+      projectId: brandDoc.id, // Actually brand ID now
+      projectName: brandData.name || null,
       hasRedditConfig,
       hasCompleteConfig,
       redirectTo,
     };
 
-    // Set cookie for project ID
+    // Set cookie for brand ID (using project_id for backward compatibility)
     const response = NextResponse.json(state, { status: 200 });
-    response.cookies.set("project_id", projectDoc.id, {
+    response.cookies.set("project_id", brandDoc.id, {
       httpOnly: false,
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days

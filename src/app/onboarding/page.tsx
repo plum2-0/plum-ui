@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { useOnboardingState } from "@/hooks/useOnboardingState";
 
@@ -49,9 +49,6 @@ function OnboardingContent() {
 
   useEffect(() => {
     if (status === "loading") return;
-    if (!session?.user) {
-      redirect("/auth/signin");
-    }
 
     // Load existing data from localStorage
     const savedData = localStorage.getItem("onboardingData");
@@ -66,7 +63,7 @@ function OnboardingContent() {
         console.error("Failed to parse saved onboarding data:", error);
       }
     }
-  }, [session, status]);
+  }, [status]);
 
   if (status === "loading") {
     return (
@@ -76,9 +73,8 @@ function OnboardingContent() {
     );
   }
 
-  if (!session?.user) {
-    return null;
-  }
+  // Guard handles redirect; avoid flashing content when unauthenticated
+  if (!session?.user) return null;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({

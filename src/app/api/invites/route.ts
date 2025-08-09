@@ -15,22 +15,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log("requests", request);
+
     const body = (await request
       .json()
       .catch(() => ({}))) as CreateInviteRequest;
     const firestore = adminDb();
     const userId = session.user.id;
+    console.log("[Invites] Create POST start", { userId });
 
     // Resolve brandId: prefer provided, else from session, else from user doc
     let brandId =
       body.brandId || (session.user.brandId as string | null) || null;
     if (!brandId) {
+      console.warn("[Invites] No brandId on create; reading from users", {
+        userId,
+      });
       const userDoc = await firestore.collection("users").doc(userId).get();
       const userData = userDoc.data();
       brandId = userData?.brand_id || null;
     }
 
     if (!brandId) {
+      console.warn(
+        "[Invites] No brand for current user; cannot create invite",
+        {
+          userId,
+        }
+      );
       return NextResponse.json(
         { error: "No brand associated with current user" },
         { status: 400 }
@@ -43,6 +55,7 @@ export async function POST(request: NextRequest) {
       firestore.collection("brands").doc(brandId).get(),
     ]);
     if (!brandDoc.exists) {
+      console.warn("[Invites] Brand not found on create", { brandId, userId });
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
     const userData = userDoc.data();
@@ -53,6 +66,13 @@ export async function POST(request: NextRequest) {
       ? brandData.user_ids.includes(userId)
       : false;
     if (!isMemberByUserDoc && !isMemberBySession && !isMemberByBrandDoc) {
+      console.warn("[Invites] Forbidden: user not member of brand", {
+        userId,
+        brandId,
+        isMemberByUserDoc,
+        isMemberBySession,
+        isMemberByBrandDoc,
+      });
       return NextResponse.json(
         { error: "Forbidden: You are not a member of this brand" },
         { status: 403 }
@@ -83,6 +103,13 @@ export async function POST(request: NextRequest) {
     const origin = request.nextUrl.origin;
     const inviteUrl = `${origin}/invite/${token}`;
 
+    console.log("[Invites] Create POST success", {
+      userId,
+      brandId,
+      token,
+      expiresAt: expiresAt.toISOString(),
+      maxUses,
+    });
     return NextResponse.json({
       success: true,
       token,
@@ -92,7 +119,10 @@ export async function POST(request: NextRequest) {
       brandId,
     });
   } catch (error) {
-    console.error("Error creating invite:", error);
+    console.error("[Invites] Create POST error", {
+      message: (error as any)?.message,
+      stack: (error as any)?.stack,
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
