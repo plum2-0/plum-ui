@@ -25,6 +25,7 @@ export default function Dashboard2Page() {
   const [page, setPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'posts' | 'insights'>('posts');
+  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
   const pageSize = 10;
 
   // Check authentication
@@ -214,6 +215,69 @@ export default function Dashboard2Page() {
     setPage(1);
   };
 
+  const handleFetchNewPosts = async () => {
+    if (!selectedUseCase || !brandData?.id) return;
+    
+    setIsFetchingPosts(true);
+    try {
+      // Call the new posts API
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8000";
+      const response = await fetch(
+        `${backendUrl}/api/brand/${brandData.id}/new/posts?use_case_id=${selectedUseCase.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Plum-UI/1.0',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch new posts: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('New posts fetch result:', result);
+
+      // Show success message with results
+      if (result.status === 'completed') {
+        const totalDiscovered = result.total_posts_discovered || 0;
+        const totalTagged = result.total_posts_tagged || 0;
+        
+        if (totalDiscovered > 0) {
+          alert(`Success! Discovered ${totalDiscovered} new posts, tagged ${totalTagged} posts. Refreshing data...`);
+        } else {
+          alert('No new posts found at this time. Try again later!');
+        }
+
+        // Refresh brand data to get updated posts
+        const brandResponse = await fetch("/api/brand");
+        if (brandResponse.ok) {
+          const brandResult = await brandResponse.json();
+          const data: Brand = brandResult.brand;
+          setBrandData(data);
+          
+          // Update selected use case with fresh data
+          const updatedUseCase = data.target_use_cases.find(uc => uc.id === selectedUseCase.id);
+          if (updatedUseCase) {
+            setSelectedUseCase(updatedUseCase);
+          }
+          
+          // Reset to first page to see new posts
+          setPage(1);
+        }
+      } else {
+        throw new Error('Failed to complete new posts fetch');
+      }
+    } catch (error) {
+      console.error("Error fetching new posts:", error);
+      alert(`Failed to fetch new posts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsFetchingPosts(false);
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
       {/* Animated Background with Liquid Glass Effect */}
@@ -338,7 +402,7 @@ export default function Dashboard2Page() {
         <main className="flex-1 overflow-auto">
           <div className="p-6">
             <div className="max-w-5xl mx-auto space-y-6">
-              {/* Use Case Tabs and Filter Controls */}
+              {/* Use Case Tabs and Controls */}
               {selectedUseCase && (
                 <div className="flex items-center justify-between">
                   <UseCaseTabs
@@ -346,14 +410,44 @@ export default function Dashboard2Page() {
                     onTabChange={setActiveTab}
                     hasInsights={!!selectedUseCase.insights}
                   />
-                  {activeTab === 'posts' && (
-                    <TagFiltersDropdown
-                      posts={allPosts}
-                      selectedTags={selectedTags}
-                      onTagToggle={handleTagToggle}
-                      onClearAll={handleClearAllTags}
-                    />
-                  )}
+                  <div className="flex items-center gap-3">
+                    {activeTab === 'posts' && (
+                      <>
+                        <button
+                          onClick={handleFetchNewPosts}
+                          disabled={isFetchingPosts}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(34, 197, 94, 0.3)',
+                            boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
+                            color: 'white'
+                          }}
+                        >
+                          {isFetchingPosts ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                              Fetching...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              Fetch New Posts
+                            </>
+                          )}
+                        </button>
+                        <TagFiltersDropdown
+                          posts={allPosts}
+                          selectedTags={selectedTags}
+                          onTagToggle={handleTagToggle}
+                          onClearAll={handleClearAllTags}
+                        />
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 
