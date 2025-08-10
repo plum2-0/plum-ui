@@ -9,8 +9,9 @@ import { Brand, UseCase, SubredditPost } from "@/types/brand";
 import UseCasesSidebar from "@/components/dashboard2/UseCasesSidebar";
 import CompetitorSummary from "@/components/dashboard2/CompetitorSummary";
 import RedditPostListItem from "@/components/dashboard2/RedditPostListItem";
-import TagFilters from "@/components/dashboard2/TagFilters";
+import TagFiltersDropdown from "@/components/dashboard2/TagFiltersDropdown";
 import UseCaseInsightsComponent from "@/components/dashboard2/UseCaseInsights";
+import UseCaseTabs from "@/components/dashboard2/UseCaseTabs";
 import InviteTeammateButton from "@/components/InviteTeammateButton";
 
 export default function Dashboard2Page() {
@@ -23,6 +24,7 @@ export default function Dashboard2Page() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'posts' | 'insights'>('posts');
   const pageSize = 10;
 
   // Check authentication
@@ -90,9 +92,10 @@ export default function Dashboard2Page() {
 
   console.log(JSON.stringify(brandData, null, 2));
 
-  // Reset pagination when changing use case
+  // Reset pagination and tab when changing use case
   useEffect(() => {
     setPage(1);
+    setActiveTab('posts'); // Always start with posts tab
   }, [selectedUseCase]);
 
   if (status === "loading" || isLoading) {
@@ -335,78 +338,94 @@ export default function Dashboard2Page() {
         <main className="flex-1 overflow-auto">
           <div className="p-6">
             <div className="max-w-5xl mx-auto space-y-6">
-              {/* Market Insights */}
-              {selectedUseCase?.insights && (
+              {/* Use Case Tabs and Filter Controls */}
+              {selectedUseCase && (
+                <div className="flex items-center justify-between">
+                  <UseCaseTabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    hasInsights={!!selectedUseCase.insights}
+                  />
+                  {activeTab === 'posts' && (
+                    <TagFiltersDropdown
+                      posts={allPosts}
+                      selectedTags={selectedTags}
+                      onTagToggle={handleTagToggle}
+                      onClearAll={handleClearAllTags}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Insights View */}
+              {activeTab === 'insights' && selectedUseCase?.insights && (
                 <UseCaseInsightsComponent insights={selectedUseCase.insights} />
               )}
 
-              {/* Competitor Summary */}
-              {selectedUseCase?.competitor_summary && (
-                <CompetitorSummary
-                  summary={selectedUseCase.competitor_summary}
-                  hotFeatures={selectedUseCase.hot_features_summary}
-                />
-              )}
+                            {/* Posts View */}
+              {activeTab === 'posts' && (
+                <>
+                  {/* Competitor Summary */}
+                  {selectedUseCase?.competitor_summary && (
+                    <CompetitorSummary
+                      summary={selectedUseCase.competitor_summary}
+                      hotFeatures={selectedUseCase.hot_features_summary}
+                    />
+                  )}
 
-              {/* Tag Filters */}
-              <TagFilters
-                posts={allPosts}
-                selectedTags={selectedTags}
-                onTagToggle={handleTagToggle}
-                onClearAll={handleClearAllTags}
-              />
+                   {/* Reddit Posts */}
+                   <div className="space-y-4">
+                     {visiblePosts.length === 0 ? (
+                       <div className="glass-card rounded-2xl p-8 text-center">
+                         <p className="text-white/80 font-body">
+                           {selectedTags.size > 0
+                             ? "No posts found matching the selected filters."
+                             : "No posts found for this use case."}
+                         </p>
+                       </div>
+                     ) : (
+                       visiblePosts.map((post) => (
+                         <RedditPostListItem key={post.id} post={post} />
+                       ))
+                     )}
+                   </div>
 
-              {/* Reddit Posts */}
-              <div className="space-y-4">
-                {visiblePosts.length === 0 ? (
-                  <div className="glass-card rounded-2xl p-8 text-center">
-                    <p className="text-white/80 font-body">
-                      {selectedTags.size > 0
-                        ? "No posts found matching the selected filters."
-                        : "No posts found for this use case."}
-                    </p>
-                  </div>
-                ) : (
-                  visiblePosts.map((post) => (
-                    <RedditPostListItem key={post.id} post={post} />
-                  ))
-                )}
-              </div>
-
-              {/* Pagination Controls */}
-              <div className="mt-6 flex items-center justify-between gap-4 pb-6">
-                <div className="text-sm text-white/70 font-body">
-                  Showing {totalPosts === 0 ? 0 : startIndex + 1}–
-                  {Math.min(startIndex + pageSize, totalPosts)} of {totalPosts}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
-                      page > 1
-                        ? "glass-button text-white hover:text-white"
-                        : "glass-button text-white/50 cursor-not-allowed"
-                    }`}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                  >
-                    Prev
-                  </button>
-                  <span className="text-white/80 font-body text-sm px-3">
-                    Page {page} / {totalPages}
-                  </span>
-                  <button
-                    className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
-                      page < totalPages
-                        ? "glass-button text-white hover:text-white"
-                        : "glass-button text-white/50 cursor-not-allowed"
-                    }`}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+                   {/* Pagination Controls */}
+                   <div className="mt-6 flex items-center justify-between gap-4 pb-6">
+                     <div className="text-sm text-white/70 font-body">
+                       Showing {totalPosts === 0 ? 0 : startIndex + 1}–
+                       {Math.min(startIndex + pageSize, totalPosts)} of {totalPosts}
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <button
+                         className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
+                           page > 1
+                             ? "glass-button text-white hover:text-white"
+                             : "glass-button text-white/50 cursor-not-allowed"
+                         }`}
+                         onClick={() => setPage((p) => Math.max(1, p - 1))}
+                         disabled={page <= 1}
+                       >
+                         Prev
+                       </button>
+                       <span className="text-white/80 font-body text-sm px-3">
+                         Page {page} / {totalPages}
+                       </span>
+                       <button
+                         className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
+                           page < totalPages
+                             ? "glass-button text-white hover:text-white"
+                             : "glass-button text-white/50 cursor-not-allowed"
+                         }`}
+                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                         disabled={page >= totalPages}
+                       >
+                         Next
+                       </button>
+                     </div>
+                   </div>
+                 </>
+               )}
             </div>
           </div>
         </main>

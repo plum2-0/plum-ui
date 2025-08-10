@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { PlumIcon } from "@/components/PlumIcon";
+import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 
 function SignInContent() {
   const searchParams = useSearchParams();
