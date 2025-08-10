@@ -1,23 +1,41 @@
 interface TagBadgeProps {
   label: string;
-  variant?: 'negative' | 'neutral' | 'positive' | 'competitor' | 'customer' | 'default';
+  variant: 'negative' | 'positive' | 'neutral' | 'competitor' | 'customer' | 'default';
 }
 
 export default function TagBadge({ label, variant = 'default' }: TagBadgeProps) {
   const getVariantStyles = () => {
     switch (variant) {
       case 'negative':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return {
+          background: 'rgba(239, 68, 68, 0.2)',
+          color: 'white',
+        };
       case 'positive':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return {
+          background: 'rgba(34, 197, 94, 0.2)',
+          color: 'white',
+        };
       case 'neutral':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return {
+          background: 'rgba(156, 163, 175, 0.2)',
+          color: 'white',
+        };
       case 'competitor':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return {
+          background: 'rgba(251, 146, 60, 0.2)',
+          color: 'white',
+        };
       case 'customer':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return {
+          background: 'rgba(59, 130, 246, 0.2)',
+          color: 'white',
+        };
       default:
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return {
+          background: 'rgba(168, 85, 247, 0.2)',
+          color: 'white',
+        };
     }
   };
 
@@ -27,6 +45,12 @@ export default function TagBadge({ label, variant = 'default' }: TagBadgeProps) 
         return (
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+        );
+      case 'positive':
+        return (
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
         );
       case 'competitor':
@@ -46,10 +70,18 @@ export default function TagBadge({ label, variant = 'default' }: TagBadgeProps) 
     }
   };
 
+  const styles = getVariantStyles();
+
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full border ${getVariantStyles()}`}>
+    <span 
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-body font-medium rounded-md`}
+      style={{
+        background: styles.background,
+        color: styles.color,
+      }}
+    >
       {getIcon()}
-      {label}
+      <span>{label}</span>
     </span>
   );
 }

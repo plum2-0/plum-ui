@@ -24,13 +24,21 @@ export default function TagFilters({
   const hasActiveFilters = selectedTags.size > 0;
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
+    <div 
+      className="rounded-2xl p-4 mb-6"
+      style={{
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+      }}
+    >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-medium">Filter by Tags</h3>
+        <h3 className="text-white font-heading font-semibold tracking-wide">Filter by Tags</h3>
         {hasActiveFilters && (
           <button
             onClick={onClearAll}
-            className="text-sm text-purple-300 hover:text-white transition-colors"
+            className="text-sm text-white/70 hover:text-white transition-colors font-body"
           >
             Clear all
           </button>
@@ -62,7 +70,7 @@ export default function TagFilters({
       </div>
 
       {hasActiveFilters && (
-        <div className="mt-3 text-sm text-purple-200">
+        <div className="mt-3 text-sm text-white/80 font-body">
           Showing posts with any of the selected tags
         </div>
       )}

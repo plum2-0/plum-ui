@@ -1,5 +1,4 @@
 import { UseCase } from "@/types/brand";
-import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
 interface UseCasesSidebarProps {
   useCases: UseCase[];
@@ -9,55 +8,32 @@ interface UseCasesSidebarProps {
   setOnlyUnread: (value: boolean) => void;
 }
 
-// Icon components for different use case types
+const ChevronRightIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+  </svg>
+);
+
 const getUseCaseIcon = (title: string) => {
-  if (title.toLowerCase().includes("documentation")) {
+  // Simple icon mapping based on use case title
+  if (title.toLowerCase().includes("support") || title.toLowerCase().includes("help")) {
     return (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        />
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     );
   }
-  if (title.toLowerCase().includes("api")) {
+  if (title.toLowerCase().includes("integration") || title.toLowerCase().includes("api")) {
     return (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-        />
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
       </svg>
     );
   }
+  // Default icon
   return (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-      />
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
     </svg>
   );
 };
@@ -70,11 +46,18 @@ export default function UseCasesSidebar({
   setOnlyUnread,
 }: UseCasesSidebarProps) {
   return (
-    <aside className="w-64 bg-white/5 backdrop-blur-sm p-4 h-full overflow-auto">
-      <div className="space-y-4">
+    <aside 
+      className="h-full flex flex-col"
+      style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.1)'
+      }}
+    >
+      <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white font-semibold flex items-center gap-2">
+        <div className="px-4 py-4 border-b border-white/10">
+          <h2 className="text-white font-heading font-bold flex items-center gap-2 tracking-wide">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -88,53 +71,105 @@ export default function UseCasesSidebar({
                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
               />
             </svg>
-            UseCases
+            Use Cases
           </h2>
         </div>
 
-        {/* Use Cases Count */}
-        <div className="text-purple-200 text-sm mb-4">
-          {useCases.length} Use Cases Found:
-        </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="space-y-4">
+            {/* Use Cases Count */}
+            <div className="text-white/80 font-body text-sm">
+              {useCases.length} Use Cases Found:
+            </div>
 
-        {/* Use Cases List */}
-        <div className="space-y-2">
-          {useCases.map((useCase) => (
-            <button
-              key={useCase.id}
-              onClick={() => onUseCaseSelect(useCase)}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                selectedUseCase?.id === useCase.id
-                  ? "bg-purple-600/30 text-white"
-                  : "text-purple-200 hover:bg-white/10 hover:text-white"
-              }`}
+            {/* Use Cases List */}
+            <div className="space-y-2">
+              {useCases.map((useCase) => (
+                <button
+                  key={useCase.id}
+                  onClick={() => onUseCaseSelect(useCase)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
+                    selectedUseCase?.id === useCase.id
+                      ? "text-white"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                  style={{
+                    background: selectedUseCase?.id === useCase.id 
+                      ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(34, 197, 94, 0.3))'
+                      : 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    ...(selectedUseCase?.id !== useCase.id && {
+                      ':hover': {
+                        background: 'rgba(255, 255, 255, 0.1)'
+                      }
+                    })
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedUseCase?.id !== useCase.id) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedUseCase?.id !== useCase.id) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    }
+                  }}
+                >
+                  <div className="flex-shrink-0">
+                    {getUseCaseIcon(useCase.title)}
+                  </div>
+                  <span className="flex-1 text-left font-body text-sm">{useCase.title}</span>
+                  <ChevronRightIcon />
+                </button>
+              ))}
+            </div>
+
+            {/* Add Use Case Button */}
+            <button 
+              className="w-full flex items-center gap-2 p-3 text-white/60 hover:text-white rounded-xl transition-all duration-300"
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              }}
             >
-              <div className="flex-shrink-0">
-                {getUseCaseIcon(useCase.title)}
-              </div>
-              <span className="flex-1 text-left text-sm">{useCase.title}</span>
-              <ChevronRightIcon className="w-4 h-4" />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="font-body text-sm">Add Use Case</span>
             </button>
-          ))}
+          </div>
         </div>
 
-        {/* Add Use Case Button */}
-        <button className="w-full flex items-center gap-2 p-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Fixed Filter Toggle at Bottom */}
+        <div className="px-4 py-4 border-t border-white/10">
+          <div 
+            className="p-4 rounded-xl"
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          <span className="text-sm">Add Use Case</span>
-        </button>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={onlyUnread}
+                onChange={(e) => setOnlyUnread(e.target.checked)}
+                className="w-4 h-4 rounded border-white/30 bg-white/10 text-purple-400 focus:ring-purple-400 focus:ring-offset-0"
+              />
+              <span className="font-body text-sm text-white/80">Only show unread</span>
+            </label>
+          </div>
+        </div>
       </div>
     </aside>
   );
