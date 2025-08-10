@@ -20,6 +20,18 @@ export interface UseCase {
   created_at: string;
   brand_id: string;
   subreddit_posts: SubredditPost[];
+  insights?: UseCaseInsights;
+}
+
+export interface UseCaseInsights {
+  general_summary: string;
+  identified_solutions: string;
+  willingness_to_pay: string;
+  demographic_breakdown: string;
+  tag_counts: {
+    potential_customer: number;
+    competitor_mention: number;
+  };
 }
 
 export interface SubredditPost {

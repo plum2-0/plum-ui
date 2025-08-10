@@ -35,8 +35,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/plum-favicon.svg?v=2" type="image/svg+xml" />
-        <link rel="shortcut icon" href="/favicon.ico?v=2" />
+        <link rel="icon" href="/plum-favicon.svg?v=6" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/plum-favicon.svg?v=6" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

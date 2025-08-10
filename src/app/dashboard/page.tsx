@@ -9,7 +9,9 @@ import { Brand, UseCase, SubredditPost } from "@/types/brand";
 import UseCasesSidebar from "@/components/dashboard2/UseCasesSidebar";
 import CompetitorSummary from "@/components/dashboard2/CompetitorSummary";
 import RedditPostListItem from "@/components/dashboard2/RedditPostListItem";
-import TagFilters from "@/components/dashboard2/TagFilters";
+import TagFiltersDropdown from "@/components/dashboard2/TagFiltersDropdown";
+import UseCaseInsightsComponent from "@/components/dashboard2/UseCaseInsights";
+import UseCaseTabs from "@/components/dashboard2/UseCaseTabs";
 import InviteTeammateButton from "@/components/InviteTeammateButton";
 
 export default function Dashboard2Page() {
@@ -22,6 +24,7 @@ export default function Dashboard2Page() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'posts' | 'insights'>('posts');
   const pageSize = 10;
 
   // Check authentication
@@ -89,42 +92,68 @@ export default function Dashboard2Page() {
 
   console.log(JSON.stringify(brandData, null, 2));
 
-  // Reset pagination when changing use case
+  // Reset pagination and tab when changing use case
   useEffect(() => {
     setPage(1);
+    setActiveTab('posts'); // Always start with posts tab
   }, [selectedUseCase]);
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
-        <div className="animate-pulse text-white">Loading...</div>
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        {/* Animated Background */}
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            background: `
+              radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3), transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3), transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2), transparent 50%),
+              linear-gradient(135deg, #0F0F23 0%, #1A0B2E 25%, #2D1B3D 50%, #1E293B 75%, #0F172A 100%)
+            `
+          }}
+        />
+        <div className="animate-pulse text-white text-xl relative z-10 font-body">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-300 text-xl mb-4">
-            Error loading brand data
-          </div>
-          <div className="text-white/80 mb-6">{error}</div>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        {/* Animated Background */}
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            background: `
+              radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3), transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3), transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2), transparent 50%),
+              linear-gradient(135deg, #0F0F23 0%, #1A0B2E 25%, #2D1B3D 50%, #1E293B 75%, #0F172A 100%)
+            `
+          }}
+        />
+        <div className="text-red-300 text-xl relative z-10 font-body">Error: {error}</div>
       </div>
     );
   }
 
   if (!brandData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
-        <div className="text-white">No data available</div>
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        {/* Animated Background */}
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            background: `
+              radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3), transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3), transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2), transparent 50%),
+              linear-gradient(135deg, #0F0F23 0%, #1A0B2E 25%, #2D1B3D 50%, #1E293B 75%, #0F172A 100%)
+            `
+          }}
+        />
+        <div className="text-white text-xl relative z-10 font-body">No brand data found</div>
       </div>
     );
   }
@@ -132,28 +161,30 @@ export default function Dashboard2Page() {
   const allPosts = selectedUseCase?.subreddit_posts || [];
 
   // Filter posts based on selected tags
-  const filteredPosts =
-    selectedTags.size === 0
-      ? allPosts
-      : allPosts.filter((post: SubredditPost) => {
-          // Show posts that have ANY of the selected tags
-          if (
-            selectedTags.has("potential_customer") &&
-            post.tags.potential_customer
-          )
-            return true;
-          if (
-            selectedTags.has("competitor_mention") &&
-            post.tags.competitor_mention
-          )
-            return true;
-          if (selectedTags.has("own_mention") && post.tags.own_mention)
-            return true;
+  const filteredPosts = allPosts.filter((post: SubredditPost) => {
+    if (selectedTags.size === 0) return true;
+    
+    // Check if any selected tag matches the post's tags
+    return Array.from(selectedTags).some(selectedTag => {
+      switch (selectedTag) {
+        case 'potential_customer':
+          return post.tags?.potential_customer;
+        case 'competitor_mention':
+          return post.tags?.competitor_mention;
+        case 'own_mention':
+          return post.tags?.own_mention;
+        case 'positive_sentiment':
+          return post.tags?.positive_sentiment;
+        case 'negative_sentiment':
+          return post.tags?.negative_sentiment;
+        default:
           return false;
-        });
+      }
+    });
+  });
 
   const totalPosts = filteredPosts.length;
-  const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
+  const totalPages = Math.ceil(totalPosts / pageSize);
   const startIndex = (page - 1) * pageSize;
   const visiblePosts = filteredPosts.slice(startIndex, startIndex + pageSize);
 
@@ -184,21 +215,105 @@ export default function Dashboard2Page() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-      {/* Header */}
-      <header className="p-6 bg-white/10 backdrop-blur-sm shrink-0">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <PlumSproutLogo className="w-8 h-8" />
+    <div className="h-screen flex flex-col relative overflow-hidden">
+      {/* Animated Background with Liquid Glass Effect */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3), transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2), transparent 50%),
+            linear-gradient(135deg, #0F0F23 0%, #1A0B2E 25%, #2D1B3D 50%, #1E293B 75%, #0F172A 100%)
+          `
+        }}
+      />
+      
+      {/* Floating Glass Orbs */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div 
+          className="absolute top-20 left-20 w-72 h-72 rounded-full opacity-30 animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, rgba(168, 85, 247, 0.1) 70%, transparent 100%)',
+            filter: 'blur(40px)',
+            animation: 'float 6s ease-in-out infinite'
+          }}
+        />
+        <div 
+          className="absolute top-40 right-32 w-96 h-96 rounded-full opacity-25 animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.1) 70%, transparent 100%)',
+            filter: 'blur(50px)',
+            animation: 'float 8s ease-in-out infinite reverse'
+          }}
+        />
+        <div 
+          className="absolute bottom-20 left-1/3 w-64 h-64 rounded-full opacity-20"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 70%, transparent 100%)',
+            filter: 'blur(30px)',
+            animation: 'float 10s ease-in-out infinite'
+          }}
+        />
+      </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-20px) rotate(120deg); }
+          66% { transform: translateY(10px) rotate(240deg); }
+        }
+        .glass-card {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .glass-header {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(30px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .glass-button {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          transition: all 0.3s ease;
+        }
+        .glass-button:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-1px);
+        }
+        .glass-button:disabled {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+          opacity: 0.5;
+        }
+      `}</style>
+
+      {/* Fixed Header */}
+      <header className="glass-header px-4 py-4 shrink-0 relative z-20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl glass-card">
+              <PlumSproutLogo className="w-6 h-6" />
+            </div>
+            <span className="font-heading text-lg font-bold text-white tracking-wide">
+              PlumSprout
+            </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-white/80 text-sm">
+            <span className="text-white/80 font-body text-sm">
               Welcome, {session?.user?.name || session?.user?.email}
             </span>
             <InviteTeammateButton brandId={session?.user?.brandId || null} />
             <Link
               href="/api/auth/signout"
-              className="text-white/60 hover:text-white text-sm"
+              className="text-white/60 hover:text-white font-body text-sm transition-colors"
             >
               Sign Out
             </Link>
@@ -206,86 +321,111 @@ export default function Dashboard2Page() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <UseCasesSidebar
-          useCases={brandData.target_use_cases}
-          selectedUseCase={selectedUseCase}
-          onUseCaseSelect={setSelectedUseCase}
-          onlyUnread={onlyUnread}
-          setOnlyUnread={setOnlyUnread}
-        />
+      {/* Main Content Area */}
+      <div className="flex flex-1 overflow-hidden relative z-10">
+        {/* Fixed Sidebar */}
+        <div className="w-64 shrink-0">
+          <UseCasesSidebar
+            useCases={brandData.target_use_cases}
+            selectedUseCase={selectedUseCase}
+            onUseCaseSelect={setSelectedUseCase}
+            onlyUnread={onlyUnread}
+            setOnlyUnread={setOnlyUnread}
+          />
+        </div>
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-5xl mx-auto space-y-6">
-            {/* Competitor Summary */}
-            {selectedUseCase?.competitor_summary && (
-              <CompetitorSummary
-                summary={selectedUseCase.competitor_summary}
-                hotFeatures={selectedUseCase.hot_features_summary}
-              />
-            )}
-
-            {/* Tag Filters */}
-            <TagFilters
-              posts={allPosts}
-              selectedTags={selectedTags}
-              onTagToggle={handleTagToggle}
-              onClearAll={handleClearAllTags}
-            />
-
-            {/* Reddit Posts */}
-            <div className="space-y-4">
-              {visiblePosts.length === 0 ? (
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
-                  <p className="text-purple-200">
-                    {selectedTags.size > 0
-                      ? "No posts found matching the selected filters."
-                      : "No posts found for this use case."}
-                  </p>
+        {/* Scrollable Main Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="p-6">
+            <div className="max-w-5xl mx-auto space-y-6">
+              {/* Use Case Tabs and Filter Controls */}
+              {selectedUseCase && (
+                <div className="flex items-center justify-between">
+                  <UseCaseTabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    hasInsights={!!selectedUseCase.insights}
+                  />
+                  {activeTab === 'posts' && (
+                    <TagFiltersDropdown
+                      posts={allPosts}
+                      selectedTags={selectedTags}
+                      onTagToggle={handleTagToggle}
+                      onClearAll={handleClearAllTags}
+                    />
+                  )}
                 </div>
-              ) : (
-                visiblePosts.map((post) => (
-                  <RedditPostListItem key={post.id} post={post} />
-                ))
               )}
-            </div>
 
-            {/* Pagination Controls */}
-            <div className="mt-6 flex items-center justify-between gap-4">
-              <div className="text-sm text-purple-200">
-                Showing {totalPosts === 0 ? 0 : startIndex + 1}–
-                {Math.min(startIndex + pageSize, totalPosts)} of {totalPosts}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                    page > 1
-                      ? "bg-white/10 text-purple-200 hover:bg-white/20"
-                      : "bg-white/5 text-purple-300/50 cursor-not-allowed"
-                  }`}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                >
-                  Prev
-                </button>
-                <span className="text-purple-200 text-sm">
-                  Page {page} / {totalPages}
-                </span>
-                <button
-                  className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                    page < totalPages
-                      ? "bg-white/10 text-purple-200 hover:bg-white/20"
-                      : "bg-white/5 text-purple-300/50 cursor-not-allowed"
-                  }`}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                >
-                  Next
-                </button>
-              </div>
+              {/* Insights View */}
+              {activeTab === 'insights' && selectedUseCase?.insights && (
+                <UseCaseInsightsComponent insights={selectedUseCase.insights} />
+              )}
+
+                            {/* Posts View */}
+              {activeTab === 'posts' && (
+                <>
+                  {/* Competitor Summary */}
+                  {selectedUseCase?.competitor_summary && (
+                    <CompetitorSummary
+                      summary={selectedUseCase.competitor_summary}
+                      hotFeatures={selectedUseCase.hot_features_summary}
+                    />
+                  )}
+
+                   {/* Reddit Posts */}
+                   <div className="space-y-4">
+                     {visiblePosts.length === 0 ? (
+                       <div className="glass-card rounded-2xl p-8 text-center">
+                         <p className="text-white/80 font-body">
+                           {selectedTags.size > 0
+                             ? "No posts found matching the selected filters."
+                             : "No posts found for this use case."}
+                         </p>
+                       </div>
+                     ) : (
+                       visiblePosts.map((post) => (
+                         <RedditPostListItem key={post.id} post={post} />
+                       ))
+                     )}
+                   </div>
+
+                   {/* Pagination Controls */}
+                   <div className="mt-6 flex items-center justify-between gap-4 pb-6">
+                     <div className="text-sm text-white/70 font-body">
+                       Showing {totalPosts === 0 ? 0 : startIndex + 1}–
+                       {Math.min(startIndex + pageSize, totalPosts)} of {totalPosts}
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <button
+                         className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
+                           page > 1
+                             ? "glass-button text-white hover:text-white"
+                             : "glass-button text-white/50 cursor-not-allowed"
+                         }`}
+                         onClick={() => setPage((p) => Math.max(1, p - 1))}
+                         disabled={page <= 1}
+                       >
+                         Prev
+                       </button>
+                       <span className="text-white/80 font-body text-sm px-3">
+                         Page {page} / {totalPages}
+                       </span>
+                       <button
+                         className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
+                           page < totalPages
+                             ? "glass-button text-white hover:text-white"
+                             : "glass-button text-white/50 cursor-not-allowed"
+                         }`}
+                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                         disabled={page >= totalPages}
+                       >
+                         Next
+                       </button>
+                     </div>
+                   </div>
+                 </>
+               )}
             </div>
           </div>
         </main>
