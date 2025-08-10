@@ -3,32 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface Initiative {
+interface ActionItem {
   id: string;
-  type: "post" | "comment" | "like" | "follow";
+  type: "post" | "comment" | "like";
   title: string;
   target: string;
-  confidence: number;
-  timeToPost: string;
-  status: "pending" | "scheduled" | "active" | "draft";
+  status: "pending" | "scheduled" | "completed" | "dismissed";
   content: string;
-  tags?: string[];
-  expectedKarma?: number;
-  priority: "high" | "medium" | "low";
-  parentPost?: string;
-  postsToLike?: number;
-  postsLiked?: number;
+  useCase?: string;
 }
 
 interface InitiativesPanelProps {
   refreshKey: number;
 }
 
-export default function InitiativesPanel({
-  refreshKey,
-}: InitiativesPanelProps) {
+export default function ActionsPanel({ refreshKey }: InitiativesPanelProps) {
   const router = useRouter();
-  const [initiatives, setInitiatives] = useState<Initiative[]>([]);
+  const [initiatives, setInitiatives] = useState<ActionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "post" | "comment" | "like">(
     "all"
@@ -38,9 +29,35 @@ export default function InitiativesPanel({
     const fetchInitiatives = async () => {
       setLoading(true);
       try {
-        const response = await fetch("/api/initiatives");
+        const response = await fetch("/api/actions");
         const data = await response.json();
-        setInitiatives(data.initiatives);
+        const rawActions: any[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.initiatives)
+          ? data.initiatives
+          : [];
+
+        const mapped: ActionItem[] = rawActions.map((a: any) => {
+          const titleFallback =
+            a?.title ||
+            (a?.action_type === "post"
+              ? `Create post in r/${a?.target_subreddit ?? ""}`
+              : a?.action_type === "comment"
+              ? `Comment in r/${a?.target_subreddit ?? ""}`
+              : "Like posts");
+
+          return {
+            id: a?.action_id,
+            type: a?.action_type,
+            title: titleFallback,
+            target: a?.target_subreddit ? `r/${a.target_subreddit}` : "",
+            status: a?.status,
+            content: a?.content ?? "",
+            useCase: a?.use_case ?? undefined,
+          } as ActionItem;
+        });
+
+        setInitiatives(mapped);
       } catch (error) {
         console.error("Failed to fetch initiatives:", error);
       } finally {
@@ -86,32 +103,6 @@ export default function InitiativesPanel({
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500/20 text-red-300 border-red-500/30";
-      case "medium":
-        return "bg-orange-500/20 text-orange-300 border-orange-500/30";
-      case "low":
-        return "bg-green-500/20 text-green-300 border-green-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "scheduled":
-        return { text: "Scheduled", color: "bg-blue-500/20 text-blue-300" };
-      case "active":
-        return { text: "Active", color: "bg-green-500/20 text-green-300" };
-      case "draft":
-        return { text: "Draft", color: "bg-gray-500/20 text-gray-300" };
-      default:
-        return { text: "Pending", color: "bg-yellow-500/20 text-yellow-300" };
-    }
-  };
-
   if (loading) {
     return (
       <div className="glass-card rounded-2xl p-6 animate-pulse">
@@ -126,6 +117,8 @@ export default function InitiativesPanel({
       </div>
     );
   }
+
+  console.log(initiatives);
 
   return (
     <div className="glass-card rounded-2xl p-6">
@@ -172,26 +165,7 @@ export default function InitiativesPanel({
                   >
                     {initiative.type}
                   </span>
-                  <span
-                    className={`ml-2 inline-flex px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(
-                      initiative.priority
-                    )}`}
-                  >
-                    {initiative.priority}
-                  </span>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                    getStatusBadge(initiative.status).color
-                  }`}
-                >
-                  {getStatusBadge(initiative.status).text}
-                </span>
-                <span className="text-xs text-white/50">
-                  {initiative.timeToPost}
-                </span>
               </div>
             </div>
 
@@ -199,57 +173,23 @@ export default function InitiativesPanel({
             <h3 className="font-semibold text-white mb-2 line-clamp-2">
               {initiative.title}
             </h3>
+            {initiative.useCase && (
+              <p className="text-sm text-emerald-400 mb-2 font-medium">
+                Use Case: {initiative.useCase}
+              </p>
+            )}
             <p className="text-sm text-white/60 mb-3">
               Target:{" "}
               <span className="text-purple-400">{initiative.target}</span>
             </p>
 
-            {/* Confidence Bar */}
-            <div className="mb-4">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-white/50">Confidence</span>
-                <span className="text-xs font-medium text-white">
-                  {initiative.confidence}%
-                </span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ${
-                    initiative.confidence >= 85
-                      ? "bg-gradient-to-r from-green-400 to-green-500"
-                      : initiative.confidence >= 70
-                      ? "bg-gradient-to-r from-yellow-400 to-yellow-500"
-                      : "bg-gradient-to-r from-orange-400 to-orange-500"
-                  }`}
-                  style={{ width: `${initiative.confidence}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Expected Karma or Progress */}
-            {initiative.expectedKarma && (
-              <p className="text-xs text-white/50 mb-3">
-                Expected Karma:{" "}
-                <span className="text-orange-400">
-                  ~{initiative.expectedKarma}
-                </span>
-              </p>
-            )}
-            {initiative.postsToLike && (
-              <p className="text-xs text-white/50 mb-3">
-                Progress:{" "}
-                <span className="text-green-400">
-                  {initiative.postsLiked}/{initiative.postsToLike}
-                </span>{" "}
-                posts liked
-              </p>
-            )}
+            {/* like-progress removed for new action schema */}
 
             {/* Action Buttons */}
             <div className="flex gap-2 mt-4 justify-end">
               <button
                 onClick={() =>
-                  router.push(`/agent-dashboard/initiative/${initiative.id}`)
+                  router.push(`/dashboard/engage/action/${initiative.id}`)
                 }
                 className="max-w-[250px] px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 text-xs font-medium transition-all"
               >
@@ -257,7 +197,7 @@ export default function InitiativesPanel({
               </button>
               <button
                 onClick={() =>
-                  router.push(`/agent-dashboard/initiative/${initiative.id}`)
+                  router.push(`/dashboard/engage/actions/${initiative.id}`)
                 }
                 className="max-w-[250px] px-3 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-medium transition-all"
               >

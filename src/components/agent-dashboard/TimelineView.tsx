@@ -39,7 +39,7 @@ export default function TimelineView({ refreshKey }: TimelineViewProps) {
     const fetchTimeline = async () => {
       setLoading(true);
       try {
-        const response = await fetch("/api/initiatives/timeline");
+        const response = await fetch("/api/actions/timeline");
         const data = await response.json();
         setTimeline(data.timeline);
       } catch (error) {
@@ -165,7 +165,7 @@ export default function TimelineView({ refreshKey }: TimelineViewProps) {
                   >
                     {/* Status Indicator Dot */}
                     <div className={`w-2 h-2 rounded-full absolute -left-[21px] top-4 ${getStatusDot(event.status)}`}></div>
-                    
+
                     {/* Time */}
                     <div className="flex items-start justify-between mb-2">
                       <span className="text-xs text-white/50 font-medium">
@@ -186,7 +186,7 @@ export default function TimelineView({ refreshKey }: TimelineViewProps) {
                         <p className="text-xs text-white/50 mt-1">
                           {event.subreddit}
                         </p>
-                        
+
                         {/* Additional Info */}
                         {event.confidence && (
                           <div className="mt-2">
@@ -195,20 +195,20 @@ export default function TimelineView({ refreshKey }: TimelineViewProps) {
                               <span className="text-xs text-white/60">{event.confidence}%</span>
                             </div>
                             <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                              <div 
+                              <div
                                 className="h-full bg-gradient-to-r from-purple-400 to-purple-500"
                                 style={{ width: `${event.confidence}%` }}
                               />
                             </div>
                           </div>
                         )}
-                        
+
                         {event.karma && (
                           <p className="text-xs text-green-400 mt-2">
                             +{event.karma} karma
                           </p>
                         )}
-                        
+
                         {event.count && (
                           <p className="text-xs text-white/50 mt-2">
                             {event.count} {event.type === "like" ? "posts" : "items"}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import InitiativeDetail from "@/components/agent-dashboard/InitiativeDetail";
+import InitiativeDetail from "@/components/agent-dashboard/ActionsDetail";
 import { ArrowLeft } from "lucide-react";
 
 export default function InitiativeDetailPage() {
@@ -23,11 +23,11 @@ export default function InitiativeDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push("/agent-dashboard")}
+                onClick={() => router.push("/dashboard/engage")}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to Dashboard
+                Back to Engage
               </button>
               <div className="flex items-center gap-2 text-sm text-white/60">
                 <span>Dashboard</span>

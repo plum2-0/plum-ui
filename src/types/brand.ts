@@ -9,6 +9,10 @@ export interface Brand {
   created_at: string;
   updated_at: string;
   brand_configs: BrandConfig[];
+  // Optional source configuration for connected platforms (e.g., Reddit)
+  source?: {
+    reddit?: RedditSource;
+  };
 }
 
 export interface UseCase {
@@ -84,4 +88,12 @@ export interface TargetDemographics {
   interests: string[];
   age_range: string;
   geographic_focus: string;
+}
+
+export interface RedditSource {
+  oauth_token?: string;
+  oauth_token_expires_at?: number;
+  refresh_token?: string;
+  username?: string;
+  connected_subreddit?: string;
 }

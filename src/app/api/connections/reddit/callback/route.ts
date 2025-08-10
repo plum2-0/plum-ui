@@ -144,6 +144,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log(redditUser);
+    console.log("")
+
     const brandRef = firestore.collection("brands").doc(brandId);
     await brandRef.set(
       {
@@ -163,7 +166,7 @@ export async function GET(request: NextRequest) {
 
     // Clear OAuth cookies and set brand cookie
     const response = NextResponse.redirect(
-      new URL("/dashboard?reddit=connected", request.url)
+      new URL("/dashboard/settings?reddit=connected", request.url)
     );
     response.cookies.delete("reddit_oauth_state");
     response.cookies.set("brand_id", brandId, {

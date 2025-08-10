@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
         const firestore = adminDb();
         if (firestore) {
           try {
-            console.log("userId - - ", userId);
             const userRef = firestore.collection("users").doc(userId);
             const userDoc = await userRef.get();
             const userData = userDoc.data();

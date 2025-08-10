@@ -95,7 +95,7 @@ export async function verifyRedditAccount(
   let reddit: any = null;
   if (brandDoc.exists) {
     const brandData = brandDoc.data() as any;
-    reddit = brandData?.source?.reddit || brandData?.reddit_source || null;
+    reddit = brandData?.source?.reddit || null;
   }
 
   const oauthToken = reddit?.oauth_token as string | undefined;

@@ -27,7 +27,7 @@ export default function SummaryStats({ refreshKey }: SummaryStatsProps) {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        const response = await fetch("/api/initiatives/stats");
+        const response = await fetch("/api/actions/stats");
         const data = await response.json();
         setStats(data);
       } catch (error) {
@@ -103,7 +103,7 @@ export default function SummaryStats({ refreshKey }: SummaryStatsProps) {
             key={index}
             className="relative group cursor-pointer transition-transform duration-300 hover:scale-105"
           >
-            <div 
+            <div
               className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{
                 background: `linear-gradient(135deg, ${item.color.replace('from-', '').replace(' to-', ', ')})`,
