@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { useOnboardingState } from "@/hooks/useOnboardingState";
+import { useRedirectToDashboard } from "@/hooks/useRedirectToDashboard";
 
 interface UseCase {
   title: string;
@@ -15,6 +16,8 @@ function OnboardingContent() {
   const { data: session, status } = useSession();
   // Auto-redirect users to the correct onboarding step or dashboard if complete
   useOnboardingState(true);
+  // If user already has a brand, skip onboarding entirely
+  useRedirectToDashboard();
   const router = useRouter();
   const [formData, setFormData] = useState({
     brandName: "",
@@ -67,7 +70,7 @@ function OnboardingContent() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 to-indigo-900">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
@@ -166,13 +169,103 @@ function OnboardingContent() {
     formData.useCases.some((uc) => uc.title.trim() && uc.description.trim());
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700">
-      <OnboardingHeader session={session} />
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Animated Background with Liquid Glass Effect */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3), transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2), transparent 50%),
+            linear-gradient(135deg, #0F0F23 0%, #1A0B2E 25%, #2D1B3D 50%, #1E293B 75%, #0F172A 100%)
+          `
+        }}
+      />
+      
+      {/* Floating Glass Orbs */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div 
+          className="absolute top-20 left-20 w-72 h-72 rounded-full opacity-30 animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, rgba(168, 85, 247, 0.1) 70%, transparent 100%)',
+            filter: 'blur(40px)',
+            animation: 'float 6s ease-in-out infinite'
+          }}
+        />
+        <div 
+          className="absolute top-40 right-32 w-96 h-96 rounded-full opacity-25 animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.1) 70%, transparent 100%)',
+            filter: 'blur(50px)',
+            animation: 'float 8s ease-in-out infinite reverse'
+          }}
+        />
+        <div 
+          className="absolute bottom-20 left-1/3 w-64 h-64 rounded-full opacity-20"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 70%, transparent 100%)',
+            filter: 'blur(30px)',
+            animation: 'float 10s ease-in-out infinite'
+          }}
+        />
+      </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-20px) rotate(120deg); }
+          66% { transform: translateY(10px) rotate(240deg); }
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(34, 197, 94, 0.2); }
+          50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(34, 197, 94, 0.4); }
+        }
+        .glass-card {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .glass-header {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(30px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .glass-button {
+          background: linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8));
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          position: relative;
+          overflow: hidden;
+        }
+        .glass-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          animation: shimmer 2s infinite;
+        }
+      `}</style>
+
+      <div className="relative z-10 w-full">
+        <OnboardingHeader session={session} />
 
       {/* Loading Overlay */}
       {isSubmitting && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-12 max-w-md mx-auto text-center">
+          <div className="glass-card rounded-3xl p-12 max-w-md mx-auto text-center">
             {/* Spinner */}
             <div className="mb-8 flex justify-center">
               <div className="w-16 h-16 border-4 border-pink-400 border-t-transparent rounded-full animate-spin"></div>
@@ -190,13 +283,13 @@ function OnboardingContent() {
         </div>
       )}
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-6 py-8 relative z-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold text-white mb-6">
-              Welcome to Plum! 🚀
+            <h1 className="text-5xl font-bold text-white mb-6 drop-shadow-2xl">
+              Welcome to <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent animate-pulse">Plum!</span> 🚀
             </h1>
-            <p className="text-xl text-purple-100 max-w-2xl mx-auto">
+            <p className="text-xl text-white/90 max-w-2xl mx-auto">
               Let&apos;s get to know your brand so we can help you monitor
               conversations and engage with your community more effectively.
             </p>
@@ -204,7 +297,7 @@ function OnboardingContent() {
 
           <form
             onSubmit={handleSubmit}
-            className="bg-white/10 backdrop-blur-md rounded-3xl p-8 shadow-2xl"
+            className="glass-card rounded-3xl p-8"
           >
             {/* Brand Name */}
             <div className="mb-8">
@@ -220,7 +313,7 @@ function OnboardingContent() {
                 value={formData.brandName}
                 onChange={(e) => handleInputChange("brandName", e.target.value)}
                 placeholder="e.g., TechFlow Solutions"
-                className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 glass-card rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all"
                 required
               />
             </div>
@@ -241,7 +334,7 @@ function OnboardingContent() {
                 }
                 placeholder="What does your brand do? What makes you special?"
                 rows={4}
-                className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-3 glass-card rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all resize-none"
               />
             </div>
 
@@ -259,7 +352,7 @@ function OnboardingContent() {
                 value={formData.website}
                 onChange={(e) => handleInputChange("website", e.target.value)}
                 placeholder="https://your-awesome-site.com"
-                className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 glass-card rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all"
                 required
               />
             </div>
@@ -274,7 +367,7 @@ function OnboardingContent() {
                 {formData.useCases.map((useCase, index) => (
                   <div
                     key={index}
-                    className="bg-white/10 rounded-2xl p-6 border border-white/20"
+                    className="glass-card rounded-2xl p-6"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-semibold">
@@ -302,7 +395,7 @@ function OnboardingContent() {
                             handleUseCaseChange(index, "title", e.target.value)
                           }
                           placeholder="e.g., API Integration Support"
-                          className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all"
+                          className="w-full px-4 py-3 glass-card rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all"
                         />
                       </div>
                       <div>
@@ -317,7 +410,7 @@ function OnboardingContent() {
                           }
                           placeholder="Describe how you want to help with this topic..."
                           rows={3}
-                          className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all resize-none"
+                          className="w-full px-4 py-3 glass-card rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all resize-none"
                         />
                       </div>
                     </div>
@@ -337,7 +430,7 @@ function OnboardingContent() {
                       <button
                         type="button"
                         onClick={addUseCase}
-                        className="px-6 py-3 bg-gradient-to-r from-pink-400/80 to-purple-500/80 hover:from-pink-500/90 hover:to-purple-600/90 text-white rounded-xl transition-all font-medium transform hover:scale-105 shadow-lg"
+                        className="px-6 py-3 glass-button text-white rounded-xl transition-all font-medium transform hover:scale-105"
                       >
                         ✨ Add Another Use Case
                       </button>
@@ -351,7 +444,8 @@ function OnboardingContent() {
               <button
                 type="submit"
                 disabled={!isFormValid || isSubmitting}
-                className="px-12 py-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold text-lg rounded-2xl transition-all transform hover:scale-105 disabled:hover:scale-100 shadow-lg"
+                className="px-12 py-4 glass-button disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-lg rounded-2xl transition-all transform hover:scale-105 disabled:hover:scale-100"
+                style={{ animation: !isSubmitting && isFormValid ? 'glow 3s ease-in-out infinite' : 'none' }}
               >
                 {isSubmitting
                   ? "Setting up your account..."
@@ -361,6 +455,7 @@ function OnboardingContent() {
           </form>
         </div>
       </main>
+      </div>
     </div>
   );
 }
@@ -369,7 +464,7 @@ export default function OnboardingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
           <div className="text-white text-xl">Loading...</div>
         </div>
       }
