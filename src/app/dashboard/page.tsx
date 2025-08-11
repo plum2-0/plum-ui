@@ -21,7 +21,7 @@ export default function Dashboard2Page() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'posts' | 'insights'>('posts');
+  const [activeTab, setActiveTab] = useState<"posts" | "insights">("posts");
   const [isFetchingPosts, setIsFetchingPosts] = useState(false);
   const pageSize = 10;
 
@@ -85,13 +85,15 @@ export default function Dashboard2Page() {
   // Reset pagination and tab when changing use case
   useEffect(() => {
     setPage(1);
-    setActiveTab('posts'); // Always start with posts tab
+    setActiveTab("posts"); // Always start with posts tab
   }, [selectedUseCase]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-pulse text-white text-xl font-body">Loading brand data...</div>
+        <div className="animate-pulse text-white text-xl font-body">
+          Loading brand data...
+        </div>
       </div>
     );
   }
@@ -117,19 +119,19 @@ export default function Dashboard2Page() {
   // Filter posts based on selected tags
   const filteredPosts = allPosts.filter((post: SubredditPost) => {
     if (selectedTags.size === 0) return true;
-    
+
     // Check if any selected tag matches the post's tags
-    return Array.from(selectedTags).some(selectedTag => {
+    return Array.from(selectedTags).some((selectedTag) => {
       switch (selectedTag) {
-        case 'potential_customer':
+        case "potential_customer":
           return post.tags?.potential_customer;
-        case 'competitor_mention':
+        case "competitor_mention":
           return post.tags?.competitor_mention;
-        case 'own_mention':
+        case "own_mention":
           return post.tags?.own_mention;
-        case 'positive_sentiment':
+        case "positive_sentiment":
           return post.tags?.positive_sentiment;
-        case 'negative_sentiment':
+        case "negative_sentiment":
           return post.tags?.negative_sentiment;
         default:
           return false;
@@ -170,18 +172,19 @@ export default function Dashboard2Page() {
 
   const handleFetchNewPosts = async () => {
     if (!selectedUseCase || !brandData?.id) return;
-    
+
     setIsFetchingPosts(true);
     try {
       // Call the new posts API
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8000";
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
         `${backendUrl}/api/brand/${brandData.id}/new/posts?use_case_id=${selectedUseCase.id}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Plum-UI/1.0',
+            "Content-Type": "application/json",
+            "User-Agent": "Plum-UI/1.0",
           },
         }
       );
@@ -191,17 +194,19 @@ export default function Dashboard2Page() {
       }
 
       const result = await response.json();
-      console.log('New posts fetch result:', result);
+      console.log("New posts fetch result:", result);
 
       // Show success message with results
-      if (result.status === 'completed') {
+      if (result.status === "completed") {
         const totalDiscovered = result.total_posts_discovered || 0;
         const totalTagged = result.total_posts_tagged || 0;
-        
+
         if (totalDiscovered > 0) {
-          alert(`Success! Discovered ${totalDiscovered} new posts, tagged ${totalTagged} posts. Refreshing data...`);
+          alert(
+            `Success! Discovered ${totalDiscovered} new posts, tagged ${totalTagged} posts. Refreshing data...`
+          );
         } else {
-          alert('No new posts found at this time. Try again later!');
+          alert("No new posts found at this time. Try again later!");
         }
 
         // Refresh brand data to get updated posts
@@ -210,22 +215,28 @@ export default function Dashboard2Page() {
           const brandResult = await brandResponse.json();
           const data: Brand = brandResult.brand;
           setBrandData(data);
-          
+
           // Update selected use case with fresh data
-          const updatedUseCase = data.target_use_cases.find(uc => uc.id === selectedUseCase.id);
+          const updatedUseCase = data.target_use_cases.find(
+            (uc) => uc.id === selectedUseCase.id
+          );
           if (updatedUseCase) {
             setSelectedUseCase(updatedUseCase);
           }
-          
+
           // Reset to first page to see new posts
           setPage(1);
         }
       } else {
-        throw new Error('Failed to complete new posts fetch');
+        throw new Error("Failed to complete new posts fetch");
       }
     } catch (error) {
       console.error("Error fetching new posts:", error);
-      alert(`Failed to fetch new posts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Failed to fetch new posts: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setIsFetchingPosts(false);
     }
@@ -257,18 +268,19 @@ export default function Dashboard2Page() {
                   hasInsights={!!selectedUseCase.insights}
                 />
                 <div className="flex items-center gap-3">
-                  {activeTab === 'posts' && (
+                  {activeTab === "posts" && (
                     <>
                       <button
                         onClick={handleFetchNewPosts}
                         disabled={isFetchingPosts}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(34, 197, 94, 0.3)',
-                          boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
-                          color: 'white'
+                          background:
+                            "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))",
+                          backdropFilter: "blur(10px)",
+                          border: "1px solid rgba(34, 197, 94, 0.3)",
+                          boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)",
+                          color: "white",
                         }}
                       >
                         {isFetchingPosts ? (
@@ -278,8 +290,18 @@ export default function Dashboard2Page() {
                           </>
                         ) : (
                           <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
                             </svg>
                             Fetch New Posts
                           </>
@@ -298,12 +320,12 @@ export default function Dashboard2Page() {
             )}
 
             {/* Insights View */}
-            {activeTab === 'insights' && selectedUseCase?.insights && (
+            {activeTab === "insights" && selectedUseCase?.insights && (
               <UseCaseInsightsComponent insights={selectedUseCase.insights} />
             )}
 
             {/* Posts View */}
-            {activeTab === 'posts' && (
+            {activeTab === "posts" && (
               <>
                 {/* Competitor Summary */}
                 {selectedUseCase?.competitor_summary && (
@@ -316,13 +338,14 @@ export default function Dashboard2Page() {
                 {/* Reddit Posts */}
                 <div className="space-y-4">
                   {visiblePosts.length === 0 ? (
-                    <div 
+                    <div
                       className="rounded-2xl p-8 text-center"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                        background: "rgba(255, 255, 255, 0.08)",
+                        backdropFilter: "blur(20px)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        boxShadow:
+                          "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
                       }}
                     >
                       <p className="text-white/80 font-body">
@@ -342,7 +365,8 @@ export default function Dashboard2Page() {
                 <div className="mt-6 flex items-center justify-between gap-4 pb-6">
                   <div className="text-sm text-white/70 font-body">
                     Showing {totalPosts === 0 ? 0 : startIndex + 1}–
-                    {Math.min(startIndex + pageSize, totalPosts)} of {totalPosts}
+                    {Math.min(startIndex + pageSize, totalPosts)} of{" "}
+                    {totalPosts}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -352,9 +376,12 @@ export default function Dashboard2Page() {
                           : "text-white/50 cursor-not-allowed"
                       }`}
                       style={{
-                        background: page > 1 ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background:
+                          page > 1
+                            ? "rgba(255, 255, 255, 0.1)"
+                            : "rgba(255, 255, 255, 0.05)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
                       }}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page <= 1}
@@ -371,11 +398,16 @@ export default function Dashboard2Page() {
                           : "text-white/50 cursor-not-allowed"
                       }`}
                       style={{
-                        background: page < totalPages ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background:
+                          page < totalPages
+                            ? "rgba(255, 255, 255, 0.1)"
+                            : "rgba(255, 255, 255, 0.05)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
                       }}
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page >= totalPages}
                     >
                       Next
