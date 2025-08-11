@@ -40,9 +40,10 @@ function mapBackendToInitiative(raw: any) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const cookieStore = await cookies();
     const brandId = cookieStore.get("brand_id")?.value;
 
@@ -56,7 +57,7 @@ export async function GET(
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const resp = await fetch(
-      `${backendUrl}/api/engagement/${brandId}/actions/${params.id}`,
+      `${backendUrl}/api/engagement/${brandId}/actions/${id}`,
       { headers: { "Content-Type": "application/json" } }
     );
 
@@ -85,9 +86,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const cookieStore = await cookies();
     const brandId = cookieStore.get("brand_id")?.value;
     if (!brandId) {
@@ -117,7 +119,7 @@ export async function PUT(
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const resp = await fetch(
-      `${backendUrl}/api/engagement/${brandId}/actions/${params.id}`,
+      `${backendUrl}/api/engagement/${brandId}/actions/${id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -136,7 +138,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      data: { ...body, id: params.id, updatedAt: new Date().toISOString() },
+      data: { ...body, id: id, updatedAt: new Date().toISOString() },
       message: "Initiative updated successfully",
     });
   } catch (error) {

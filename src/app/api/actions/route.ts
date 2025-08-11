@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   try {
     // Get brand_id from cookies
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const brandId = cookieStore.get("brand_id")?.value;
 
     if (!brandId) {
