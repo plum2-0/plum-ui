@@ -67,7 +67,8 @@ export async function POST(
     }
 
     // Send action to backend
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8001";
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
     try {
       const backendResponse = await fetch(`${backendUrl}/reddit/action`, {

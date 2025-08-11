@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Call the backend API
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8000";
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const response = await fetch(`${backendUrl}/api/brand/onboard`, {
       method: "POST",
       headers: {

@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8000";
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const resp = await fetch(`${backendUrl}/api/brand/generate/reply`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

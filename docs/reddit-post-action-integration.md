@@ -37,13 +37,13 @@ The component currently uses mock data. To integrate with your backend:
 
 2. **Set the backend URL** environment variable:
    ```env
-   BACKEND_API_URL=http://localhost:8001
+   NEXT_PUBLIC_API_URL=http://localhost:8001
    ```
 
 3. **Replace the mock data calls** with actual backend API calls:
    ```typescript
    // In the API route
-   const backendUrl = process.env.BACKEND_API_URL || 'http://localhost:8001';
+   const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
    const response = await fetch(`${backendUrl}/admin/reddit/posts/project/${projectId}`);
    const data = await response.json();
    ```
@@ -80,7 +80,7 @@ The Reddit Post Action component is now fully integrated with the backend API. H
 - **Fallback system** - Falls back to mock data if backend is unavailable
 
 ### 🛠️ Environment Configuration
-- Added `BACKEND_API_URL` environment variable support
+- Added `NEXT_PUBLIC_API_URL` environment variable support
 - Default backend URL: `http://localhost:8001`
 - Easy configuration for production deployment
 
@@ -90,7 +90,7 @@ To start using the integration:
 1. **Set environment variable**:
    ```bash
    # In your .env.local file
-   BACKEND_API_URL=http://localhost:8001
+   NEXT_PUBLIC_API_URL=http://localhost:8001
    ```
 
 2. **Access the review page**:
@@ -111,7 +111,7 @@ To start using the integration:
 
 ## Next Steps
 
-1. **Production Deployment**: Update `BACKEND_API_URL` for your production environment
+1. **Production Deployment**: Update `NEXT_PUBLIC_API_URL` for your production environment
 2. **Authentication**: Ensure proper user authentication and project access
 3. **Notifications**: Add a badge for pending posts count
 4. **Batch Actions**: Implement bulk operations for multiple posts

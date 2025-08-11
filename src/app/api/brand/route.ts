@@ -56,7 +56,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch brand data from Python backend
-    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:8000";
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const response = await fetch(`${backendUrl}/api/brand/${brandId}`, {
       method: "GET",
       headers: {

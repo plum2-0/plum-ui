@@ -65,10 +65,10 @@ The implementation expects:
 To connect to the backend service, add to your `.env.local` file:
 ```bash
 # Backend API Configuration
-BACKEND_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:8000
 
 # For production, update to your deployed backend URL:
-# BACKEND_API_URL=https://api.yourapp.com
+# NEXT_PUBLIC_API_URL=https://api.yourapp.com
 ```
 
 If the backend is not available, the API will automatically fall back to mock data for development purposes.
