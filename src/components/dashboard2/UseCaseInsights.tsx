@@ -38,7 +38,7 @@ export default function UseCaseInsightsComponent({ insights }: UseCaseInsightsPr
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* General Summary */}
         <div 
           className="p-4 rounded-xl"
@@ -54,7 +54,7 @@ export default function UseCaseInsightsComponent({ insights }: UseCaseInsightsPr
             </svg>
             <h3 className="text-white font-heading text-sm font-semibold">Market Overview</h3>
           </div>
-          <p className="text-white/80 font-body text-sm leading-relaxed">
+          <p className="text-white/80 font-body text-sm leading-snug">
             {insights.general_summary}
           </p>
         </div>
@@ -74,9 +74,14 @@ export default function UseCaseInsightsComponent({ insights }: UseCaseInsightsPr
             </svg>
             <h3 className="text-white font-heading text-sm font-semibold">Solutions & Opportunities</h3>
           </div>
-          <p className="text-white/80 font-body text-sm leading-relaxed">
-            {insights.identified_solutions}
-          </p>
+          <ul className="space-y-1">
+            {insights.identified_solutions.map((solution, index) => (
+              <li key={index} className="flex items-start gap-2 text-white/80 font-body text-sm leading-snug">
+                <span className="text-green-400 mt-1">•</span>
+                <span>{solution}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* Willingness to Pay */}
@@ -94,7 +99,7 @@ export default function UseCaseInsightsComponent({ insights }: UseCaseInsightsPr
             </svg>
             <h3 className="text-white font-heading text-sm font-semibold">Purchase Intent</h3>
           </div>
-          <p className="text-white/80 font-body text-sm leading-relaxed">
+          <p className="text-white/80 font-body text-sm leading-snug">
             {insights.willingness_to_pay}
           </p>
         </div>
@@ -114,9 +119,39 @@ export default function UseCaseInsightsComponent({ insights }: UseCaseInsightsPr
             </svg>
             <h3 className="text-white font-heading text-sm font-semibold">Target Demographics</h3>
           </div>
-          <p className="text-white/80 font-body text-sm leading-relaxed">
-            {insights.demographic_breakdown}
-          </p>
+          <ul className="space-y-1">
+            {insights.demographic_breakdown.map((demographic, index) => (
+              <li key={index} className="flex items-start gap-2 text-white/80 font-body text-sm leading-snug">
+                <span className="text-purple-400 mt-1">•</span>
+                <span>{demographic}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Top Competitors */}
+        <div 
+          className="p-4 rounded-xl lg:col-span-2"
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+            <h3 className="text-white font-heading text-sm font-semibold">Top Competitors</h3>
+          </div>
+          <ul className="flex flex-wrap gap-3">
+            {insights.top_competitors.map((competitor, index) => (
+              <li key={index} className="flex items-center gap-2 text-white/80 font-body text-sm leading-snug">
+                <span className="text-orange-400">•</span>
+                <span>{competitor}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

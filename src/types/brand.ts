@@ -29,9 +29,10 @@ export interface UseCase {
 
 export interface UseCaseInsights {
   general_summary: string;
-  identified_solutions: string;
+  identified_solutions: string[];
   willingness_to_pay: string;
-  demographic_breakdown: string;
+  demographic_breakdown: string[];
+  top_competitors: string[];
   tag_counts: {
     potential_customer: number;
     competitor_mention: number;

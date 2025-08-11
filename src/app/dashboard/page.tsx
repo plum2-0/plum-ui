@@ -232,7 +232,7 @@ export default function Dashboard2Page() {
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="h-full flex overflow-hidden">
       {/* Fixed Sidebar with existing styling */}
       <div className="w-64 shrink-0">
         <DashboardSidebar
@@ -245,7 +245,7 @@ export default function Dashboard2Page() {
       </div>
 
       {/* Scrollable Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-6">
           <div className="max-w-5xl mx-auto space-y-6">
             {/* Use Case Tabs and Controls */}
