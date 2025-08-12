@@ -1,16 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
-interface ActionItem {
-  id: string;
-  type: "post" | "comment" | "like";
-  title: string;
-  target: string;
+interface CommentSuggestion {
+  action_id: string;
+  brand_id: string;
   status: "pending" | "scheduled" | "completed" | "dismissed";
-  content: string;
-  useCase?: string;
+  action_title: string;
+  post: {
+    id: string;
+    post_id: string;
+    subreddit: string;
+    title: string;
+    author: string;
+    content: string;
+    link: string;
+    image?: string | null;
+    up_votes?: number;
+    num_comments?: number;
+  };
+  llm_generated_reply: string;
+  intent?: string;
+  use_case?: string;
 }
 
 interface InitiativesPanelProps {
@@ -21,91 +34,29 @@ interface InitiativesPanelProps {
 
 export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: InitiativesPanelProps) {
   const router = useRouter();
-  const [initiatives, setInitiatives] = useState<ActionItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "post" | "comment" | "like">(
-    "all"
-  );
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchInitiatives = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/actions");
-        const data = await response.json();
-        const rawActions: any[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.initiatives)
-          ? data.initiatives
-          : [];
-
-        const mapped: ActionItem[] = rawActions.map((a: any) => {
-          const titleFallback =
-            a?.title ||
-            (a?.action_type === "post"
-              ? `Create post in r/${a?.target_subreddit ?? ""}`
-              : a?.action_type === "comment"
-              ? `Comment in r/${a?.target_subreddit ?? ""}`
-              : "Like posts");
-
-          return {
-            id: a?.action_id,
-            type: a?.action_type,
-            title: titleFallback,
-            target: a?.target_subreddit ? `r/${a.target_subreddit}` : "",
-            status: a?.status,
-            content: a?.content ?? "",
-            useCase: a?.use_case ?? undefined,
-          } as ActionItem;
-        });
-
-        setInitiatives(mapped);
-      } catch (error) {
-        console.error("Failed to fetch initiatives:", error);
-      } finally {
-        setLoading(false);
+  const { data, isLoading, isFetching } = useQuery<{ suggestions: CommentSuggestion[] }>({
+    queryKey: ["comment-suggestions", refreshKey],
+    queryFn: async () => {
+      setErrorMsg(null);
+      const resp = await fetch("/api/engagement/comment-suggestions");
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || "Failed to load suggestions");
       }
-    };
+      return resp.json();
+    },
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
 
-    fetchInitiatives();
-  }, [refreshKey]);
+  const suggestions: CommentSuggestion[] = Array.isArray(data?.suggestions)
+    ? data!.suggestions
+    : [];
 
-  const filteredInitiatives =
-    filter === "all"
-      ? initiatives
-      : initiatives.filter((i) => i.type === filter);
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "post":
-        return "📝";
-      case "comment":
-        return "💬";
-      case "like":
-        return "❤️";
-      case "follow":
-        return "👤";
-      default:
-        return "📌";
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "post":
-        return "from-purple-400 to-purple-600";
-      case "comment":
-        return "from-blue-400 to-blue-600";
-      case "like":
-        return "from-pink-400 to-pink-600";
-      case "follow":
-        return "from-green-400 to-green-600";
-      default:
-        return "from-gray-400 to-gray-600";
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="glass-card rounded-2xl p-6 animate-pulse">
         <div className="space-y-4">
@@ -120,24 +71,20 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
     );
   }
 
-  console.log(initiatives);
-
   return (
     <div className="glass-card rounded-2xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-heading font-bold text-white">
-            AI Suggested Actions
+            AI Suggested Replies
           </h2>
           {onRefresh && (
             <button
               onClick={onRefresh}
-              disabled={isRefreshing}
+              disabled={isRefreshing || isFetching}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm text-white transition-all duration-300 ${
-                isRefreshing
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:scale-105"
+                isRefreshing || isFetching ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
               }`}
               style={{
                 background: "rgba(255, 255, 255, 0.1)",
@@ -146,7 +93,7 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
               }}
             >
               <svg
-                className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                className={`w-4 h-4 ${isRefreshing || isFetching ? "animate-spin" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -158,87 +105,86 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              {isRefreshing ? "Generating..." : "Refresh"}
+              {isRefreshing || isFetching ? "Loading..." : "Refresh"}
             </button>
           )}
         </div>
-        <div className="flex gap-2">
-          {["all", "post", "comment", "like"].map((type) => (
-            <button
-              key={type}
-              onClick={() => setFilter(type as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                filter === type
-                  ? "bg-white/20 text-white border border-white/30"
-                  : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-              }`}
-            >
-              {type === "all"
-                ? "All"
-                : type.charAt(0).toUpperCase() + type.slice(1) + "s"}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Initiatives List */}
+      {errorMsg && (
+        <div className="mb-3 text-sm text-red-300">{errorMsg}</div>
+      )}
+
+      {/* Suggestions List */}
       <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-        {filteredInitiatives.map((initiative) => (
+        {suggestions.length === 0 && (
+          <div className="text-white/60 text-sm">No suggestions yet.</div>
+        )}
+
+        {suggestions.map((s) => (
           <div
-            key={initiative.id}
+            key={s.action_id}
             className="glass-card rounded-xl p-5 border border-white/10 hover:border-white/20 transition-all duration-300 group"
           >
-            {/* Header Row */}
+            {/* Subreddit and title */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{getTypeIcon(initiative.type)}</span>
+                <span className="text-2xl">💬</span>
                 <div>
-                  <span
-                    className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${getTypeColor(
-                      initiative.type
-                    )} text-white`}
-                  >
-                    {initiative.type}
+                  <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-blue-400 to-blue-600 text-white">
+                    comment
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Title and Target */}
-            <h3 className="font-semibold text-white mb-2 line-clamp-2">
-              {initiative.title}
+            <h3 className="font-semibold text-white mb-1 line-clamp-2">
+              {s.post.title}
             </h3>
-            {initiative.useCase && (
-              <p className="text-sm text-emerald-400 mb-2 font-medium">
-                Use Case: {initiative.useCase}
-              </p>
-            )}
-            <p className="text-sm text-white/60 mb-3">
-              Target:{" "}
-              <span className="text-purple-400">{initiative.target}</span>
-            </p>
+            <div className="text-xs text-white/60 mb-2">
+              Posted in <span className="text-purple-300">r/{s.post.subreddit}</span>
+              {" • "}by <span className="text-white/80">u/{s.post.author}</span>
+            </div>
+            <a
+              href={s.post.link}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-blue-300 hover:underline"
+            >
+              View post ↗
+            </a>
 
-            {/* like-progress removed for new action schema */}
+            {/* Post preview */}
+            <div className="mt-3 text-sm text-white/80 bg-white/5 rounded-md p-3 border border-white/10 line-clamp-6 whitespace-pre-wrap">
+              {s.post.content}
+            </div>
 
-            {/* Action Buttons */}
+            {/* Suggested reply */}
+            <div className="mt-4">
+              <div className="text-xs uppercase tracking-wide text-white/50 mb-1">
+                Suggested reply
+              </div>
+              <div className="text-sm text-emerald-200 bg-emerald-500/10 rounded-md p-3 border border-emerald-500/20 whitespace-pre-wrap">
+                {s.llm_generated_reply}
+              </div>
+            </div>
+
+            {/* Action buttons */}
             <div className="flex gap-2 mt-4 justify-end">
               <button
-                onClick={() =>
-                  router.push(`/dashboard/engage/action/${initiative.id}`)
-                }
-                className="max-w-[250px] px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 text-xs font-medium transition-all"
+                onClick={() => router.push(`/dashboard/engage/actions/${s.action_id}`)}
+                className="px-3 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-medium transition-all"
+              >
+                Edit
+              </button>
+              <button
+                className="px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 text-xs font-medium transition-all"
               >
                 Schedule
               </button>
               <button
-                onClick={() =>
-                  router.push(`/dashboard/engage/actions/${initiative.id}`)
-                }
-                className="max-w-[250px] px-3 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-medium transition-all"
+                className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-all"
               >
-                Edit
-              </button>
-              <button className="max-w-[250px] px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-all">
                 Dismiss
               </button>
             </div>

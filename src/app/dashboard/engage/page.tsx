@@ -12,21 +12,8 @@ export default function AgentDashboardPage() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-
     try {
-      // First, generate new actions
-  const generateResponse = await fetch("/api/actions/suggestions", {
-        method: "GET",
-      });
-
-      if (!generateResponse.ok) {
-        console.error(
-          "Failed to generate new actions:",
-          await generateResponse.text()
-        );
-      }
-
-      // Then refresh the components by updating the refresh key
+      // Trigger a refresh; ActionsPanel will fetch latest suggestions from backend on refreshKey change
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error("Error during refresh:", error);
