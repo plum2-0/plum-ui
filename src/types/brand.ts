@@ -19,6 +19,7 @@ export interface UseCase {
   id: string;
   title: string;
   description: string;
+  keywords?: string[];
   hot_features_summary: string | null;
   competitor_summary: string | null;
   created_at: string;

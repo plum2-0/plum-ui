@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const brandId = cookieStore.get("brand_id")?.value;
@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+    // Trigger generation (backend will also persist results now)
     const resp = await fetch(
-      `${backendUrl}/api/engagement/${brandId}/comment-suggestions`,
+      `${backendUrl}/api/engagement/${brandId}/generate-comment-suggestions`,
       {
         method: "GET",
         headers: {
@@ -27,17 +28,15 @@ export async function GET(request: NextRequest) {
     if (!resp.ok) {
       const text = await resp.text();
       return NextResponse.json(
-        { error: text || "Failed to fetch comment suggestions" },
+        { error: text || "Failed to generate comment suggestions" },
         { status: resp.status }
       );
     }
 
     const data = await resp.json();
-    // Ensure we always return an array
-    const suggestions = Array.isArray(data) ? data : [];
-    return NextResponse.json({ suggestions }, { status: 200 });
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error("Error fetching comment suggestions:", error);
+    console.error("Error generating comment suggestions:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

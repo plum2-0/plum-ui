@@ -2,6 +2,10 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 import { SubredditPost } from "@/types/brand";
 import TagBadge from "./TagBadge";
 
@@ -28,88 +32,100 @@ function formatTimeAgo(dateString: string): string {
 const PERSONA_OPTIONS = [
   {
     label: "Professional",
-    prompt: "Professional and informative tone, like a knowledgeable industry expert. 2-4 sentences. Helpful and authoritative without being pushy.",
-    icon: "💼"
+    prompt:
+      "Professional and informative tone, like a knowledgeable industry expert. 2-4 sentences. Helpful and authoritative without being pushy.",
+    icon: "💼",
   },
   {
     label: "Friendly",
-    prompt: "Friendly and approachable tone, like a helpful neighbor. 2-4 sentences. Warm, conversational, and supportive.",
-    icon: "😊"
+    prompt:
+      "Friendly and approachable tone, like a helpful neighbor. 2-4 sentences. Warm, conversational, and supportive.",
+    icon: "😊",
   },
   {
     label: "Motivational",
-    prompt: "Motivational and encouraging tone, in the spirit of Tony Robbins (tone only, no direct impersonation). 2-4 sentences. Conversational and human. No corporate speak or sales pitch.",
-    icon: "🚀"
+    prompt:
+      "Motivational and encouraging tone, in the spirit of Tony Robbins (tone only, no direct impersonation). 2-4 sentences. Conversational and human. No corporate speak or sales pitch.",
+    icon: "🚀",
   },
   {
     label: "Empathetic",
-    prompt: "Empathetic and understanding tone, in the spirit of Mister Rogers (tone only, no direct impersonation). 2-4 sentences. Warm, kind, and human.",
-    icon: "💝"
+    prompt:
+      "Empathetic and understanding tone, in the spirit of Mister Rogers (tone only, no direct impersonation). 2-4 sentences. Warm, kind, and human.",
+    icon: "💝",
   },
   {
     label: "Witty",
-    prompt: "Witty with light humor, in the spirit of Dave Chappelle (tone only, no direct impersonation). 2-4 sentences. Keep it respectful and friendly.",
-    icon: "😄"
+    prompt:
+      "Witty with light humor, in the spirit of Dave Chappelle (tone only, no direct impersonation). 2-4 sentences. Keep it respectful and friendly.",
+    icon: "😄",
   },
   {
     label: "Technical",
-    prompt: "Technical and detailed tone, like a subject matter expert. 2-4 sentences. Focus on specific, actionable advice and solutions.",
-    icon: "🔧"
-  }
+    prompt:
+      "Technical and detailed tone, like a subject matter expert. 2-4 sentences. Focus on specific, actionable advice and solutions.",
+    icon: "🔧",
+  },
 ];
 
-export default function RedditPostListItem({
-  post,
-  onGenerate,
-  onIgnore,
-  onSend,
-}: RedditPostListItemProps) {
-  
+export default function RedditPostListItem({ post }: RedditPostListItemProps) {
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [customReply, setCustomReply] = useState<string>("");
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
-  const [lastUsedPersona, setLastUsedPersona] = useState<typeof PERSONA_OPTIONS[0] | null>(null);
+  const [lastUsedPersona, setLastUsedPersona] = useState<
+    (typeof PERSONA_OPTIONS)[0] | null
+  >(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
 
   // Extract mentioned brand from llm_explanation
   const mentionedBrand = post.llm_explanation
-    ?.match(/(?:mentions?|discusses?|talks? about)\s+([A-Za-z0-9\s]+?)(?:\s+(?:in|as|for|with|to|and|or|but|because|since|although|while|if|when|where|why|how|that|which|who|whom|whose)|\.|,|;|:|\?|!|$)/i)?.[1]
+    ?.match(
+      /(?:mentions?|discusses?|talks? about)\s+([A-Za-z0-9\s]+?)(?:\s+(?:in|as|for|with|to|and|or|but|because|since|although|while|if|when|where|why|how|that|which|who|whom|whose)|\.|,|;|:|\?|!|$)/i
+    )?.[1]
     ?.trim();
 
-  const handleGenerateReply = async (persona: typeof PERSONA_OPTIONS[0]) => {
+  const handleGenerateReply = async (persona: (typeof PERSONA_OPTIONS)[0]) => {
     setIsGenerating(true);
     setSelectedPersona(persona.label);
     setLastUsedPersona(persona);
-    
+
     try {
-      const response = await fetch('/api/generate/reply', {
-        method: 'POST',
+      const response = await fetch("/api/generate/reply", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          post_title: post.title,
+          post_subreddit: post.subreddit,
           post_content: post.content || post.title,
-          prompt: persona.prompt
+          prompt: persona.prompt,
+          brand_id: post.brand_id,
+          use_case_id: post.use_case_id,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate reply');
+        throw new Error(errorData.error || "Failed to generate reply");
       }
 
       const data = await response.json();
-      
+
       if (data.generated_reply) {
         setCustomReply(data.generated_reply);
       } else {
-        throw new Error('No reply generated');
+        throw new Error("No reply generated");
       }
     } catch (error) {
       console.error("Error generating reply:", error);
-      alert(`Failed to generate reply: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Failed to generate reply: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setIsGenerating(false);
       setSelectedPersona(null);
@@ -122,41 +138,55 @@ export default function RedditPostListItem({
     }
   };
 
-  const handleIgnore = async () => {
-    if (!onIgnore) return;
-    setIsSubmittingAction(true);
-    try {
-      await onIgnore(post);
-    } catch (error) {
-      console.error("Error ignoring post:", error);
-    } finally {
-      setIsSubmittingAction(false);
-    }
-  };
-
-  const handleSend = async (message: string) => {
-    if (!onSend || !message.trim()) return;
-    setIsSubmittingAction(true);
-    try {
-      await onSend(post, message);
-      setShowReplyBox(false);
-      setCustomReply("");
-    } catch (error) {
-      console.error("Error sending reply:", error);
-    } finally {
-      setIsSubmittingAction(false);
-    }
+  // Markdown renderers for Reddit-like dark theme
+  const markdownComponents: Components = {
+    a: (props) => <a {...props} className="text-blue-400 hover:underline" />,
+    p: (props) => <p {...props} className="mb-2" />,
+    ul: (props) => <ul {...props} className="list-disc pl-6 mb-2" />,
+    ol: (props) => <ol {...props} className="list-decimal pl-6 mb-2" />,
+    li: (props) => <li {...props} className="mb-1" />,
+    blockquote: (props) => (
+      <blockquote
+        {...props}
+        className="border-l-4 border-white/20 pl-3 text-white/70 italic"
+      />
+    ),
+    code: (props: any) => {
+      const { inline, children, ...rest } = props;
+      if (inline) {
+        return (
+          <code
+            {...rest}
+            className="bg-[#272729] text-white/90 px-1.5 py-0.5 rounded"
+          >
+            {children}
+          </code>
+        );
+      }
+      return (
+        <pre className="bg-[#272729] text-white/90 p-3 rounded-md overflow-auto mb-3">
+          <code {...rest}>{children}</code>
+        </pre>
+      );
+    },
+    h1: (props) => <h1 {...props} className="text-xl font-semibold mb-2" />,
+    h2: (props) => <h2 {...props} className="text-lg font-semibold mb-2" />,
+    h3: (props) => <h3 {...props} className="text-base font-semibold mb-2" />,
   };
 
   async function submitPostAction(action: "reply" | "ignore", text?: string) {
     setIsSubmittingAction(true);
     try {
-      const response = await fetch(`/api/projects/${post.use_case_id}/reddit-posts/${post.id}/action`, {
+      const response = await fetch(`/api/brand/post/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action,
-          text: text || "",
+          brand_id: post.brand_id,
+          use_case_id: post.use_case_id,
+          subreddit_post_id: post.id,
+          post_id: post.post_id,
+          user_content_action: action,
+          content: action === "reply" ? text || "" : undefined,
         }),
       });
 
@@ -176,27 +206,16 @@ export default function RedditPostListItem({
 
   // Get truncated content for preview
   const contentToShow = post.content || "";
-  const truncatedContent = contentToShow.length > 200 
-    ? contentToShow.substring(0, 200) + "..." 
-    : contentToShow;
   const shouldShowExpandButton = contentToShow.length > 200;
 
   return (
     <div className="group">
-      <div 
-        className="rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02]"
-        style={{
-          background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-        }}
-      >
+      <div className="rounded-lg border border-[#343536] bg-[#1a1a1b] p-5 transition-colors duration-200 hover:border-[#4f5355]">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             {/* Subreddit mention */}
-            <div className="flex items-center gap-2 text-sm text-white/60 mb-2">
+            <div className="flex items-center gap-2 text-xs text-white/60 mb-2">
               {/* Reddit icon */}
               <Image
                 src="/reddit.svg"
@@ -222,9 +241,11 @@ export default function RedditPostListItem({
             </div>
 
             {/* Post title - Clickable */}
-            <h3 
-              className="text-white font-heading text-lg font-semibold mb-3 hover:text-white/80 transition-colors cursor-pointer hover:underline"
-              onClick={() => window.open(post.link, "_blank", "noopener,noreferrer")}
+            <h3
+              className="text-white font-heading text-xl md:text-2xl font-semibold leading-tight mb-3 hover:text-white/90 transition-colors cursor-pointer"
+              onClick={() =>
+                window.open(post.link, "_blank", "noopener,noreferrer")
+              }
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
@@ -240,21 +261,24 @@ export default function RedditPostListItem({
 
             {/* LLM Explanation */}
             {post.llm_explanation && (
-              <div
-                className="rounded-xl p-4 mb-4"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-1 text-white/50 text-[11px] uppercase tracking-wide">
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
                   </svg>
-                  <span className="font-body font-medium text-white/90 text-sm">AI Analysis</span>
+                  <span className="font-body">PlumSprout Idea</span>
                 </div>
-                <p className="text-white/80 font-body text-sm leading-relaxed">
+                <p className="text-white/60 font-body text-[13px] leading-relaxed">
                   {post.llm_explanation}
                 </p>
               </div>
@@ -262,21 +286,10 @@ export default function RedditPostListItem({
 
             {/* Post Content - Collapsible */}
             {contentToShow && (
-              <div
-                className="mb-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div
-                  className="rounded-xl p-4"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)'
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="font-body font-medium text-white/80 text-sm">Post Content:</span>
-                    {shouldShowExpandButton && (
+              <div className="mb-4" onClick={(e) => e.stopPropagation()}>
+                <div className="relative">
+                  {shouldShowExpandButton && (
+                    <div className="absolute right-0 -top-1">
                       <button
                         onClick={() => setIsContentExpanded(!isContentExpanded)}
                         className="text-white/60 hover:text-white transition-colors text-xs font-body flex items-center gap-1"
@@ -284,24 +297,67 @@ export default function RedditPostListItem({
                         {isContentExpanded ? (
                           <>
                             <span>Collapse</span>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 15l7-7 7 7"
+                              />
                             </svg>
                           </>
                         ) : (
                           <>
                             <span>Expand</span>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
                             </svg>
                           </>
                         )}
                       </button>
-                    )}
+                    </div>
+                  )}
+                  <div
+                    className="font-body text-[15px] md:text-[16px] leading-relaxed"
+                    style={{
+                      color: "#d7dadc",
+                      overflow: isContentExpanded ? "visible" : "hidden",
+                      maxHeight: isContentExpanded ? "none" : 240,
+                      paddingTop: shouldShowExpandButton ? 8 : 0,
+                    }}
+                  >
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeSanitize]}
+                      components={markdownComponents}
+                    >
+                      {contentToShow}
+                    </ReactMarkdown>
                   </div>
-                  <p className="text-white/70 font-body text-sm leading-relaxed whitespace-pre-wrap">
-                    {isContentExpanded ? contentToShow : truncatedContent}
-                  </p>
+                  {!isContentExpanded && shouldShowExpandButton && (
+                    <div
+                      className="pointer-events-none absolute bottom-0 left-0 right-0 h-12"
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, rgba(26,26,27,0), rgba(26,26,27,0.9))",
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -325,65 +381,98 @@ export default function RedditPostListItem({
               )}
             </div>
 
-            {/* Action buttons */}
-            <div 
+            {/* Action bar with counters on the left */}
+            <div
               className="flex items-center gap-3 pt-4 border-t border-white/10"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setShowReplyBox(!showReplyBox)}
-                disabled={isSubmittingAction}
-                className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))',
-                  color: 'white',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.2)'
-                }}
-              >
-                {showReplyBox ? "Cancel" : "Reply"}
-              </button>
-
-              <button
-                onClick={() => submitPostAction("ignore")}
-                disabled={isSubmittingAction}
-                className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                }}
-              >
-                {isSubmittingAction ? "Processing..." : "Ignore"}
-              </button>
-
-              <div className="flex items-center gap-4 ml-auto text-white/60 font-body text-sm">
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+              {/* Left-aligned counters styled as badges */}
+              <div className="flex items-center gap-2 text-white/70 font-body text-xs">
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#343536] bg-[#272729]"
+                  aria-label="Upvotes"
+                  title="Upvotes"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 11l5-5m0 0l5 5m-5-5v12"
+                    />
                   </svg>
-                  {post.up_votes}
+                  <span className="font-medium">{post.up_votes}</span>
                 </span>
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#343536] bg-[#272729]"
+                  aria-label="Comments"
+                  title="Comments"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
                   </svg>
-                  {post.num_comments}
+                  <span className="font-medium">{post.num_comments}</span>
                 </span>
+              </div>
+
+              {/* Spacer to push actions to the right */}
+              <div className="ml-auto flex items-center gap-3">
+                <button
+                  onClick={() => setShowReplyBox(!showReplyBox)}
+                  disabled={isSubmittingAction}
+                  className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))",
+                    color: "white",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(34, 197, 94, 0.3)",
+                    boxShadow: "0 4px 12px rgba(34, 197, 94, 0.2)",
+                  }}
+                >
+                  {showReplyBox ? "Cancel" : "Reply"}
+                </button>
+
+                <button
+                  onClick={() => submitPostAction("ignore")}
+                  disabled={isSubmittingAction}
+                  className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                    color: "white",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  {isSubmittingAction ? "Processing..." : "Ignore"}
+                </button>
               </div>
             </div>
 
             {/* Reply box */}
             {showReplyBox && (
-              <div 
+              <div
                 className="mt-4 p-4 rounded-xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                  background: "rgba(255, 255, 255, 0.05)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -392,7 +481,7 @@ export default function RedditPostListItem({
                   <h4 className="text-white font-heading text-sm font-semibold mb-3">
                     Generate with AI
                   </h4>
-                  
+
                   {/* Persona options - always visible */}
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     {PERSONA_OPTIONS.map((persona) => (
@@ -402,9 +491,9 @@ export default function RedditPostListItem({
                         disabled={isGenerating}
                         className="flex items-center gap-2 p-3 rounded-xl text-left transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.15)'
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(10px)",
+                          border: "1px solid rgba(255, 255, 255, 0.15)",
                         }}
                       >
                         <span className="text-lg">{persona.icon}</span>
@@ -430,10 +519,10 @@ export default function RedditPostListItem({
                     placeholder="Write your reply or use AI generation above..."
                     className="w-full p-3 rounded-xl font-body text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400/50 transition-all"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: 'white'
+                      background: "rgba(255, 255, 255, 0.1)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      color: "white",
                     }}
                     rows={4}
                   />
@@ -447,14 +536,24 @@ export default function RedditPostListItem({
                       {isGenerating ? (
                         <div className="w-4 h-4 border border-white/30 border-t-white rounded-full animate-spin"></div>
                       ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
                         </svg>
                       )}
                     </button>
                   )}
                 </div>
-                
+
                 <div className="flex justify-end">
                   <button
                     onClick={() => submitPostAction("reply", customReply)}
@@ -462,12 +561,18 @@ export default function RedditPostListItem({
                     className="px-4 py-2 rounded-xl font-body font-semibold text-sm transition-all duration-300 hover:scale-105"
                     style={{
                       background: customReply.trim()
-                        ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))'
-                        : 'rgba(255, 255, 255, 0.05)',
-                      color: customReply.trim() ? 'white' : 'rgba(255, 255, 255, 0.5)',
-                      border: '1px solid rgba(34, 197, 94, 0.3)',
-                      boxShadow: customReply.trim() ? '0 4px 12px rgba(34, 197, 94, 0.3)' : 'none',
-                      textShadow: customReply.trim() ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
+                        ? "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))"
+                        : "rgba(255, 255, 255, 0.05)",
+                      color: customReply.trim()
+                        ? "white"
+                        : "rgba(255, 255, 255, 0.5)",
+                      border: "1px solid rgba(34, 197, 94, 0.3)",
+                      boxShadow: customReply.trim()
+                        ? "0 4px 12px rgba(34, 197, 94, 0.3)"
+                        : "none",
+                      textShadow: customReply.trim()
+                        ? "0 1px 2px rgba(0, 0, 0, 0.3)"
+                        : "none",
                     }}
                   >
                     {isSubmittingAction ? "Submitting..." : "Send Reply"}

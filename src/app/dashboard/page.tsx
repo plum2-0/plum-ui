@@ -3,13 +3,10 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Brand, UseCase, SubredditPost } from "@/types/brand";
+import { Brand, UseCase } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import CompetitorSummary from "@/components/dashboard2/CompetitorSummary";
-import RedditPostListItem from "@/components/dashboard2/RedditPostListItem";
-import TagFiltersDropdown from "@/components/dashboard2/TagFiltersDropdown";
 import UseCaseInsightsComponent from "@/components/dashboard2/UseCaseInsights";
-import UseCaseTabs from "@/components/dashboard2/UseCaseTabs";
 
 export default function Dashboard2Page() {
   const router = useRouter();
@@ -19,24 +16,9 @@ export default function Dashboard2Page() {
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<"posts" | "insights">("posts");
-  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
-  const pageSize = 10;
+  const [loadingUseCaseId, setLoadingUseCaseId] = useState<string | null>(null);
 
-  // Load saved filter preferences from localStorage
-  useEffect(() => {
-    const savedFilters = localStorage.getItem("dashboardTagFilters");
-    if (savedFilters) {
-      try {
-        const filters = JSON.parse(savedFilters);
-        setSelectedTags(new Set(filters));
-      } catch (e) {
-        console.error("Error loading saved filters:", e);
-      }
-    }
-  }, []);
+  // No posts filters needed when showing insights-only view
 
   // Load brand data from API
   useEffect(() => {
@@ -61,10 +43,8 @@ export default function Dashboard2Page() {
 
         setBrandData(data);
 
-        // Select first use case by default
-        if (data.target_use_cases.length > 0) {
-          setSelectedUseCase(data.target_use_cases[0]);
-        }
+        // Default to Total (no specific use case selected)
+        setSelectedUseCase(null);
       } catch (error) {
         console.error("Error loading brand data:", error);
         setError(
@@ -80,13 +60,102 @@ export default function Dashboard2Page() {
     }
   }, [session, router]);
 
+  const handleAddUseCase = (title: string) => {
+    if (!brandData) return Promise.resolve();
+
+    const brandId = brandData.id;
+    const tempId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : String(Date.now());
+
+    const tempUseCase: UseCase = {
+      id: tempId,
+      title,
+      description: "",
+      hot_features_summary: null,
+      competitor_summary: null,
+      created_at: new Date().toISOString(),
+      brand_id: brandId,
+      subreddit_posts: [],
+      // insights intentionally undefined while loading
+    } as unknown as UseCase;
+
+    // Optimistically add and select
+    setBrandData((prev) =>
+      prev
+        ? { ...prev, target_use_cases: [...prev.target_use_cases, tempUseCase] }
+        : prev
+    );
+    setSelectedUseCase(tempUseCase);
+    setLoadingUseCaseId(tempId);
+
+    // Fire backend in background, then refetch brand, select the new one
+    void (async () => {
+      try {
+        const query = encodeURIComponent(title);
+        const url = `http://localhost:8000/api/brand/${brandId}/insight?use_case=${query}`;
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { "User-Agent": "plum-ui" },
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Failed to generate insight: ${res.status} ${text}`);
+        }
+
+        // Ignore body; we will refetch brand to pick up the new persisted use case
+        // Refetch brand to get fresh data
+        const brandRes = await fetch("/api/brand");
+        if (!brandRes.ok) {
+          const text = await brandRes.text();
+          throw new Error(`Refetch brand failed: ${brandRes.status} ${text}`);
+        }
+        const brandJson = await brandRes.json();
+        const refreshed: Brand = brandJson.brand;
+
+        // Find the created use case by matching title
+        const created = refreshed.target_use_cases.find(
+          (uc) => uc.title.trim().toLowerCase() === title.trim().toLowerCase()
+        );
+
+        setBrandData(refreshed);
+        if (created) {
+          setSelectedUseCase(created);
+        }
+      } catch (e) {
+        console.error(e);
+        // Remove the temp use case on failure
+        setBrandData((prev) =>
+          prev
+            ? {
+                ...prev,
+                target_use_cases: prev.target_use_cases.filter(
+                  (uc) => uc.id !== tempId
+                ),
+              }
+            : prev
+        );
+        if (selectedUseCase?.id === tempId) {
+          setSelectedUseCase(() => {
+            // fallback to first use case if available
+            const first = brandData?.target_use_cases[0];
+            return first ?? null;
+          });
+        }
+        setError(e instanceof Error ? e.message : "Failed to generate insight");
+      } finally {
+        setLoadingUseCaseId((prev) => (prev === tempId ? null : prev));
+      }
+    })();
+
+    // Return a resolved promise so the input can close immediately
+    return Promise.resolve();
+  };
+
   console.log(JSON.stringify(brandData, null, 2));
 
-  // Reset pagination and tab when changing use case
-  useEffect(() => {
-    setPage(1);
-    setActiveTab("posts"); // Always start with posts tab
-  }, [selectedUseCase]);
+  // No tab state to manage in insights-only view
 
   if (isLoading) {
     return (
@@ -114,133 +183,10 @@ export default function Dashboard2Page() {
     );
   }
 
-  const allPosts = selectedUseCase?.subreddit_posts || [];
+  // Posts list and filters removed for insights-only view
 
-  // Filter posts based on selected tags
-  const filteredPosts = allPosts.filter((post: SubredditPost) => {
-    if (selectedTags.size === 0) return true;
-
-    // Check if any selected tag matches the post's tags
-    return Array.from(selectedTags).some((selectedTag) => {
-      switch (selectedTag) {
-        case "potential_customer":
-          return post.tags?.potential_customer;
-        case "competitor_mention":
-          return post.tags?.competitor_mention;
-        case "own_mention":
-          return post.tags?.own_mention;
-        case "positive_sentiment":
-          return post.tags?.positive_sentiment;
-        case "negative_sentiment":
-          return post.tags?.negative_sentiment;
-        default:
-          return false;
-      }
-    });
-  });
-
-  const totalPosts = filteredPosts.length;
-  const totalPages = Math.ceil(totalPosts / pageSize);
-  const startIndex = (page - 1) * pageSize;
-  const visiblePosts = filteredPosts.slice(startIndex, startIndex + pageSize);
-
-  // Tag handling functions
-  const handleTagToggle = (tagName: string) => {
-    setSelectedTags((prev) => {
-      const newTags = new Set(prev);
-      if (newTags.has(tagName)) {
-        newTags.delete(tagName);
-      } else {
-        newTags.add(tagName);
-      }
-      // Save to localStorage
-      localStorage.setItem(
-        "dashboardTagFilters",
-        JSON.stringify(Array.from(newTags))
-      );
-      return newTags;
-    });
-    // Reset to page 1 when filters change
-    setPage(1);
-  };
-
-  const handleClearAllTags = () => {
-    setSelectedTags(new Set());
-    localStorage.removeItem("dashboardTagFilters");
-    setPage(1);
-  };
-
-  const handleFetchNewPosts = async () => {
-    if (!selectedUseCase || !brandData?.id) return;
-
-    setIsFetchingPosts(true);
-    try {
-      // Call the new posts API
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(
-        `${backendUrl}/api/brand/${brandData.id}/new/posts?use_case_id=${selectedUseCase.id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": "Plum-UI/1.0",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch new posts: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log("New posts fetch result:", result);
-
-      // Show success message with results
-      if (result.status === "completed") {
-        const totalDiscovered = result.total_posts_discovered || 0;
-        const totalTagged = result.total_posts_tagged || 0;
-
-        if (totalDiscovered > 0) {
-          alert(
-            `Success! Discovered ${totalDiscovered} new posts, tagged ${totalTagged} posts. Refreshing data...`
-          );
-        } else {
-          alert("No new posts found at this time. Try again later!");
-        }
-
-        // Refresh brand data to get updated posts
-        const brandResponse = await fetch("/api/brand");
-        if (brandResponse.ok) {
-          const brandResult = await brandResponse.json();
-          const data: Brand = brandResult.brand;
-          setBrandData(data);
-
-          // Update selected use case with fresh data
-          const updatedUseCase = data.target_use_cases.find(
-            (uc) => uc.id === selectedUseCase.id
-          );
-          if (updatedUseCase) {
-            setSelectedUseCase(updatedUseCase);
-          }
-
-          // Reset to first page to see new posts
-          setPage(1);
-        }
-      } else {
-        throw new Error("Failed to complete new posts fetch");
-      }
-    } catch (error) {
-      console.error("Error fetching new posts:", error);
-      alert(
-        `Failed to fetch new posts: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    } finally {
-      setIsFetchingPosts(false);
-    }
-  };
+  const isSelectedUseCaseLoading =
+    selectedUseCase && loadingUseCaseId === selectedUseCase.id;
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -252,6 +198,7 @@ export default function Dashboard2Page() {
           onUseCaseSelect={setSelectedUseCase}
           onlyUnread={onlyUnread}
           setOnlyUnread={setOnlyUnread}
+          onAddUseCase={handleAddUseCase}
         />
       </div>
 
@@ -259,39 +206,102 @@ export default function Dashboard2Page() {
       <main className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-6">
           <div className="max-w-5xl mx-auto space-y-6">
-            {/* Use Case Tabs and Controls */}
-            {selectedUseCase && (
-              <div className="flex items-center justify-between">
-                <UseCaseTabs
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  hasInsights={!!selectedUseCase.insights}
-                />
-                <div className="flex items-center gap-3">
-                  {activeTab === "posts" && (
-                    <>
-                      <button
-                        onClick={handleFetchNewPosts}
-                        disabled={isFetchingPosts}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            {isSelectedUseCaseLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex items-center gap-3 text-white">
+                  <svg
+                    className="w-5 h-5 animate-spin text-white/80"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  <span className="font-body">Researching your topic...</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Total tab: Overall Posts Summary across all use cases */}
+                {!selectedUseCase &&
+                  brandData?.target_use_cases &&
+                  brandData.target_use_cases.length > 0 &&
+                  (() => {
+                    const allPosts = brandData.target_use_cases.flatMap(
+                      (uc) => uc.subreddit_posts || []
+                    );
+                    const totalPosts = allPosts.length;
+                    const tagTotals = allPosts.reduce(
+                      (acc, post) => {
+                        if (post.tags?.potential_customer)
+                          acc.potential_customer += 1;
+                        if (post.tags?.competitor_mention)
+                          acc.competitor_mention += 1;
+                        if (post.tags?.own_mention) acc.own_mention += 1;
+                        return acc;
+                      },
+                      {
+                        potential_customer: 0,
+                        competitor_mention: 0,
+                        own_mention: 0,
+                      }
+                    );
+                    const subredditCounts = allPosts.reduce<
+                      Record<string, number>
+                    >((acc, post) => {
+                      acc[post.subreddit] = (acc[post.subreddit] || 0) + 1;
+                      return acc;
+                    }, {});
+                    const topSubreddits = Object.entries(subredditCounts)
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 6);
+
+                    // Aggregate keywords across all use cases (simple frequency by occurrence in each use case array)
+                    const keywordFrequency: Record<string, number> = {};
+                    brandData.target_use_cases.forEach((uc) => {
+                      (uc.keywords || []).forEach((kw) => {
+                        const key = kw.trim().toLowerCase();
+                        if (!key) return;
+                        keywordFrequency[key] =
+                          (keywordFrequency[key] || 0) + 1;
+                      });
+                    });
+                    const topKeywords = Object.entries(keywordFrequency)
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 8);
+
+                    return (
+                      <div
+                        className="rounded-2xl p-6 space-y-6"
                         style={{
-                          background:
-                            "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))",
-                          backdropFilter: "blur(10px)",
-                          border: "1px solid rgba(34, 197, 94, 0.3)",
-                          boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)",
-                          color: "white",
+                          background: "rgba(255, 255, 255, 0.08)",
+                          backdropFilter: "blur(20px)",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          boxShadow:
+                            "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
                         }}
                       >
-                        {isFetchingPosts ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            Fetching...
-                          </>
-                        ) : (
-                          <>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="p-2 rounded-xl"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3))",
+                            }}
+                          >
                             <svg
-                              className="w-4 h-4"
+                              className="w-5 h-5 text-emerald-300"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -300,33 +310,419 @@ export default function Dashboard2Page() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                d="M3 10h11M9 21V3m7 18v-6m5 6V10"
                               />
                             </svg>
-                            Fetch New Posts
-                          </>
-                        )}
-                      </button>
-                      <TagFiltersDropdown
-                        posts={allPosts}
-                        selectedTags={selectedTags}
-                        onTagToggle={handleTagToggle}
-                        onClearAll={handleClearAllTags}
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
+                          </div>
+                          <h2 className="text-white font-heading text-xl font-bold">
+                            Community Activity Summary
+                          </h2>
+                        </div>
 
-            {/* Insights View */}
-            {activeTab === "insights" && selectedUseCase?.insights && (
-              <UseCaseInsightsComponent insights={selectedUseCase.insights} />
-            )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div
+                            className="p-4 rounded-xl"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              backdropFilter: "blur(10px)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <div className="text-white/70 text-xs font-body mb-1">
+                              Total Posts
+                            </div>
+                            <div className="text-white text-2xl font-heading font-bold">
+                              {totalPosts}
+                            </div>
+                          </div>
+                          <div
+                            className="p-4 rounded-xl"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              backdropFilter: "blur(10px)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <div className="text-white/70 text-xs font-body mb-1">
+                              Potential Customers
+                            </div>
+                            <div className="text-emerald-300 text-2xl font-heading font-bold">
+                              {tagTotals.potential_customer}
+                            </div>
+                          </div>
+                          <div
+                            className="p-4 rounded-xl"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              backdropFilter: "blur(10px)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <div className="text-white/70 text-xs font-body mb-1">
+                              Competitor Mentions
+                            </div>
+                            <div className="text-rose-300 text-2xl font-heading font-bold">
+                              {tagTotals.competitor_mention}
+                            </div>
+                          </div>
+                          <div
+                            className="p-4 rounded-xl"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              backdropFilter: "blur(10px)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <div className="text-white/70 text-xs font-body mb-1">
+                              Own Mentions
+                            </div>
+                            <div className="text-indigo-300 text-2xl font-heading font-bold">
+                              {tagTotals.own_mention}
+                            </div>
+                          </div>
+                        </div>
 
-            {/* Posts View */}
-            {activeTab === "posts" && (
-              <>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          <div
+                            className="p-4 rounded-xl"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              backdropFilter: "blur(10px)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <div className="text-white/70 text-xs font-body mb-3">
+                              Top Keywords
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {topKeywords.length === 0 ? (
+                                <span className="text-white/60 font-body text-sm">
+                                  No keywords yet
+                                </span>
+                              ) : (
+                                topKeywords.map(([kw, count]) => (
+                                  <span
+                                    key={kw}
+                                    className="px-3 py-1 rounded-full text-sm font-body text-white/90"
+                                    style={{
+                                      background: "rgba(255, 255, 255, 0.08)",
+                                      border:
+                                        "1px solid rgba(255, 255, 255, 0.15)",
+                                    }}
+                                  >
+                                    {kw} · {count}
+                                  </span>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                          <div
+                            className="p-4 rounded-xl"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.05)",
+                              backdropFilter: "blur(10px)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <div className="text-white/70 text-xs font-body mb-3">
+                              Top Subreddits
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {topSubreddits.length === 0 ? (
+                                <span className="text-white/60 font-body text-sm">
+                                  No subreddit data yet
+                                </span>
+                              ) : (
+                                topSubreddits.map(([name, count]) => (
+                                  <span
+                                    key={name}
+                                    className="px-3 py-1 rounded-full text-sm font-body text-white/90"
+                                    style={{
+                                      background: "rgba(255, 255, 255, 0.08)",
+                                      border:
+                                        "1px solid rgba(255, 255, 255, 0.15)",
+                                    }}
+                                  >
+                                    r/{name} · {count}
+                                  </span>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                {/* Total tab: Summary Table of all use cases */}
+                {!selectedUseCase && brandData?.target_use_cases?.length
+                  ? (() => {
+                      const rows = brandData.target_use_cases.map((uc) => {
+                        const ucPosts = uc.subreddit_posts || [];
+                        const ucTotals = ucPosts.reduce(
+                          (acc, post) => {
+                            if (post.tags?.potential_customer)
+                              acc.potential_customer += 1;
+                            if (post.tags?.competitor_mention)
+                              acc.competitor_mention += 1;
+                            return acc;
+                          },
+                          { potential_customer: 0, competitor_mention: 0 }
+                        );
+                        return {
+                          id: uc.id,
+                          title: uc.title,
+                          potential: ucTotals.potential_customer,
+                          competitor: ucTotals.competitor_mention,
+                          keywords: uc.keywords || [],
+                        };
+                      });
+                      return (
+                        <div
+                          className="rounded-2xl p-6"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.06)",
+                            backdropFilter: "blur(16px)",
+                            border: "1px solid rgba(255, 255, 255, 0.18)",
+                          }}
+                        >
+                          <div className="text-white font-heading text-lg font-bold mb-3">
+                            Use Case Summary
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full text-sm">
+                              <thead>
+                                <tr className="text-left text-white/70">
+                                  <th className="py-2 pr-4 font-body">
+                                    Use Case
+                                  </th>
+                                  <th className="py-2 pr-4 font-body">
+                                    Potential
+                                  </th>
+                                  <th className="py-2 pr-4 font-body">
+                                    Competitor
+                                  </th>
+                                  <th className="py-2 pr-4 font-body">
+                                    Keywords
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rows.map((row) => (
+                                  <tr
+                                    key={row.id}
+                                    className="border-t border-white/10"
+                                  >
+                                    <td className="py-2 pr-4 text-white font-body">
+                                      {row.title}
+                                    </td>
+                                    <td className="py-2 pr-4 text-emerald-300 font-heading">
+                                      {row.potential}
+                                    </td>
+                                    <td className="py-2 pr-4 text-rose-300 font-heading">
+                                      {row.competitor}
+                                    </td>
+                                    <td className="py-2 pr-4">
+                                      <div className="flex flex-wrap gap-1">
+                                        {row.keywords.length ? (
+                                          row.keywords.slice(0, 8).map((kw) => (
+                                            <span
+                                              key={kw}
+                                              className="px-2 py-0.5 rounded-full text-xs font-body text-white/90"
+                                              style={{
+                                                background:
+                                                  "rgba(255, 255, 255, 0.08)",
+                                                border:
+                                                  "1px solid rgba(255, 255, 255, 0.15)",
+                                              }}
+                                            >
+                                              {kw}
+                                            </span>
+                                          ))
+                                        ) : (
+                                          <span className="text-white/60 text-xs font-body">
+                                            —
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  : null}
+
+                {/* Selected Use Case: Activity for the chosen use case only */}
+                {selectedUseCase
+                  ? (() => {
+                      const uc = selectedUseCase;
+                      const ucPosts = uc.subreddit_posts || [];
+                      const ucTotals = ucPosts.reduce(
+                        (acc, post) => {
+                          if (post.tags?.potential_customer)
+                            acc.potential_customer += 1;
+                          if (post.tags?.competitor_mention)
+                            acc.competitor_mention += 1;
+                          if (post.tags?.own_mention) acc.own_mention += 1;
+                          return acc;
+                        },
+                        {
+                          potential_customer: 0,
+                          competitor_mention: 0,
+                          own_mention: 0,
+                        }
+                      );
+                      const ucSubCounts = ucPosts.reduce<
+                        Record<string, number>
+                      >((acc, post) => {
+                        acc[post.subreddit] = (acc[post.subreddit] || 0) + 1;
+                        return acc;
+                      }, {});
+                      const ucTopSubs = Object.entries(ucSubCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5);
+                      return (
+                        <div
+                          className="rounded-2xl p-6 space-y-4"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.06)",
+                            backdropFilter: "blur(16px)",
+                            border: "1px solid rgba(255, 255, 255, 0.18)",
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="p-2 rounded-xl"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, rgba(59,130,246,0.28), rgba(99,102,241,0.28))",
+                              }}
+                            >
+                              <svg
+                                className="w-5 h-5 text-indigo-300"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M3 7h18M3 12h18M3 17h18"
+                                />
+                              </svg>
+                            </div>
+                            <h3 className="text-white font-heading text-lg font-bold">
+                              Use Case Activity — {uc.title}
+                            </h3>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                            <div
+                              className="p-3 rounded-lg"
+                              style={{
+                                background: "rgba(255, 255, 255, 0.04)",
+                                border: "1px solid rgba(255, 255, 255, 0.08)",
+                              }}
+                            >
+                              <div className="text-white/70 text-xs font-body mb-1">
+                                Tags
+                              </div>
+                              <div className="flex gap-4 text-sm font-heading">
+                                <span className="text-emerald-300">
+                                  Potential · {ucTotals.potential_customer}
+                                </span>
+                                <span className="text-rose-300">
+                                  Competitor · {ucTotals.competitor_mention}
+                                </span>
+                                <span className="text-indigo-300">
+                                  Own · {ucTotals.own_mention}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div
+                              className="p-3 rounded-lg"
+                              style={{
+                                background: "rgba(255, 255, 255, 0.04)",
+                                border: "1px solid rgba(255, 255, 255, 0.08)",
+                              }}
+                            >
+                              <div className="text-white/70 text-xs font-body mb-1">
+                                Keywords
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {uc.keywords && uc.keywords.length ? (
+                                  uc.keywords.slice(0, 12).map((kw) => (
+                                    <span
+                                      key={kw}
+                                      className="px-2 py-0.5 rounded-full text-xs font-body text-white/90"
+                                      style={{
+                                        background: "rgba(255, 255, 255, 0.08)",
+                                        border:
+                                          "1px solid rgba(255, 255, 255, 0.15)",
+                                      }}
+                                    >
+                                      {kw}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-white/60 text-xs font-body">
+                                    No keywords
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div
+                              className="p-3 rounded-lg"
+                              style={{
+                                background: "rgba(255, 255, 255, 0.04)",
+                                border: "1px solid rgba(255, 255, 255, 0.08)",
+                              }}
+                            >
+                              <div className="text-white/70 text-xs font-body mb-1">
+                                Top Subreddits
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {ucTopSubs.length ? (
+                                  ucTopSubs.map(([name, count]) => (
+                                    <span
+                                      key={name}
+                                      className="px-2 py-0.5 rounded-full text-xs font-body text-white/90"
+                                      style={{
+                                        background: "rgba(255, 255, 255, 0.08)",
+                                        border:
+                                          "1px solid rgba(255, 255, 255, 0.15)",
+                                      }}
+                                    >
+                                      r/{name} · {count}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-white/60 text-xs font-body">
+                                    No subreddit data
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  : null}
+
+                {/* Insights View */}
+                {selectedUseCase?.insights && (
+                  <UseCaseInsightsComponent
+                    insights={selectedUseCase.insights}
+                    insightTitle={selectedUseCase.title}
+                  />
+                )}
+
                 {/* Competitor Summary */}
                 {selectedUseCase?.competitor_summary && (
                   <CompetitorSummary
@@ -334,86 +730,6 @@ export default function Dashboard2Page() {
                     hotFeatures={selectedUseCase.hot_features_summary}
                   />
                 )}
-
-                {/* Reddit Posts */}
-                <div className="space-y-4">
-                  {visiblePosts.length === 0 ? (
-                    <div
-                      className="rounded-2xl p-8 text-center"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.08)",
-                        backdropFilter: "blur(20px)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        boxShadow:
-                          "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-                      }}
-                    >
-                      <p className="text-white/80 font-body">
-                        {selectedTags.size > 0
-                          ? "No posts found matching the selected filters."
-                          : "No posts found for this use case."}
-                      </p>
-                    </div>
-                  ) : (
-                    visiblePosts.map((post) => (
-                      <RedditPostListItem key={post.id} post={post} />
-                    ))
-                  )}
-                </div>
-
-                {/* Pagination Controls */}
-                <div className="mt-6 flex items-center justify-between gap-4 pb-6">
-                  <div className="text-sm text-white/70 font-body">
-                    Showing {totalPosts === 0 ? 0 : startIndex + 1}–
-                    {Math.min(startIndex + pageSize, totalPosts)} of{" "}
-                    {totalPosts}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
-                        page > 1
-                          ? "text-white hover:text-white"
-                          : "text-white/50 cursor-not-allowed"
-                      }`}
-                      style={{
-                        background:
-                          page > 1
-                            ? "rgba(255, 255, 255, 0.1)"
-                            : "rgba(255, 255, 255, 0.05)",
-                        backdropFilter: "blur(10px)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                      }}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page <= 1}
-                    >
-                      Prev
-                    </button>
-                    <span className="text-white/80 font-body text-sm px-3">
-                      Page {page} / {totalPages}
-                    </span>
-                    <button
-                      className={`px-4 py-2 rounded-xl font-body font-medium text-sm transition-all ${
-                        page < totalPages
-                          ? "text-white hover:text-white"
-                          : "text-white/50 cursor-not-allowed"
-                      }`}
-                      style={{
-                        background:
-                          page < totalPages
-                            ? "rgba(255, 255, 255, 0.1)"
-                            : "rgba(255, 255, 255, 0.05)",
-                        backdropFilter: "blur(10px)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                      }}
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={page >= totalPages}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
               </>
             )}
           </div>

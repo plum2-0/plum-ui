@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,16 +9,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let body: { post_content: string; prompt: string };
+    let body: {
+      post_title: string;
+      post_subreddit: string;
+      post_content: string;
+      prompt: string;
+      brand_id?: string;
+      use_case_id?: string;
+    };
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (!body?.post_content || !body?.prompt) {
+    const cookieStore = await cookies();
+    const brandIdFromCookie = cookieStore.get("brand_id")?.value;
+
+    const finalPayload = {
+      post_title: body?.post_title,
+      post_subreddit: body?.post_subreddit,
+      post_content: body?.post_content,
+      prompt: body?.prompt,
+      brand_id: body?.brand_id || brandIdFromCookie,
+      use_case_id: body?.use_case_id,
+    } as const;
+
+    if (
+      !finalPayload.post_title ||
+      !finalPayload.post_subreddit ||
+      !finalPayload.post_content ||
+      !finalPayload.prompt ||
+      !finalPayload.brand_id ||
+      !finalPayload.use_case_id
+    ) {
       return NextResponse.json(
-        { error: "post_content and prompt are required" },
+        {
+          error:
+            "post_title, post_subreddit, post_content, prompt, brand_id, and use_case_id are required",
+        },
         { status: 400 }
       );
     }
@@ -27,7 +57,7 @@ export async function POST(request: NextRequest) {
     const resp = await fetch(`${backendUrl}/api/brand/generate/reply`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(finalPayload),
     });
 
     if (!resp.ok) {
