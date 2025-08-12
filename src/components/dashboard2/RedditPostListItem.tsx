@@ -78,6 +78,7 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
     (typeof PERSONA_OPTIONS)[0] | null
   >(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
+  const [replySent, setReplySent] = useState(false);
 
   // Extract mentioned brand from llm_explanation
   const mentionedBrand = post.llm_explanation
@@ -194,8 +195,13 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
         throw new Error("Failed to submit action");
       }
 
-      // Refresh the page or update the post status
-      window.location.reload();
+      if (action === "reply") {
+        setReplySent(true);
+        // Optionally reset confirmation after a short delay
+        setTimeout(() => {
+          setReplySent(false);
+        }, 2500);
+      }
     } catch (error) {
       console.error("Error submitting action:", error);
       alert("Failed to submit action. Please try again.");
@@ -557,7 +563,9 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
                 <div className="flex justify-end">
                   <button
                     onClick={() => submitPostAction("reply", customReply)}
-                    disabled={!customReply.trim() || isSubmittingAction}
+                    disabled={
+                      !customReply.trim() || isSubmittingAction || replySent
+                    }
                     className="px-4 py-2 rounded-xl font-body font-semibold text-sm transition-all duration-300 hover:scale-105"
                     style={{
                       background: customReply.trim()
@@ -575,7 +583,11 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
                         : "none",
                     }}
                   >
-                    {isSubmittingAction ? "Submitting..." : "Send Reply"}
+                    {isSubmittingAction
+                      ? "Submitting..."
+                      : replySent
+                      ? "Sent!"
+                      : "Send Reply"}
                   </button>
                 </div>
               </div>
