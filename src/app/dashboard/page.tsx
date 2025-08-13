@@ -7,6 +7,9 @@ import { Brand, UseCase } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import CompetitorSummary from "@/components/dashboard2/CompetitorSummary";
 import UseCaseInsightsComponent from "@/components/dashboard2/UseCaseInsights";
+import SummaryMetrics from "@/components/dashboard2/SummaryMetrics";
+import SummaryStatsCard from "@/components/dashboard2/SummaryStatsCard";
+import { getTopKeywordCounts } from "@/lib/keyword-utils";
 
 export default function Dashboard2Page() {
   const router = useRouter();
@@ -267,19 +270,20 @@ export default function Dashboard2Page() {
                       .sort((a, b) => b[1] - a[1])
                       .slice(0, 6);
 
-                    // Aggregate keywords across all use cases (simple frequency by occurrence in each use case array)
-                    const keywordFrequency: Record<string, number> = {};
-                    brandData.target_use_cases.forEach((uc) => {
-                      (uc.keywords || []).forEach((kw) => {
-                        const key = kw.trim().toLowerCase();
-                        if (!key) return;
-                        keywordFrequency[key] =
-                          (keywordFrequency[key] || 0) + 1;
-                      });
-                    });
-                    const topKeywords = Object.entries(keywordFrequency)
-                      .sort((a, b) => b[1] - a[1])
-                      .slice(0, 8);
+                    // Count posts containing each keyword (case-insensitive, phrase match by default)
+                    const allKeywords = Array.from(
+                      new Set(
+                        brandData.target_use_cases
+                          .flatMap((uc) => uc.keywords || [])
+                          .map((k) => k.trim())
+                          .filter(Boolean)
+                      )
+                    );
+                    const topKeywords = getTopKeywordCounts(
+                      allPosts,
+                      allKeywords,
+                      8
+                    );
 
                     return (
                       <div
@@ -310,145 +314,40 @@ export default function Dashboard2Page() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M3 10h11M9 21V3m7 18v-6m5 6V10"
+                                d="M3 7h18M3 12h18M3 17h18"
                               />
                             </svg>
                           </div>
                           <h2 className="text-white font-heading text-xl font-bold">
-                            Community Activity Summary
+                            Problem Validation Research Summary
                           </h2>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          <div
-                            className="p-4 rounded-xl"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.05)",
-                              backdropFilter: "blur(10px)",
-                              border: "1px solid rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <div className="text-white/70 text-xs font-body mb-1">
-                              Total Posts
-                            </div>
-                            <div className="text-white text-2xl font-heading font-bold">
-                              {totalPosts}
-                            </div>
-                          </div>
-                          <div
-                            className="p-4 rounded-xl"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.05)",
-                              backdropFilter: "blur(10px)",
-                              border: "1px solid rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <div className="text-white/70 text-xs font-body mb-1">
-                              Potential Customers
-                            </div>
-                            <div className="text-emerald-300 text-2xl font-heading font-bold">
-                              {tagTotals.potential_customer}
-                            </div>
-                          </div>
-                          <div
-                            className="p-4 rounded-xl"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.05)",
-                              backdropFilter: "blur(10px)",
-                              border: "1px solid rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <div className="text-white/70 text-xs font-body mb-1">
-                              Competitor Mentions
-                            </div>
-                            <div className="text-rose-300 text-2xl font-heading font-bold">
-                              {tagTotals.competitor_mention}
-                            </div>
-                          </div>
-                          <div
-                            className="p-4 rounded-xl"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.05)",
-                              backdropFilter: "blur(10px)",
-                              border: "1px solid rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <div className="text-white/70 text-xs font-body mb-1">
-                              Own Mentions
-                            </div>
-                            <div className="text-indigo-300 text-2xl font-heading font-bold">
-                              {tagTotals.own_mention}
-                            </div>
-                          </div>
-                        </div>
+                        <SummaryMetrics
+                          totalPosts={totalPosts}
+                          potentialCustomers={tagTotals.potential_customer}
+                          competitorMentions={tagTotals.competitor_mention}
+                          ownMentions={tagTotals.own_mention}
+                        />
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                          <div
-                            className="p-4 rounded-xl"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.05)",
-                              backdropFilter: "blur(10px)",
-                              border: "1px solid rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <div className="text-white/70 text-xs font-body mb-3">
-                              Top Keywords
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {topKeywords.length === 0 ? (
-                                <span className="text-white/60 font-body text-sm">
-                                  No keywords yet
-                                </span>
-                              ) : (
-                                topKeywords.map(([kw, count]) => (
-                                  <span
-                                    key={kw}
-                                    className="px-3 py-1 rounded-full text-sm font-body text-white/90"
-                                    style={{
-                                      background: "rgba(255, 255, 255, 0.08)",
-                                      border:
-                                        "1px solid rgba(255, 255, 255, 0.15)",
-                                    }}
-                                  >
-                                    {kw} · {count}
-                                  </span>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                          <div
-                            className="p-4 rounded-xl"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.05)",
-                              backdropFilter: "blur(10px)",
-                              border: "1px solid rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <div className="text-white/70 text-xs font-body mb-3">
-                              Top Subreddits
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {topSubreddits.length === 0 ? (
-                                <span className="text-white/60 font-body text-sm">
-                                  No subreddit data yet
-                                </span>
-                              ) : (
-                                topSubreddits.map(([name, count]) => (
-                                  <span
-                                    key={name}
-                                    className="px-3 py-1 rounded-full text-sm font-body text-white/90"
-                                    style={{
-                                      background: "rgba(255, 255, 255, 0.08)",
-                                      border:
-                                        "1px solid rgba(255, 255, 255, 0.15)",
-                                    }}
-                                  >
-                                    r/{name} · {count}
-                                  </span>
-                                ))
-                              )}
-                            </div>
-                          </div>
+                          <SummaryStatsCard
+                            title="Top Keywords"
+                            items={topKeywords.map(([kw, count]) => ({
+                              label: kw as string,
+                              count: count as number,
+                            }))}
+                            emptyText="No keywords yet"
+                          />
+                          <SummaryStatsCard
+                            title="Top Subreddits"
+                            items={topSubreddits.map(([name, count]) => ({
+                              label: name as string,
+                              count: count as number,
+                            }))}
+                            prefix="r/"
+                            emptyText="No subreddit data yet"
+                          />
                         </div>
                       </div>
                     );
@@ -486,7 +385,7 @@ export default function Dashboard2Page() {
                           }}
                         >
                           <div className="text-white font-heading text-lg font-bold mb-3">
-                            Use Case Summary
+                            By Use Case
                           </div>
                           <div className="overflow-x-auto">
                             <table className="min-w-full text-sm">
@@ -611,7 +510,7 @@ export default function Dashboard2Page() {
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth={2}
-                                  d="M3 7h18M3 12h18M3 17h18"
+                                  d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1m-1 0h1a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h1m10 0H7"
                                 />
                               </svg>
                             </div>
@@ -620,95 +519,39 @@ export default function Dashboard2Page() {
                             </h3>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                            <div
-                              className="p-3 rounded-lg"
-                              style={{
-                                background: "rgba(255, 255, 255, 0.04)",
-                                border: "1px solid rgba(255, 255, 255, 0.08)",
-                              }}
-                            >
-                              <div className="text-white/70 text-xs font-body mb-1">
-                                Tags
-                              </div>
-                              <div className="flex gap-4 text-sm font-heading">
-                                <span className="text-emerald-300">
-                                  Potential · {ucTotals.potential_customer}
-                                </span>
-                                <span className="text-rose-300">
-                                  Competitor · {ucTotals.competitor_mention}
-                                </span>
-                                <span className="text-indigo-300">
-                                  Own · {ucTotals.own_mention}
-                                </span>
-                              </div>
-                            </div>
+                          <div className="mb-4">
+                            <SummaryMetrics
+                              totalPosts={ucPosts.length}
+                              potentialCustomers={ucTotals.potential_customer}
+                              competitorMentions={ucTotals.competitor_mention}
+                              ownMentions={ucTotals.own_mention}
+                            />
+                          </div>
 
-                            <div
-                              className="p-3 rounded-lg"
-                              style={{
-                                background: "rgba(255, 255, 255, 0.04)",
-                                border: "1px solid rgba(255, 255, 255, 0.08)",
-                              }}
-                            >
-                              <div className="text-white/70 text-xs font-body mb-1">
-                                Keywords
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {uc.keywords && uc.keywords.length ? (
-                                  uc.keywords.slice(0, 12).map((kw) => (
-                                    <span
-                                      key={kw}
-                                      className="px-2 py-0.5 rounded-full text-xs font-body text-white/90"
-                                      style={{
-                                        background: "rgba(255, 255, 255, 0.08)",
-                                        border:
-                                          "1px solid rgba(255, 255, 255, 0.15)",
-                                      }}
-                                    >
-                                      {kw}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="text-white/60 text-xs font-body">
-                                    No keywords
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div
-                              className="p-3 rounded-lg"
-                              style={{
-                                background: "rgba(255, 255, 255, 0.04)",
-                                border: "1px solid rgba(255, 255, 255, 0.08)",
-                              }}
-                            >
-                              <div className="text-white/70 text-xs font-body mb-1">
-                                Top Subreddits
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {ucTopSubs.length ? (
-                                  ucTopSubs.map(([name, count]) => (
-                                    <span
-                                      key={name}
-                                      className="px-2 py-0.5 rounded-full text-xs font-body text-white/90"
-                                      style={{
-                                        background: "rgba(255, 255, 255, 0.08)",
-                                        border:
-                                          "1px solid rgba(255, 255, 255, 0.15)",
-                                      }}
-                                    >
-                                      r/{name} · {count}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="text-white/60 text-xs font-body">
-                                    No subreddit data
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <SummaryStatsCard
+                              title="Keywords"
+                              size="sm"
+                              items={getTopKeywordCounts(
+                                ucPosts,
+                                uc.keywords || [],
+                                12
+                              ).map(([kw, count]) => ({
+                                label: kw as string,
+                                count: count as number,
+                              }))}
+                              emptyText="No keywords"
+                            />
+                            <SummaryStatsCard
+                              title="Top Subreddits"
+                              size="sm"
+                              items={ucTopSubs.map(([name, count]) => ({
+                                label: name as string,
+                                count: count as number,
+                              }))}
+                              prefix="r/"
+                              emptyText="No subreddit data"
+                            />
                           </div>
                         </div>
                       );

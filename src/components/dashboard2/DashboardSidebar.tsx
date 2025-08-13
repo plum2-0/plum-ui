@@ -11,49 +11,8 @@ interface DashboardSidebarProps {
   onAddUseCase?: (title: string) => Promise<void> | void;
 }
 
-const getUseCaseIcon = (title: string) => {
-  // Simple icon mapping based on use case title
-  if (
-    title.toLowerCase().includes("support") ||
-    title.toLowerCase().includes("help")
-  ) {
-    return (
-      <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    );
-  }
-  if (
-    title.toLowerCase().includes("integration") ||
-    title.toLowerCase().includes("api")
-  ) {
-    return (
-      <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-        />
-      </svg>
-    );
-  }
-  // Default icon
+const getUseCaseIcon = () => {
+  // Always use a briefcase icon for use cases to be consistent with panel headers
   return (
     <svg
       className="w-4 h-4"
@@ -65,7 +24,7 @@ const getUseCaseIcon = (title: string) => {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+        d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1m-1 0h1a2 2 0 012 2v9a 2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h1m10 0H7"
       />
     </svg>
   );
@@ -295,9 +254,7 @@ export default function DashboardSidebar({
                         }
                       }}
                     >
-                      <div className="flex-shrink-0">
-                        {getUseCaseIcon(useCase.title)}
-                      </div>
+                      <div className="flex-shrink-0">{getUseCaseIcon()}</div>
                       <span className="flex-1 text-left font-body">
                         {useCase.title}
                       </span>

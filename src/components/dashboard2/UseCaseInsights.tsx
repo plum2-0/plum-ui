@@ -50,26 +50,6 @@ export default function UseCaseInsightsComponent({
             </h2>
           </div>
         </div>
-        <div className="flex items-center gap-4 ml-auto">
-          <div
-            className="px-3 py-1 rounded-full text-xs font-body font-semibold"
-            style={{
-              background: "rgba(34, 197, 94, 0.2)",
-              color: "rgb(34, 197, 94)",
-            }}
-          >
-            {insights.tag_counts.potential_customer} Potential Customers
-          </div>
-          <div
-            className="px-3 py-1 rounded-full text-xs font-body font-semibold"
-            style={{
-              background: "rgba(239, 68, 68, 0.2)",
-              color: "rgb(239, 68, 68)",
-            }}
-          >
-            {insights.tag_counts.competitor_mention} Competitor Mentions
-          </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
