@@ -43,7 +43,7 @@ export default function SettingsSidebar() {
           />
         </svg>
       ),
-      href: "/dashboard/settings#social",
+      href: "/dashboard/settings/social",
       disabled: false,
     },
     {
@@ -93,18 +93,8 @@ export default function SettingsSidebar() {
   ];
 
   const handleNavigation = (href: string, disabled: boolean) => {
-    if (!disabled && href !== "#") {
-      if (href.includes("#")) {
-        const [path, hash] = href.split("#");
-        router.push(path);
-        setTimeout(() => {
-          const element = document.getElementById(hash);
-          element?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      } else {
-        router.push(href);
-      }
-    }
+    if (disabled || href === "#") return;
+    router.push(href);
   };
 
   return (

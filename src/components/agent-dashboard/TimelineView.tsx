@@ -1,56 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface TimelineEvent {
-  id: string;
-  time: string;
-  type: "post" | "comment" | "like" | "follow";
-  title: string;
-  status: "scheduled" | "completed" | "failed" | "in_progress" | "planned";
-  subreddit: string;
-  confidence?: number;
-  count?: number;
-  karma?: number;
-}
-
-interface TimelineSection {
-  date: string;
-  events: TimelineEvent[];
-}
-
-interface TimelineData {
-  today: TimelineSection;
-  tomorrow: TimelineSection;
-  upcoming: TimelineSection;
-  completed: TimelineSection;
-}
+import { useState } from "react";
+import { useActionTimeline } from "@/hooks/api/useActionQueries";
 
 interface TimelineViewProps {
   refreshKey: number;
 }
 
 export default function TimelineView({ refreshKey }: TimelineViewProps) {
-  const [timeline, setTimeline] = useState<TimelineData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading: loading } = useActionTimeline();
+  const timeline = data?.timeline || null;
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    const fetchTimeline = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/actions/timeline");
-        const data = await response.json();
-        setTimeline(data.timeline);
-      } catch (error) {
-        console.error("Failed to fetch timeline:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTimeline();
-  }, [refreshKey]);
 
   const toggleSection = (section: string) => {
     setCollapsedSections(prev => {

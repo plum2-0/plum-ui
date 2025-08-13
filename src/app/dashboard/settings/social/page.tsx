@@ -1,11 +1,11 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import BrandSettings from "@/components/settings/BrandSettings";
+import SocialMediaManager from "@/components/settings/SocialMediaManager";
 import { useBrandQuery, BRAND_QUERY_KEY } from "@/hooks/api/useBrandQuery";
 import { Brand } from "@/types/brand";
 
-export default function SettingsPage() {
+export default function SettingsSocialPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useBrandQuery();
 
@@ -17,7 +17,7 @@ export default function SettingsPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-white text-xl font-body">
-          Loading brand settings...
+          Loading social settings...
         </div>
       </div>
     );
@@ -43,7 +43,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="glass-card rounded-xl p-6">
-        <BrandSettings
+        <SocialMediaManager
           brand={data?.brand || null}
           onUpdate={handleBrandUpdate}
         />

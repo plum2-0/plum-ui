@@ -2,24 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { Brand, UseCase, SubredditPost } from "@/types/brand";
+import { UseCase, SubredditPost } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import RedditPostListItem from "@/components/dashboard2/RedditPostListItem";
 import TagFiltersDropdown from "@/components/dashboard2/TagFiltersDropdown";
+import { useBrandQuery, useFetchNewPosts } from "@/hooks/api/useBrandQuery";
 
 export default function EngagePage() {
-  const router = useRouter();
   const { data: session } = useSession();
-  const [brandData, setBrandData] = useState<Brand | null>(null);
+  const { data: brandResponse, isLoading, error } = useBrandQuery();
+  const fetchNewPosts = useFetchNewPosts();
   const [selectedUseCase, setSelectedUseCase] = useState<UseCase | null>(null);
   const [onlyUnread, setOnlyUnread] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
   const pageSize = 10;
+  
+  const brandData = brandResponse?.brand || null;
 
   useEffect(() => {
     const savedFilters = localStorage.getItem("engageTagFilters");
@@ -33,39 +32,12 @@ export default function EngagePage() {
     }
   }, []);
 
-  // Load brand data from API
+  // Set initial selected use case when brand data loads
   useEffect(() => {
-    const loadBrandData = async () => {
-      try {
-        const response = await fetch("/api/brand");
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          if (errorData.needsOnboarding) {
-            router.push("/onboarding");
-            return;
-          }
-          throw new Error(errorData.error || "Failed to fetch brand data");
-        }
-
-        const result = await response.json();
-        const data: Brand = result.brand;
-        setBrandData(data);
-        if (data.target_use_cases.length > 0) {
-          setSelectedUseCase(data.target_use_cases[0]);
-        }
-      } catch (error) {
-        console.error("Error loading brand data:", error);
-        setError(error instanceof Error ? error.message : "Failed to load brand data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (session?.user) {
-      loadBrandData();
+    if (brandData && !selectedUseCase && brandData.target_use_cases.length > 0) {
+      setSelectedUseCase(brandData.target_use_cases[0]);
     }
-  }, [session, router]);
+  }, [brandData, selectedUseCase]);
 
   // Reset pagination when use case changes
   useEffect(() => {
@@ -83,7 +55,7 @@ export default function EngagePage() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-red-300 text-xl font-body">Error: {error}</div>
+        <div className="text-red-300 text-xl font-body">Error: {error.message}</div>
       </div>
     );
   }
@@ -146,45 +118,19 @@ export default function EngagePage() {
 
   const handleFetchNewPosts = async () => {
     if (!selectedUseCase || !brandData?.id) return;
-    setIsFetchingPosts(true);
-    try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(
-        `${backendUrl}/api/brand/${brandData.id}/new/posts?use_case_id=${selectedUseCase.id}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json", "User-Agent": "Plum-UI/1.0" },
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to fetch new posts: ${response.statusText}`);
+    
+    await fetchNewPosts.mutateAsync({ 
+      brandId: brandData.id, 
+      useCaseId: selectedUseCase.id 
+    });
+    
+    // Update selected use case with fresh data
+    if (brandData) {
+      const updatedUseCase = brandData.target_use_cases.find((uc) => uc.id === selectedUseCase.id);
+      if (updatedUseCase) {
+        setSelectedUseCase(updatedUseCase);
+        setPage(1);
       }
-      const result = await response.json();
-      if (result.status === "completed") {
-        const totalDiscovered = result.total_posts_discovered || 0;
-        const totalTagged = result.total_posts_tagged || 0;
-        if (totalDiscovered > 0) {
-          alert(`Success! Discovered ${totalDiscovered} new posts, tagged ${totalTagged} posts. Refreshing data...`);
-        } else {
-          alert("No new posts found at this time. Try again later!");
-        }
-        const brandResponse = await fetch("/api/brand");
-        if (brandResponse.ok) {
-          const brandResult = await brandResponse.json();
-          const data: Brand = brandResult.brand;
-          setBrandData(data);
-          const updatedUseCase = data.target_use_cases.find((uc) => uc.id === selectedUseCase.id);
-          if (updatedUseCase) setSelectedUseCase(updatedUseCase);
-          setPage(1);
-        }
-      } else {
-        throw new Error("Failed to complete new posts fetch");
-      }
-    } catch (error) {
-      console.error("Error fetching new posts:", error);
-      alert(`Failed to fetch new posts: ${error instanceof Error ? error.message : "Unknown error"}`);
-    } finally {
-      setIsFetchingPosts(false);
     }
   };
 
@@ -211,7 +157,7 @@ export default function EngagePage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleFetchNewPosts}
-                    disabled={isFetchingPosts}
+                    disabled={fetchNewPosts.isPending}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       background: "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))",
@@ -221,7 +167,7 @@ export default function EngagePage() {
                       color: "white",
                     }}
                   >
-                    {isFetchingPosts ? (
+                    {fetchNewPosts.isPending ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         Fetching...

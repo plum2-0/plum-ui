@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Brand, UseCase } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import CompetitorSummary from "@/components/dashboard2/CompetitorSummary";
@@ -10,60 +9,29 @@ import UseCaseInsightsComponent from "@/components/dashboard2/UseCaseInsights";
 import SummaryMetrics from "@/components/dashboard2/SummaryMetrics";
 import SummaryStatsCard from "@/components/dashboard2/SummaryStatsCard";
 import { getTopKeywordCounts } from "@/lib/keyword-utils";
+import { useBrandQuery, useGenerateUseCaseInsight } from "@/hooks/api/useBrandQuery";
 
 export default function Dashboard2Page() {
-  const router = useRouter();
   const { data: session } = useSession();
-  const [brandData, setBrandData] = useState<Brand | null>(null);
+  const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
+  const generateInsight = useGenerateUseCaseInsight();
   const [selectedUseCase, setSelectedUseCase] = useState<UseCase | null>(null);
   const [onlyUnread, setOnlyUnread] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [loadingUseCaseId, setLoadingUseCaseId] = useState<string | null>(null);
+  
+  const brandData = brandResponse?.brand || null;
 
   // No posts filters needed when showing insights-only view
 
-  // Load brand data from API
-  useEffect(() => {
-    const loadBrandData = async () => {
-      try {
-        const response = await fetch("/api/brand");
-
-        if (!response.ok) {
-          const errorData = await response.json();
-
-          // If user needs onboarding, redirect them
-          if (errorData.needsOnboarding) {
-            router.push("/onboarding");
-            return;
-          }
-
-          throw new Error(errorData.error || "Failed to fetch brand data");
-        }
-
-        const result = await response.json();
-        const data: Brand = result.brand;
-
-        setBrandData(data);
-
-        // Default to Total (no specific use case selected)
-        setSelectedUseCase(null);
-      } catch (error) {
-        console.error("Error loading brand data:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to load brand data"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (session?.user) {
-      loadBrandData();
+  // Set initial selected use case when brand data loads
+  useState(() => {
+    if (brandData && !selectedUseCase) {
+      // Default to Total (no specific use case selected)
+      setSelectedUseCase(null);
     }
-  }, [session, router]);
+  });
 
-  const handleAddUseCase = (title: string) => {
+  const handleAddUseCase = async (title: string) => {
     if (!brandData) return Promise.resolve();
 
     const brandId = brandData.id;
@@ -84,75 +52,35 @@ export default function Dashboard2Page() {
       // insights intentionally undefined while loading
     } as unknown as UseCase;
 
-    // Optimistically add and select
-    setBrandData((prev) =>
-      prev
-        ? { ...prev, target_use_cases: [...prev.target_use_cases, tempUseCase] }
-        : prev
-    );
+    // Optimistically select the temp use case
     setSelectedUseCase(tempUseCase);
     setLoadingUseCaseId(tempId);
 
-    // Fire backend in background, then refetch brand, select the new one
-    void (async () => {
-      try {
-        const query = encodeURIComponent(title);
-        const url = `http://localhost:8000/api/brand/${brandId}/insight?use_case=${query}`;
-        const res = await fetch(url, {
-          method: "GET",
-          headers: { "User-Agent": "plum-ui" },
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Failed to generate insight: ${res.status} ${text}`);
-        }
-
-        // Ignore body; we will refetch brand to pick up the new persisted use case
-        // Refetch brand to get fresh data
-        const brandRes = await fetch("/api/brand");
-        if (!brandRes.ok) {
-          const text = await brandRes.text();
-          throw new Error(`Refetch brand failed: ${brandRes.status} ${text}`);
-        }
-        const brandJson = await brandRes.json();
-        const refreshed: Brand = brandJson.brand;
-
-        // Find the created use case by matching title
-        const created = refreshed.target_use_cases.find(
+    try {
+      // Generate insight and let React Query handle the refetch
+      await generateInsight.mutateAsync({ brandId, title });
+      
+      // After successful generation, find and select the new use case
+      const updatedBrand = await refetch();
+      if (updatedBrand.data?.brand) {
+        const created = updatedBrand.data.brand.target_use_cases.find(
           (uc) => uc.title.trim().toLowerCase() === title.trim().toLowerCase()
         );
-
-        setBrandData(refreshed);
         if (created) {
           setSelectedUseCase(created);
         }
-      } catch (e) {
-        console.error(e);
-        // Remove the temp use case on failure
-        setBrandData((prev) =>
-          prev
-            ? {
-                ...prev,
-                target_use_cases: prev.target_use_cases.filter(
-                  (uc) => uc.id !== tempId
-                ),
-              }
-            : prev
-        );
-        if (selectedUseCase?.id === tempId) {
-          setSelectedUseCase(() => {
-            // fallback to first use case if available
-            const first = brandData?.target_use_cases[0];
-            return first ?? null;
-          });
-        }
-        setError(e instanceof Error ? e.message : "Failed to generate insight");
-      } finally {
-        setLoadingUseCaseId((prev) => (prev === tempId ? null : prev));
       }
-    })();
+    } catch (e) {
+      console.error(e);
+      // On failure, reset selection
+      setSelectedUseCase(() => {
+        const first = brandData?.target_use_cases[0];
+        return first ?? null;
+      });
+    } finally {
+      setLoadingUseCaseId(null);
+    }
 
-    // Return a resolved promise so the input can close immediately
     return Promise.resolve();
   };
 
@@ -173,7 +101,7 @@ export default function Dashboard2Page() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-red-300 text-xl font-body">Error: {error}</div>
+        <div className="text-red-300 text-xl font-body">Error: {error.message}</div>
       </div>
     );
   }

@@ -1,44 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface Stats {
-  todaysEngagements: number;
-  todaysEngagementsChange: string;
-  weeklyGrowth: string;
-  weeklyGrowthValue: number;
-  successRate: number;
-  successRateChange: string;
-  karmaGained: number;
-  karmaGainedChange: string;
-  pendingActions: number;
-  pendingActionsUrgent: number;
-}
+import { useActionStats } from "@/hooks/api/useActionQueries";
 
 interface SummaryStatsProps {
   refreshKey: number;
 }
 
 export default function SummaryStats({ refreshKey }: SummaryStatsProps) {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/actions/stats");
-        const data = await response.json();
-        setStats(data);
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [refreshKey]);
+  const { data: stats, isLoading: loading } = useActionStats();
 
   if (loading) {
     return (
