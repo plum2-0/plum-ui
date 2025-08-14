@@ -6,6 +6,7 @@ import { UseCase, SubredditPost } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import RedditPostListItem from "@/components/dashboard2/RedditPostListItem";
 import TagFiltersDropdown from "@/components/dashboard2/TagFiltersDropdown";
+import TeamAgentList from "@/components/team/TeamAgentList";
 import { useBrandQuery, useFetchNewPosts } from "@/hooks/api/useBrandQuery";
 
 export default function EngagePage() {
@@ -151,6 +152,12 @@ export default function EngagePage() {
       <main className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-6">
           <div className="max-w-5xl mx-auto space-y-6">
+            {/* Team Agent List */}
+            <div>
+              <h2 className="text-white font-heading text-xl font-bold mb-4">Your Team Agents</h2>
+              <TeamAgentList />
+            </div>
+            
             {selectedUseCase && (
               <div className="flex items-center justify-between">
                 <h2 className="text-white font-heading text-xl font-bold">Engage — Reddit Posts</h2>
