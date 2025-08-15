@@ -3,40 +3,54 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAgent, useDeleteAgent } from "@/hooks/api/useAgentQueries";
+import { useBrandQuery } from "@/hooks/api/useBrandQuery";
+import { UseCase } from "@/types/brand";
+import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import AgentModal from "@/components/team/AgentModal";
 import RedditAgentThread from "@/components/team/RedditAgentThread";
-import { Conversation } from "@/types/agent";
+// import { Conversation } from "@/types/agent"; // Unused import
 
-type FilterType = 'all' | 'engaged' | 'monitoring' | 'archived';
-type SortType = 'newest' | 'oldest' | 'relevance' | 'upvotes';
+type FilterType = "all" | "engaged" | "monitoring" | "archived";
+type SortType = "newest" | "oldest" | "relevance" | "upvotes";
 
 export default function AgentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const agentId = params.id as string;
-  
+
   const { data, isLoading, error } = useAgent(agentId);
+  const { data: brandResponse } = useBrandQuery();
   const deleteAgent = useDeleteAgent();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
-  const [sortBy, setSortBy] = useState<SortType>('newest');
-  const [expandedConversations, setExpandedConversations] = useState<Set<string>>(new Set());
-  
-  const agent = data?.agent;
-  const conversations = data?.redditConversations || [];
-  const metrics = data?.metrics;
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
+  const [sortBy, setSortBy] = useState<SortType>("newest");
+  const [selectedUseCase, setSelectedUseCase] = useState<UseCase | null>(null);
+  const [onlyUnread, setOnlyUnread] = useState(false);
+  const [expandedConversations, setExpandedConversations] = useState<
+    Set<string>
+  >(new Set());
+  // Note: expandedConversations is used by RedditAgentThread component handlers
+
+  const agent = data;
+  const brandData = brandResponse?.brand || null;
+  const conversations = agent?.redditAgentConvos || [];
+  const metrics = agent?.metrics;
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this agent? This action cannot be undone.")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this agent? This action cannot be undone."
+      )
+    ) {
       return;
     }
-    
+
     setIsDeleting(true);
     try {
       await deleteAgent.mutateAsync(agentId);
-      router.push('/dashboard/engage');
+      router.push("/dashboard/engage");
     } catch (error) {
       console.error("Failed to delete agent:", error);
       alert("Failed to delete agent. Please try again.");
@@ -46,11 +60,11 @@ export default function AgentDetailPage() {
   };
 
   const handleConversationExpand = (conversationId: string) => {
-    setExpandedConversations(prev => new Set(prev).add(conversationId));
+    setExpandedConversations((prev) => new Set(prev).add(conversationId));
   };
 
   const handleConversationCollapse = (conversationId: string) => {
-    setExpandedConversations(prev => {
+    setExpandedConversations((prev) => {
       const newSet = new Set(prev);
       newSet.delete(conversationId);
       return newSet;
@@ -58,7 +72,7 @@ export default function AgentDetailPage() {
   };
 
   // Filter conversations based on selected filter
-  const filteredConversations = conversations.filter(convo => {
+  const filteredConversations = conversations.filter(() => {
     // For now, we'll show all conversations since we don't have status in RedditConvo
     // In a real implementation, you'd filter based on conversation status
     return true;
@@ -67,15 +81,23 @@ export default function AgentDetailPage() {
   // Sort conversations
   const sortedConversations = [...filteredConversations].sort((a, b) => {
     switch (sortBy) {
-      case 'newest':
-        return new Date(b.parentPost.createdAt).getTime() - new Date(a.parentPost.createdAt).getTime();
-      case 'oldest':
-        return new Date(a.parentPost.createdAt).getTime() - new Date(b.parentPost.createdAt).getTime();
-      case 'upvotes':
+      case "newest":
+        return (
+          new Date(b.parentPost.createdAt).getTime() -
+          new Date(a.parentPost.createdAt).getTime()
+        );
+      case "oldest":
+        return (
+          new Date(a.parentPost.createdAt).getTime() -
+          new Date(b.parentPost.createdAt).getTime()
+        );
+      case "upvotes":
         return (b.parentReply.upvotes || 0) - (a.parentReply.upvotes || 0);
-      case 'relevance':
+      case "relevance":
         // Sort by reply count for now
-        return (b.parentReply.replyCount || 0) - (a.parentReply.replyCount || 0);
+        return (
+          (b.parentReply.replyCount || 0) - (a.parentReply.replyCount || 0)
+        );
       default:
         return 0;
     }
@@ -84,12 +106,15 @@ export default function AgentDetailPage() {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="animate-pulse text-white text-xl font-body">Loading agent...</div>
+        <div className="animate-pulse text-white text-xl font-body">
+          Loading agent...
+        </div>
       </div>
     );
   }
 
   if (error || !agent) {
+    console.log("error", error);
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -97,7 +122,7 @@ export default function AgentDetailPage() {
             {error ? "Failed to load agent" : "Agent not found"}
           </p>
           <button
-            onClick={() => router.push('/dashboard/engage')}
+            onClick={() => router.push("/dashboard/engage")}
             className="px-6 py-2 rounded-xl font-body text-white transition-all hover:scale-105"
             style={{
               background: "rgba(255, 255, 255, 0.1)",
@@ -112,13 +137,29 @@ export default function AgentDetailPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="h-full flex overflow-hidden">
+      {/* Fixed Sidebar */}
+      {brandData && (
+        <div className="w-64 shrink-0">
+          <DashboardSidebar
+            useCases={brandData.target_use_cases}
+            selectedUseCase={selectedUseCase}
+            onUseCaseSelect={setSelectedUseCase}
+            onlyUnread={onlyUnread}
+            setOnlyUnread={setOnlyUnread}
+          />
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div 
+        <div
           className="rounded-2xl p-6"
           style={{
-            background: "linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(34, 197, 94, 0.1))",
+            background:
+              "linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(34, 197, 94, 0.1))",
             backdropFilter: "blur(20px)",
             border: "1px solid rgba(255, 255, 255, 0.2)",
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
@@ -127,42 +168,50 @@ export default function AgentDetailPage() {
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               {/* Avatar */}
-              <div 
+              <div
                 className="w-16 h-16 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-2xl"
                 style={{
-                  background: "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
+                  background:
+                    "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
                 }}
               >
-                {agent.name.charAt(0).toUpperCase()}
+                {agent?.name?.charAt(0)?.toUpperCase() ?? "?"}
               </div>
-              
+
               {/* Info */}
               <div>
                 <h1 className="text-2xl font-heading font-bold text-white mb-1">
-                  {agent.name}
+                  {agent?.name ?? "Unknown Agent"}
                 </h1>
                 <p className="text-white/60 text-sm font-body mb-3">
-                  Created {new Date(agent.createdAt).toLocaleDateString()}
+                  Created{" "}
+                  {agent?.createdAt
+                    ? new Date(agent.createdAt).toLocaleDateString()
+                    : "Unknown"}
                 </p>
                 <div className="flex items-center gap-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-body font-medium ${
-                    agent.isActive ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {agent.isActive ? 'Active' : 'Inactive'}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-body font-medium ${
+                      agent?.isActive
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-gray-500/20 text-gray-400"
+                    }`}
+                  >
+                    {agent?.isActive ? "Active" : "Inactive"}
                   </span>
-                  {agent.templateId && (
+                  {agent?.templateId && (
                     <span className="text-white/50 text-xs font-body">
-                      Template: {agent.templateId.replace('-', ' ')}
+                      Template: {agent.templateId.replace("-", " ")}
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            
+
             {/* Actions */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => router.push('/dashboard/engage')}
+                onClick={() => router.push("/dashboard/engage")}
                 className="px-4 py-2 rounded-xl font-body text-white/80 hover:text-white transition-all hover:scale-105"
                 style={{
                   background: "rgba(255, 255, 255, 0.05)",
@@ -190,7 +239,7 @@ export default function AgentDetailPage() {
                   border: "1px solid rgba(239, 68, 68, 0.2)",
                 }}
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
@@ -199,57 +248,71 @@ export default function AgentDetailPage() {
         {/* Metrics Dashboard */}
         {metrics && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div 
+            <div
               className="rounded-xl p-4"
               style={{
-                background: "linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%)",
                 backdropFilter: "blur(15px)",
                 border: "1px solid rgba(168, 85, 247, 0.2)",
               }}
             >
-              <p className="text-white/60 text-xs font-body mb-1">Total Conversations</p>
-              <p className="text-2xl font-heading font-bold text-white">{metrics.totalConversations}</p>
+              <p className="text-white/60 text-xs font-body mb-1">
+                Total Conversations
+              </p>
+              <p className="text-2xl font-heading font-bold text-white">
+                {metrics?.totalConversations ?? 0}
+              </p>
             </div>
-            
-            <div 
+
+            <div
               className="rounded-xl p-4"
               style={{
-                background: "linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)",
                 backdropFilter: "blur(15px)",
                 border: "1px solid rgba(34, 197, 94, 0.2)",
               }}
             >
-              <p className="text-white/60 text-xs font-body mb-1">Response Rate</p>
+              <p className="text-white/60 text-xs font-body mb-1">
+                Response Rate
+              </p>
               <p className="text-2xl font-heading font-bold text-white">
-                {Math.round(metrics.responseRate * 100)}%
+                {Math.round((metrics?.responseRate ?? 0) * 100)}%
               </p>
             </div>
-            
-            <div 
+
+            <div
               className="rounded-xl p-4"
               style={{
-                background: "linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%)",
                 backdropFilter: "blur(15px)",
                 border: "1px solid rgba(255, 193, 7, 0.2)",
               }}
             >
-              <p className="text-white/60 text-xs font-body mb-1">Engagement Rate</p>
+              <p className="text-white/60 text-xs font-body mb-1">
+                Engagement Rate
+              </p>
               <p className="text-2xl font-heading font-bold text-white">
-                {Math.round(metrics.engagementRate * 100)}%
+                {Math.round((metrics?.engagementRate ?? 0) * 100)}%
               </p>
             </div>
-            
-            <div 
+
+            <div
               className="rounded-xl p-4"
               style={{
-                background: "linear-gradient(135deg, rgba(255, 79, 0, 0.1) 0%, rgba(255, 79, 0, 0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(255, 79, 0, 0.1) 0%, rgba(255, 79, 0, 0.05) 100%)",
                 backdropFilter: "blur(15px)",
                 border: "1px solid rgba(255, 79, 0, 0.2)",
               }}
             >
-              <p className="text-white/60 text-xs font-body mb-1">Reddit Karma</p>
+              <p className="text-white/60 text-xs font-body mb-1">
+                Reddit Karma
+              </p>
               <p className="text-2xl font-heading font-bold text-white">
-                {metrics.redditMetrics.totalKarma}
+                {metrics?.redditMetrics?.totalKarma ?? 0}
               </p>
             </div>
           </div>
@@ -257,7 +320,7 @@ export default function AgentDetailPage() {
 
         {/* Persona & Goal */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div 
+          <div
             className="rounded-xl p-5"
             style={{
               background: "rgba(255, 255, 255, 0.08)",
@@ -265,13 +328,15 @@ export default function AgentDetailPage() {
               border: "1px solid rgba(255, 255, 255, 0.2)",
             }}
           >
-            <h3 className="text-white font-heading font-semibold mb-3">Persona</h3>
+            <h3 className="text-white font-heading font-semibold mb-3">
+              Persona
+            </h3>
             <p className="text-white/70 text-sm font-body leading-relaxed">
-              {agent.persona}
+              {agent?.persona ?? "No persona defined"}
             </p>
           </div>
-          
-          <div 
+
+          <div
             className="rounded-xl p-5"
             style={{
               background: "rgba(255, 255, 255, 0.08)",
@@ -281,7 +346,7 @@ export default function AgentDetailPage() {
           >
             <h3 className="text-white font-heading font-semibold mb-3">Goal</h3>
             <p className="text-white/70 text-sm font-body leading-relaxed">
-              {agent.goal}
+              {agent?.goal ?? "No goal defined"}
             </p>
           </div>
         </div>
@@ -290,30 +355,35 @@ export default function AgentDetailPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-heading font-bold text-white">
-              Conversations ({sortedConversations.length})
+              Conversations ({sortedConversations?.length ?? 0})
             </h2>
-            
+
             {/* Filters and Sort */}
             <div className="flex items-center gap-3">
               {/* Filter Tabs */}
-              <div className="flex items-center gap-1 p-1 rounded-lg" style={{
-                background: "rgba(255, 255, 255, 0.05)",
-              }}>
-                {(['all', 'engaged', 'monitoring', 'archived'] as FilterType[]).map((filter) => (
+              <div
+                className="flex items-center gap-1 p-1 rounded-lg"
+                style={{
+                  background: "rgba(255, 255, 255, 0.05)",
+                }}
+              >
+                {(
+                  ["all", "engaged", "monitoring", "archived"] as FilterType[]
+                ).map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setSelectedFilter(filter)}
                     className={`px-3 py-1 rounded-md text-xs font-body capitalize transition-all ${
-                      selectedFilter === filter 
-                        ? 'text-white bg-white/10' 
-                        : 'text-white/60 hover:text-white'
+                      selectedFilter === filter
+                        ? "text-white bg-white/10"
+                        : "text-white/60 hover:text-white"
                     }`}
                   >
                     {filter}
                   </button>
                 ))}
               </div>
-              
+
               {/* Sort Dropdown */}
               <select
                 value={sortBy}
@@ -334,8 +404,8 @@ export default function AgentDetailPage() {
 
           {/* Conversations List */}
           <div className="space-y-4">
-            {sortedConversations.length === 0 ? (
-              <div 
+            {(sortedConversations?.length ?? 0) === 0 ? (
+              <div
                 className="rounded-2xl p-8 text-center"
                 style={{
                   background: "rgba(255, 255, 255, 0.08)",
@@ -348,23 +418,36 @@ export default function AgentDetailPage() {
                 </p>
               </div>
             ) : (
-              sortedConversations.map((convo, idx) => (
+              sortedConversations?.map((convo, idx) => (
                 <RedditAgentThread
                   key={idx}
                   redditConvo={convo}
                   onExpand={handleConversationExpand}
                   onCollapse={handleConversationCollapse}
+                  agentName={agent.name}
+                  agentAvatarUrl={agent.avatarUrl}
                 />
               ))
             )}
           </div>
         </div>
       </div>
+      </div>
 
       {/* Edit Modal */}
       <AgentModal
         isOpen={isEditing}
-        agent={agent}
+        agent={{
+          id: agent.id,
+          name: agent.name,
+          persona: agent.persona,
+          goal: agent.goal,
+          avatar: agent.avatarUrl,
+          createdAt: new Date(agent.createdAt),
+          updatedAt: new Date(agent.updatedAt),
+          isActive: agent.isActive ?? true,
+          templateId: agent.templateId,
+        }}
         onClose={() => setIsEditing(false)}
       />
     </div>

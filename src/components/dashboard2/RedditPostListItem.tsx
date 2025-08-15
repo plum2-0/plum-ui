@@ -8,6 +8,8 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { SubredditPost } from "@/types/brand";
 import TagBadge from "./TagBadge";
+import { useAgentReply } from "@/hooks/useAgentReply";
+import AgentReplyBox from "./AgentReplyBox";
 
 interface RedditPostListItemProps {
   post: SubredditPost;
@@ -28,57 +30,18 @@ function formatTimeAgo(dateString: string): string {
   return `${Math.floor(diffInSeconds / 86400)}d ago`;
 }
 
-// Persona options for AI reply generation
-const PERSONA_OPTIONS = [
-  {
-    label: "Professional",
-    prompt:
-      "Professional and informative tone, like a knowledgeable industry expert. 2-4 sentences. Helpful and authoritative without being pushy.",
-    icon: "💼",
-  },
-  {
-    label: "Friendly",
-    prompt:
-      "Friendly and approachable tone, like a helpful neighbor. 2-4 sentences. Warm, conversational, and supportive.",
-    icon: "😊",
-  },
-  {
-    label: "Motivational",
-    prompt:
-      "Motivational and encouraging tone, in the spirit of Tony Robbins (tone only, no direct impersonation). 2-4 sentences. Conversational and human. No corporate speak or sales pitch.",
-    icon: "🚀",
-  },
-  {
-    label: "Empathetic",
-    prompt:
-      "Empathetic and understanding tone, in the spirit of Mister Rogers (tone only, no direct impersonation). 2-4 sentences. Warm, kind, and human.",
-    icon: "💝",
-  },
-  {
-    label: "Witty",
-    prompt:
-      "Witty with light humor, in the spirit of Dave Chappelle (tone only, no direct impersonation). 2-4 sentences. Keep it respectful and friendly.",
-    icon: "😄",
-  },
-  {
-    label: "Technical",
-    prompt:
-      "Technical and detailed tone, like a subject matter expert. 2-4 sentences. Focus on specific, actionable advice and solutions.",
-    icon: "🔧",
-  },
-];
+// Agents will be used for reply generation instead of personas
 
 export default function RedditPostListItem({ post }: RedditPostListItemProps) {
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [customReply, setCustomReply] = useState<string>("");
   const [showReplyBox, setShowReplyBox] = useState(false);
-  const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
-  const [lastUsedPersona, setLastUsedPersona] = useState<
-    (typeof PERSONA_OPTIONS)[0] | null
-  >(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [lastUsedAgentId, setLastUsedAgentId] = useState<string | null>(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [replySent, setReplySent] = useState(false);
+  const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
+    useAgentReply();
 
   // Extract mentioned brand from llm_explanation
   const mentionedBrand = post.llm_explanation
@@ -87,55 +50,35 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
     )?.[1]
     ?.trim();
 
-  const handleGenerateReply = async (persona: (typeof PERSONA_OPTIONS)[0]) => {
-    setIsGenerating(true);
-    setSelectedPersona(persona.label);
-    setLastUsedPersona(persona);
-
+  const handleGenerateWithAgent = async (agentId?: string) => {
+    const targetAgentId = agentId || selectedAgentId;
+    if (!targetAgentId) return;
     try {
-      const response = await fetch("/api/generate/reply", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          post_title: post.title,
-          post_subreddit: post.subreddit,
-          post_content: post.content || post.title,
-          prompt: persona.prompt,
-          brand_id: post.brand_id,
-          use_case_id: post.use_case_id,
-        }),
+      const result = await generateWithAgent(targetAgentId, post, {
+        autoReply: true,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to generate reply");
+      if (result.content) {
+        setCustomReply(result.content);
       }
-
-      const data = await response.json();
-
-      if (data.generated_reply) {
-        setCustomReply(data.generated_reply);
-      } else {
-        throw new Error("No reply generated");
-      }
+      setLastUsedAgentId(targetAgentId);
     } catch (error) {
-      console.error("Error generating reply:", error);
-      alert(
-        `Failed to generate reply: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    } finally {
-      setIsGenerating(false);
-      setSelectedPersona(null);
+      console.error("Error generating reply with agent:", error);
+      alert("Failed to generate reply. Please try again.");
     }
   };
 
   const handleRegenerate = async () => {
-    if (lastUsedPersona) {
-      await handleGenerateReply(lastUsedPersona);
+    if (!lastUsedAgentId) return;
+    try {
+      const result = await generateWithAgent(lastUsedAgentId, post, {
+        autoReply: true,
+      });
+      if (result.content) {
+        setCustomReply(result.content);
+      }
+    } catch (error) {
+      console.error("Error regenerating reply with agent:", error);
+      alert("Failed to regenerate reply.");
     }
   };
 
@@ -188,6 +131,8 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
           post_id: post.post_id,
           user_content_action: action,
           content: action === "reply" ? text || "" : undefined,
+          agent_id:
+            action === "reply" ? lastUsedAgentId || selectedAgentId : undefined,
         }),
       });
 
@@ -473,124 +418,22 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
 
             {/* Reply box */}
             {showReplyBox && (
-              <div
-                className="mt-4 p-4 rounded-xl"
-                style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Generate with AI Section */}
-                <div className="mb-4">
-                  <h4 className="text-white font-heading text-sm font-semibold mb-3">
-                    Generate with AI
-                  </h4>
-
-                  {/* Persona options - always visible */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    {PERSONA_OPTIONS.map((persona) => (
-                      <button
-                        key={persona.label}
-                        onClick={() => handleGenerateReply(persona)}
-                        disabled={isGenerating}
-                        className="flex items-center gap-2 p-3 rounded-xl text-left transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.08)",
-                          backdropFilter: "blur(10px)",
-                          border: "1px solid rgba(255, 255, 255, 0.15)",
-                        }}
-                      >
-                        <span className="text-lg">{persona.icon}</span>
-                        <span className="text-white font-body text-sm font-medium">
-                          {isGenerating && selectedPersona === persona.label ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
-                              Generating...
-                            </div>
-                          ) : (
-                            persona.label
-                          )}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-3">
-                  <textarea
-                    value={customReply}
-                    onChange={(e) => setCustomReply(e.target.value)}
-                    placeholder="Write your reply or use AI generation above..."
-                    className="w-full p-3 rounded-xl font-body text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400/50 transition-all"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.1)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                      color: "white",
-                    }}
-                    rows={4}
-                  />
-                  {lastUsedPersona && (
-                    <button
-                      onClick={handleRegenerate}
-                      disabled={isGenerating}
-                      className="ml-3 text-white/70 hover:text-white hover:scale-110 transition-all duration-200 disabled:opacity-50"
-                      title="Regenerate with same persona"
-                    >
-                      {isGenerating ? (
-                        <div className="w-4 h-4 border border-white/30 border-t-white rounded-full animate-spin"></div>
-                      ) : (
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => submitPostAction("reply", customReply)}
-                    disabled={
-                      !customReply.trim() || isSubmittingAction || replySent
-                    }
-                    className="px-4 py-2 rounded-xl font-body font-semibold text-sm transition-all duration-300 hover:scale-105"
-                    style={{
-                      background: customReply.trim()
-                        ? "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))"
-                        : "rgba(255, 255, 255, 0.05)",
-                      color: customReply.trim()
-                        ? "white"
-                        : "rgba(255, 255, 255, 0.5)",
-                      border: "1px solid rgba(34, 197, 94, 0.3)",
-                      boxShadow: customReply.trim()
-                        ? "0 4px 12px rgba(34, 197, 94, 0.3)"
-                        : "none",
-                      textShadow: customReply.trim()
-                        ? "0 1px 2px rgba(0, 0, 0, 0.3)"
-                        : "none",
-                    }}
-                  >
-                    {isSubmittingAction
-                      ? "Submitting..."
-                      : replySent
-                      ? "Sent!"
-                      : "Send Reply"}
-                  </button>
-                </div>
-              </div>
+              <AgentReplyBox
+                agents={agents}
+                isLoadingAgents={isLoadingAgents}
+                isGenerating={isGenerating}
+                selectedAgentId={selectedAgentId}
+                setSelectedAgentId={setSelectedAgentId}
+                lastUsedAgentId={lastUsedAgentId}
+                onGenerateWithAgent={handleGenerateWithAgent}
+                onRegenerate={handleRegenerate}
+                customReply={customReply}
+                setCustomReply={setCustomReply}
+                submitPostAction={submitPostAction}
+                replySent={replySent}
+                isSubmittingAction={isSubmittingAction}
+                post={post}
+              />
             )}
           </div>
         </div>

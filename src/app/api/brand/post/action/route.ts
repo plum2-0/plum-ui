@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     console.log(JSON.stringify(body, null, 2));
 
-    const resp = await fetch(`${backendUrl}/api/brand/post/action`, {
+    const resp = await fetch(`${backendUrl}/api/agents/post/action`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

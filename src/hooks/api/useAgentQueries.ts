@@ -1,19 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  Agent, 
-  AgentListResponse, 
-  AgentDetailResponse, 
+import {
+  Agent,
+  AgentListResponse,
+  AgentDetails,
   AgentTemplatesResponse,
   CreateAgentRequest,
   UpdateAgentRequest,
-  RedditThreadNode
+  RedditThreadNode,
 } from "@/types/agent";
+import { getBrandIdFromCookie } from "@/lib/cookies";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_PLUM_API_BASE_URL || "http://localhost:8000";
+
+// Mapping helpers: Python (snake_case) -> UI (camelCase)
 
 // Query keys
 export const AGENT_QUERY_KEYS = {
   all: ["agents"] as const,
   lists: () => [...AGENT_QUERY_KEYS.all, "list"] as const,
-  list: (filters?: Record<string, unknown>) => [...AGENT_QUERY_KEYS.lists(), filters] as const,
+  list: (filters?: Record<string, unknown>) =>
+    [...AGENT_QUERY_KEYS.lists(), filters] as const,
   details: () => [...AGENT_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...AGENT_QUERY_KEYS.details(), id] as const,
   templates: ["agent-templates"] as const,
@@ -21,29 +28,124 @@ export const AGENT_QUERY_KEYS = {
 } as const;
 
 // Queries
-export const useAgents = () => 
+export const useAgents = () =>
   useQuery<AgentListResponse>({
     queryKey: AGENT_QUERY_KEYS.lists(),
     queryFn: async () => {
-      const response = await fetch('/api/agents');
-      if (!response.ok) {
-        throw new Error('Failed to fetch agents');
+      const brandId = getBrandIdFromCookie();
+      if (!brandId) {
+        return { agents: [], totalCount: 0 };
       }
-      return response.json();
+      const response = await fetch(`${API_BASE}/api/agents/brand/${brandId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch agents");
+      }
+      return await response.json();
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
 export const useAgent = (agentId: string) =>
-  useQuery<AgentDetailResponse>({
+  useQuery<AgentDetails>({
     queryKey: AGENT_QUERY_KEYS.detail(agentId),
     queryFn: async () => {
-      const response = await fetch(`/api/agents/${agentId}`);
+      const response = await fetch(`${API_BASE}/api/agents/${agentId}`);
+      console.log("response", response);
       if (!response.ok) {
-        throw new Error('Failed to fetch agent details');
+        throw new Error("Failed to fetch agent details");
       }
-      return response.json();
+      const data = await response.json();
+      console.log("response", data);
+
+      // Map backend (snake_case) to UI (camelCase) and normalize Reddit convos
+      const mapped: AgentDetails = {
+        id: data.id,
+        brandId: data.brand_id,
+        name: data.name,
+        persona: data.persona,
+        goal: data.goal,
+        isActive: data.status ? data.status === "active" : undefined,
+        avatarUrl: data.avatar_url ?? undefined,
+        templateId: data.template_id ?? undefined,
+        category: data.category,
+        status: data.status,
+        redditUsername: data.reddit_username ?? undefined,
+        redditAgentConvos: Array.isArray(data.reddit_agent_convos)
+          ? data.reddit_agent_convos.map((c: any) => {
+              const parentPost = c.parent_post || {};
+              const parentReply = c.parent_reply || {};
+              const createdAtMs = parentPost.created_utc
+                ? Number(parentPost.created_utc) * 1000
+                : Date.now();
+
+              return {
+                parentPost: {
+                  id: parentPost.thing_id ?? c.conversation_id ?? "",
+                  content: parentPost.content ?? "",
+                  author: parentPost.author ?? "",
+                  authorAvatar: parentPost.author_avatar ?? undefined,
+                  createdAt: new Date(createdAtMs) as unknown as Date,
+                  platform: parentPost.subreddit ?? "reddit",
+                  upvotes: parentPost.upvotes ?? parentPost.score ?? 0,
+                  replyCount: parentPost.reply_count ?? 0,
+                  permalink: parentPost.permalink ?? "",
+                },
+                parentReply: {
+                  id: parentReply.thing_id ?? c.conversation_id ?? "",
+                  content: parentReply.content ?? "",
+                  author: data.reddit_username ?? data.name ?? "agent",
+                  createdAt: new Date(
+                    parentReply.posted_at ||
+                      parentReply.generated_at ||
+                      Date.now()
+                  ) as unknown as Date,
+                  platform: parentPost.subreddit ?? "reddit",
+                  permalink: parentPost.permalink ?? "",
+                },
+                actions: Array.isArray(c.actions)
+                  ? c.actions.map((a: any) => ({
+                      actionId: a.action_id ?? undefined,
+                      status: a.status ?? undefined,
+                      createdAt: a.created_at
+                        ? (new Date(a.created_at) as unknown as Date)
+                        : undefined,
+                      completedAt: a.completed_at
+                        ? (new Date(a.completed_at) as unknown as Date)
+                        : undefined,
+                      userPost: {
+                        thing_id: a.user_post?.thing_id ?? "",
+                        content: a.user_post?.content ?? "",
+                        author: a.user_post?.author ?? "",
+                        authorAvatar: a.user_post?.author_avatar ?? undefined,
+                        subreddit: a.user_post?.subreddit ?? undefined,
+                        permalink: a.user_post?.permalink ?? undefined,
+                        createdAt: a.user_post?.created_utc
+                          ? (new Date(
+                              Number(a.user_post.created_utc) * 1000
+                            ) as unknown as Date)
+                          : undefined,
+                        score: a.user_post?.score ?? undefined,
+                        upvotes: a.user_post?.upvotes ?? undefined,
+                        downvotes: a.user_post?.downvotes ?? undefined,
+                        replyCount: a.user_post?.reply_count ?? undefined,
+                      },
+                      agentReply: a.agent_reply
+                        ? {
+                            content: a.agent_reply.content ?? "",
+                          }
+                        : undefined,
+                    }))
+                  : [],
+              };
+            })
+          : [],
+        metrics: data.metrics ?? undefined,
+        createdAt: new Date(data.created_at ?? Date.now()) as unknown as Date,
+        updatedAt: new Date(data.updated_at ?? Date.now()) as unknown as Date,
+      };
+
+      return mapped;
     },
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
@@ -54,11 +156,23 @@ export const useAgentTemplates = () =>
   useQuery<AgentTemplatesResponse>({
     queryKey: AGENT_QUERY_KEYS.templates,
     queryFn: async () => {
-      const response = await fetch('/api/agent-templates');
+      const response = await fetch(`${API_BASE}/api/agents/templates`);
       if (!response.ok) {
-        throw new Error('Failed to fetch agent templates');
+        throw new Error("Failed to fetch agent templates");
       }
-      return response.json();
+      const templatesPython = await response.json();
+      const templates = Array.isArray(templatesPython)
+        ? templatesPython.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            description: t.description,
+            defaultPersona: t.default_persona,
+            defaultGoal: t.default_goal,
+            category: t.category,
+            emoji: t.emoji,
+          }))
+        : [];
+      return { templates };
     },
     staleTime: 5 * 60 * 1000, // Templates don't change often
     gcTime: 10 * 60 * 1000,
@@ -71,7 +185,7 @@ export const useRedditThread = (threadId: string) =>
     queryFn: async () => {
       const response = await fetch(`/api/reddit/thread/${threadId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch Reddit thread');
+        throw new Error("Failed to fetch Reddit thread");
       }
       return response.json();
     },
@@ -83,21 +197,29 @@ export const useRedditThread = (threadId: string) =>
 // Mutations
 export const useCreateAgent = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Agent, Error, CreateAgentRequest>({
     mutationFn: async (data) => {
-      const response = await fetch('/api/agents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      const brandId = getBrandIdFromCookie();
+      if (!brandId) throw new Error("Brand not selected");
+      const payload = {
+        brand_id: brandId,
+        name: data.name,
+        persona: data.persona,
+        goal: data.goal,
+        template_id: data.templateId ?? null,
+      };
+      const response = await fetch(`${API_BASE}/api/agents/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(error || 'Failed to create agent');
+        throw new Error(error || "Failed to create agent");
       }
-      
-      return response.json();
+      return await response.json();
     },
     onSuccess: (newAgent) => {
       // Optimistically update the agents list
@@ -112,7 +234,7 @@ export const useCreateAgent = () => {
           };
         }
       );
-      
+
       // Invalidate to ensure fresh data
       queryClient.invalidateQueries({ queryKey: AGENT_QUERY_KEYS.lists() });
     },
@@ -121,32 +243,41 @@ export const useCreateAgent = () => {
 
 export const useUpdateAgent = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation<Agent, Error, { agentId: string; data: UpdateAgentRequest }>({
+
+  return useMutation<
+    Agent,
+    Error,
+    { agentId: string; data: UpdateAgentRequest }
+  >({
     mutationFn: async ({ agentId, data }) => {
-      const response = await fetch(`/api/agents/${agentId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      const payload: Record<string, unknown> = {};
+      if (data.name !== undefined) payload["name"] = data.name;
+      if (data.persona !== undefined) payload["persona"] = data.persona;
+      if (data.goal !== undefined) payload["goal"] = data.goal;
+      if (data.isActive !== undefined)
+        payload["status"] = data.isActive ? "active" : "paused";
+      const response = await fetch(`${API_BASE}/api/agents/${agentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(error || 'Failed to update agent');
+        throw new Error(error || "Failed to update agent");
       }
-      
-      return response.json();
+      return await response.json();
     },
     onSuccess: (updatedAgent, { agentId }) => {
       // Update the specific agent in cache
-      queryClient.setQueryData<AgentDetailResponse>(
+      queryClient.setQueryData<AgentDetails>(
         AGENT_QUERY_KEYS.detail(agentId),
         (old) => {
           if (!old) return old;
           return { ...old, agent: updatedAgent };
         }
       );
-      
+
       // Update in the list as well
       queryClient.setQueryData<AgentListResponse>(
         AGENT_QUERY_KEYS.lists(),
@@ -154,15 +285,17 @@ export const useUpdateAgent = () => {
           if (!old) return old;
           return {
             ...old,
-            agents: old.agents.map(agent => 
+            agents: old.agents.map((agent) =>
               agent.id === agentId ? updatedAgent : agent
             ),
           };
         }
       );
-      
+
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: AGENT_QUERY_KEYS.detail(agentId) });
+      queryClient.invalidateQueries({
+        queryKey: AGENT_QUERY_KEYS.detail(agentId),
+      });
       queryClient.invalidateQueries({ queryKey: AGENT_QUERY_KEYS.lists() });
     },
   });
@@ -170,16 +303,16 @@ export const useUpdateAgent = () => {
 
 export const useDeleteAgent = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<void, Error, string>({
     mutationFn: async (agentId) => {
-      const response = await fetch(`/api/agents/${agentId}`, {
-        method: 'DELETE',
+      const response = await fetch(`${API_BASE}/api/agents/${agentId}`, {
+        method: "DELETE",
       });
-      
+
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(error || 'Failed to delete agent');
+        throw new Error(error || "Failed to delete agent");
       }
     },
     onSuccess: (_, agentId) => {
@@ -190,15 +323,15 @@ export const useDeleteAgent = () => {
           if (!old) return old;
           return {
             ...old,
-            agents: old.agents.filter(agent => agent.id !== agentId),
+            agents: old.agents.filter((agent) => agent.id !== agentId),
             totalCount: old.totalCount - 1,
           };
         }
       );
-      
+
       // Remove detail cache
       queryClient.removeQueries({ queryKey: AGENT_QUERY_KEYS.detail(agentId) });
-      
+
       // Invalidate list
       queryClient.invalidateQueries({ queryKey: AGENT_QUERY_KEYS.lists() });
     },

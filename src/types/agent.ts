@@ -17,18 +17,35 @@ export interface AgentTemplate {
   description: string;
   defaultPersona: string;
   defaultGoal: string;
-  category: 'customer-support' | 'community-builder' | 'technical-expert' | 'brand-advocate' | 'custom';
+  category:
+    | "customer-support"
+    | "community-builder"
+    | "technical-expert"
+    | "brand-advocate"
+    | "custom";
   emoji: string;
 }
 
 // Conversation Models
 export interface RedditAction {
+  actionId?: string;
+  status?: string;
+  createdAt?: Date;
+  completedAt?: Date;
   userPost: {
     thing_id: string;
     content: string;
     author: string;
+    authorAvatar?: string;
+    subreddit?: string;
+    permalink?: string;
+    createdAt?: Date;
+    score?: number;
+    upvotes?: number;
+    downvotes?: number;
+    replyCount?: number;
   };
-  agentReply: {
+  agentReply?: {
     content: string;
   };
 }
@@ -42,8 +59,8 @@ export interface RedditConvo {
 export interface Conversation {
   id: string;
   agentId: string;
-  platform: 'reddit' | 'twitter' | 'discord' | 'linkedin';
-  status: 'monitoring' | 'engaged' | 'archived';
+  platform: "reddit" | "twitter" | "discord" | "linkedin";
+  status: "monitoring" | "engaged" | "archived";
   threadId: string;
   relevanceScore: number;
   createdAt: Date;
@@ -89,11 +106,49 @@ export interface AgentListResponse {
   totalCount: number;
 }
 
-export interface AgentDetailResponse {
-  agent: Agent;
-  redditConversations: RedditConvo[];
-  metrics: AgentMetrics;
-  totalConversations: number;
+// Agent Categories and Status
+export enum AgentCategory {
+  CUSTOM = "custom",
+  CUSTOMER_SUPPORT = "customer-support",
+  COMMUNITY_BUILDER = "community-builder",
+  TECHNICAL_EXPERT = "technical-expert",
+  BRAND_ADVOCATE = "brand-advocate",
+}
+
+export enum AgentStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  PAUSED = "paused",
+}
+
+// Reddit Agent Conversation
+export interface RedditAgentConvo {
+  id: string;
+  threadId: string;
+  postId: string;
+  status: "monitoring" | "engaged" | "archived";
+  relevanceScore: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Extended Agent Details
+export interface AgentDetails {
+  id: string;
+  brandId: string;
+  name: string;
+  persona: string;
+  goal: string;
+  isActive?: boolean;
+  avatarUrl?: string;
+  templateId?: string;
+  category: AgentCategory;
+  status: AgentStatus;
+  redditUsername?: string;
+  redditAgentConvos: RedditConvo[];
+  metrics?: AgentMetrics;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AgentTemplatesResponse {

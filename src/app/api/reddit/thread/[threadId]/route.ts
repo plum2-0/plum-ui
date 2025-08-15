@@ -25,10 +25,11 @@ const getMockRedditThread = (threadId: string): RedditThreadNode => {
             body: "Thanks! Adding an index on (tenant_id, created_at) dropped P95 by ~30%.",
             score: 12,
             created_utc: 1723613402.0,
-            permalink: "/r/PostgreSQL/comments/abc123/slow_query_plans/m1abff4/",
-            replies: []
-          }
-        ]
+            permalink:
+              "/r/PostgreSQL/comments/abc123/slow_query_plans/m1abff4/",
+            replies: [],
+          },
+        ],
       },
       {
         id: "m1ac001",
@@ -37,7 +38,7 @@ const getMockRedditThread = (threadId: string): RedditThreadNode => {
         score: 23,
         created_utc: 1723614005.0,
         permalink: "/r/PostgreSQL/comments/abc123/slow_query_plans/m1ac001/",
-        replies: []
+        replies: [],
       },
       {
         id: "m1ac110",
@@ -53,8 +54,9 @@ const getMockRedditThread = (threadId: string): RedditThreadNode => {
             body: "Yep—BUFFERS shows read vs. hit ratios. High reads → missing cache or indexes.",
             score: 9,
             created_utc: 1723615001.0,
-            permalink: "/r/PostgreSQL/comments/abc123/slow_query_plans/m1ac200/",
-            replies: []
+            permalink:
+              "/r/PostgreSQL/comments/abc123/slow_query_plans/m1ac200/",
+            replies: [],
           },
           {
             id: "m1ac2zz",
@@ -62,25 +64,27 @@ const getMockRedditThread = (threadId: string): RedditThreadNode => {
             body: "You can paste plans to explain.depesz.com for nicer diffs.",
             score: 6,
             created_utc: 1723615200.0,
-            permalink: "/r/PostgreSQL/comments/abc123/slow_query_plans/m1ac2zz/",
-            replies: []
-          }
-        ]
-      }
-    ]
+            permalink:
+              "/r/PostgreSQL/comments/abc123/slow_query_plans/m1ac2zz/",
+            replies: [],
+          },
+        ],
+      },
+    ],
   };
 };
 
 // GET /api/reddit/thread/[threadId] - Get full Reddit thread
 export async function GET(
   request: NextRequest,
-  { params }: { params: { threadId: string } }
+  { params }: { params: Promise<{ threadId: string }> }
 ) {
   try {
     // In production, this would fetch from the actual Reddit API
     // For now, return mock data
-    const thread = getMockRedditThread(params.threadId);
-    
+    const { threadId } = await params;
+    const thread = getMockRedditThread(threadId);
+
     return NextResponse.json(thread);
   } catch (error) {
     console.error("Error fetching Reddit thread:", error);
