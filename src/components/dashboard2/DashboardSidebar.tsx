@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { UseCase } from "@/types/brand";
+import { Problems } from "@/types/brand";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import SidebarBottomSection from "./SidebarBottomSection";
 
 interface DashboardSidebarProps {
   brandName?: string;
-  useCases?: UseCase[];
-  selectedUseCase?: UseCase | null;
-  onUseCaseSelect?: (useCase: UseCase | null) => void;
+  problems?: Problems[];
+  selectedUseCase?: Problems | null;
+  onUseCaseSelect?: (problem: Problems | null) => void;
   onlyUnread?: boolean;
   setOnlyUnread?: (value: boolean) => void;
   onAddUseCase?: (title: string) => Promise<void> | void;
@@ -35,7 +35,7 @@ const getUseCaseIcon = () => {
 
 export default function DashboardSidebar({
   brandName = "Total",
-  useCases = [],
+  problems = [],
   selectedUseCase,
   onUseCaseSelect,
   onlyUnread = false,
@@ -116,7 +116,7 @@ export default function DashboardSidebar({
         </div>
 
         {/* Navigation */}
-        <div className="px-4 py-4 space-y-2 flex-1 overflow-y-auto">
+        <div className="px-4 py-4 space-y-2 h-[70%] overflow-y-auto">
           {/* Brand Total View */}
           <button
             onClick={() => onUseCaseSelect?.(null)}
@@ -169,35 +169,35 @@ export default function DashboardSidebar({
 
           {/* Use Cases List */}
           <div className="space-y-1">
-            {useCases.map((useCase) => (
+            {problems.map((problem) => (
               <button
-                key={useCase.id}
-                onClick={() => onUseCaseSelect?.(useCase)}
+                key={problem.id}
+                onClick={() => onUseCaseSelect?.(problem)}
                 className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
-                  selectedUseCase?.id === useCase.id
+                  selectedUseCase?.id === problem.id
                     ? "text-white"
                     : "text-white/70 hover:text-white"
                 }`}
                 style={{
                   background:
-                    selectedUseCase?.id === useCase.id
+                    selectedUseCase?.id === problem.id
                       ? "rgba(168, 85, 247, 0.15)"
                       : "rgba(255, 255, 255, 0.05)",
                   backdropFilter: "blur(10px)",
                   border: `1px solid ${
-                    selectedUseCase?.id === useCase.id
+                    selectedUseCase?.id === problem.id
                       ? "rgba(168, 85, 247, 0.3)"
                       : "rgba(255, 255, 255, 0.1)"
                   }`,
                 }}
                 onMouseEnter={(e) => {
-                  if (selectedUseCase?.id !== useCase.id) {
+                  if (selectedUseCase?.id !== problem.id) {
                     e.currentTarget.style.background =
                       "rgba(255, 255, 255, 0.1)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (selectedUseCase?.id !== useCase.id) {
+                  if (selectedUseCase?.id !== problem.id) {
                     e.currentTarget.style.background =
                       "rgba(255, 255, 255, 0.05)";
                   }
@@ -205,7 +205,7 @@ export default function DashboardSidebar({
               >
                 <div className="flex-shrink-0">{getUseCaseIcon()}</div>
                 <span className="flex-1 text-left font-body text-sm">
-                  {useCase.title}
+                  {problem?.problem}
                 </span>
               </button>
             ))}
@@ -305,7 +305,7 @@ export default function DashboardSidebar({
         </div>
 
         {/* Spacer */}
-        <div className="flex-1"></div>
+        <div className="flex-1 "></div>
 
         <SidebarBottomSection />
       </div>

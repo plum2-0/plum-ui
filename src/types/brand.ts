@@ -10,9 +10,8 @@ export interface Brand {
   image: string | null;
   detail: string | null;
   brand_description?: string;
-  target_problems?: string[];
   offerings?: BrandOffering[];
-  target_problems: UseCase[];
+  target_problems: Problems[];
   users: any[];
   created_at: string;
   updated_at: string;
@@ -23,10 +22,9 @@ export interface Brand {
   };
 }
 
-export interface UseCase {
+export interface Problems {
   id: string;
-  title: string;
-  description: string;
+  problem: string;
   keywords?: string[];
   hot_features_summary: string | null;
   competitor_summary: string | null;

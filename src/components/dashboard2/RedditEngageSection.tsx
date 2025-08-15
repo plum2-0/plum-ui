@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UseCase, SubredditPost } from "@/types/brand";
+import { Problems, SubredditPost } from "@/types/brand";
 import RedditPostListItem from "./RedditPostListItem";
 import TagFiltersDropdown from "./TagFiltersDropdown";
 import { useFetchNewPosts } from "@/hooks/api/useBrandQuery";
 
 interface RedditEngageSectionProps {
-  selectedUseCase: UseCase | null;
+  selectedProblem: Problems | null;
   brandId?: string;
 }
 
 export default function RedditEngageSection({
-  selectedUseCase,
+  selectedProblem,
   brandId,
 }: RedditEngageSectionProps) {
   const [page, setPage] = useState(1);
@@ -35,9 +35,9 @@ export default function RedditEngageSection({
   // Reset pagination when use case changes
   useEffect(() => {
     setPage(1);
-  }, [selectedUseCase]);
+  }, [selectedProblem]);
 
-  if (!selectedUseCase) {
+  if (!selectedProblem) {
     return (
       <div
         className="rounded-2xl p-8 text-center"
@@ -55,7 +55,7 @@ export default function RedditEngageSection({
     );
   }
 
-  const allPosts = selectedUseCase.subreddit_posts || [];
+  const allPosts = selectedProblem.subreddit_posts || [];
 
   // Filter posts by selected tags
   const filteredPosts = allPosts.filter((post: SubredditPost) => {
@@ -107,11 +107,11 @@ export default function RedditEngageSection({
   };
 
   const handleFetchNewPosts = async () => {
-    if (!selectedUseCase || !brandId) return;
+    if (!selectedProblem || !brandId) return;
 
     await fetchNewPosts.mutateAsync({
       brandId,
-      useCaseId: selectedUseCase.id,
+        problemId: selectedProblem.id,
     });
 
     setPage(1);

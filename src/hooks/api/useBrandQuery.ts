@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Brand, UseCase } from "@/types/brand";
+import { Brand, Problems } from "@/types/brand";
 
 export const BRAND_QUERY_KEY = ["brand"] as const;
 
@@ -79,15 +79,15 @@ export function useFetchNewPosts() {
   return useMutation({
     mutationFn: async ({
       brandId,
-      useCaseId,
+      problemId,
     }: {
       brandId: string;
-      useCaseId: string;
+      problemId: string;
     }) => {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
-        `${backendUrl}/api/brand/${brandId}/new/posts?problem_id=${useCaseId}`,
+        `${backendUrl}/api/brand/${brandId}/new/posts?problem_id=${problemId}`,
         {
           method: "GET",
           headers: {

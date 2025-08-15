@@ -174,18 +174,6 @@ function OnboardingContent() {
         offerings: data.offerings || [{ title: "", description: "" }],
       });
 
-      // Save to localStorage
-      localStorage.setItem(
-        "onboardingData",
-        JSON.stringify({
-          websiteUrl,
-          brandName,
-          brandDescription: data.brand_description,
-          problems: data.target_problems,
-          offerings: data.offerings,
-        })
-      );
-
       setPhase("details");
     } catch (error) {
       console.error("Failed to generate brand info:", error);
@@ -252,9 +240,6 @@ function OnboardingContent() {
     setIsSubmitting(true);
 
     try {
-      // Save to localStorage
-      localStorage.setItem("onboardingData", JSON.stringify(formData));
-
       // Call the onboard API with the new structure
       const response = await fetch("/api/onboard", {
         method: "POST",

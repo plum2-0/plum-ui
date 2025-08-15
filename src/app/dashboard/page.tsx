@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { UseCase } from "@/types/brand";
+import { Problems } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import MarketInsightsSection from "@/components/dashboard2/MarketInsightsSection";
 import RedditEngageSection from "@/components/dashboard2/RedditEngageSection";
@@ -18,7 +18,7 @@ export default function Dashboard2Page() {
   useSession();
   const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
   const generateInsight = useGenerateUseCaseInsight();
-  const [selectedUseCase, setSelectedUseCase] = useState<UseCase | null>(null);
+  const [selectedUseCase, setSelectedUseCase] = useState<Problems | null>(null);
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [loadingUseCaseId, setLoadingUseCaseId] = useState<string | null>(null);
   const [conversationView, setConversationView] = useState<"all" | "active">(
@@ -51,7 +51,7 @@ export default function Dashboard2Page() {
         ? crypto.randomUUID()
         : String(Date.now());
 
-    const tempUseCase: UseCase = {
+    const tempUseCase: Problems = {
       id: tempId,
       title,
       description: "",
@@ -61,7 +61,7 @@ export default function Dashboard2Page() {
       brand_id: brandId,
       subreddit_posts: [],
       // insights intentionally undefined while loading
-    } as unknown as UseCase;
+    } as unknown as Problems;
 
     // Optimistically select the temp use case
     setSelectedUseCase(tempUseCase);
@@ -75,7 +75,7 @@ export default function Dashboard2Page() {
       const updatedBrand = await refetch();
       if (updatedBrand.data?.brand) {
         const created = updatedBrand.data.brand.target_problems.find(
-          (uc) => uc.title.trim().toLowerCase() === title.trim().toLowerCase()
+          (uc) => uc.problem.trim().toLowerCase() === title.trim().toLowerCase()
         );
         if (created) {
           setSelectedUseCase(created);
@@ -138,7 +138,7 @@ export default function Dashboard2Page() {
       <div className="w-64 shrink-0">
         <DashboardSidebar
           brandName={brandData.name}
-          useCases={brandData.target_problems}
+          problems={brandData.target_problems}
           selectedUseCase={selectedUseCase}
           onUseCaseSelect={setSelectedUseCase}
           onlyUnread={onlyUnread}
@@ -161,11 +161,11 @@ export default function Dashboard2Page() {
                     </p>
                   )}
                   <h1 className="text-white font-heading text-3xl font-bold mb-2 tracking-tight">
-                    {selectedUseCase ? selectedUseCase.title : brandData.name}
+                    {selectedUseCase ? selectedUseCase.problem : brandData.name}
                   </h1>
                   {selectedUseCase ? (
                     <p className="text-white/80 font-body text-base leading-relaxed">
-                      {selectedUseCase.description ||
+                      {selectedUseCase.insights?.general_summary ||
                         `Research insights and Reddit engagement opportunities`}
                     </p>
                   ) : (
@@ -219,7 +219,7 @@ export default function Dashboard2Page() {
             {/* Market Insights Section (Collapsible) */}
             <MarketInsightsSection
               selectedUseCase={selectedUseCase}
-              useCases={brandData?.target_problems || []}
+              problems={brandData?.target_problems || []}
               isLoading={isSelectedUseCaseLoading || false}
             />
 
@@ -285,7 +285,7 @@ export default function Dashboard2Page() {
 
             {/* Reddit Engagement / Active Conversations - Enhanced Container */}
             <div
-              className="rounded-2xl overflow-hidden"
+              className="rounded-2xl overflow-hidden min-h-[70vh]"
               style={{
                 background: "rgba(255, 255, 255, 0.08)",
                 backdropFilter: "blur(20px)",
@@ -294,10 +294,10 @@ export default function Dashboard2Page() {
                   "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
               }}
             >
-              <div className="p-6">
+              <div className="p-6 h-full overflow-y-auto">
                 {conversationView === "all" ? (
                   <RedditEngageSection
-                    selectedUseCase={selectedUseCase}
+                    selectedProblem={selectedUseCase}
                     brandId={brandData?.id}
                   />
                 ) : isAgentsLoading ? (

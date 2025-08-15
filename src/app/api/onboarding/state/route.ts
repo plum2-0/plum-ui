@@ -11,7 +11,6 @@ interface OnboardingState {
   hasCompleteConfig: boolean;
   redirectTo:
     | "/onboarding"
-    | "/onboarding/reddit"
     | "/onboarding/configure"
     | string;
 }
@@ -82,21 +81,8 @@ export async function GET() {
       hasRedditConfig && hasSubreddits && hasTopicsAndPrompt;
 
     // Determine current step and redirect location
-    let currentStep: 1 | 2 | 3 | 4;
-    let redirectTo: string;
-
-    if (!hasRedditConfig) {
-      currentStep = 2;
-      redirectTo = "/onboarding/reddit";
-    } else if (!hasCompleteConfig) {
-      currentStep = 3;
-      redirectTo = "/onboarding/configure";
-    } else {
-      // Configuration is complete, redirect to dashboard
-      currentStep = 4;
-      redirectTo = `/dashboard`;
-    }
-
+    const currentStep: 1 | 2 | 3 | 4 = 4;
+    const redirectTo: string = `/dashboard`;
     const state: OnboardingState = {
       currentStep,
       hasProject: true, // Keep this name for backward compatibility

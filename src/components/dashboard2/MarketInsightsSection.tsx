@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UseCase } from "@/types/brand";
+import { Problems } from "@/types/brand";
 import SummaryMetrics from "./SummaryMetrics";
 import SummaryStatsCard from "./SummaryStatsCard";
 import UseCaseInsightsComponent from "./UseCaseInsights";
@@ -9,14 +9,14 @@ import CompetitorSummary from "./CompetitorSummary";
 import { getTopKeywordCounts } from "@/lib/keyword-utils";
 
 interface MarketInsightsSectionProps {
-  selectedUseCase: UseCase | null;
-  useCases: UseCase[];
+  selectedUseCase: Problems | null;
+  problems: Problems[];
   isLoading?: boolean;
 }
 
 export default function MarketInsightsSection({
   selectedUseCase,
-  useCases,
+  problems,
   isLoading = false,
 }: MarketInsightsSectionProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -24,7 +24,7 @@ export default function MarketInsightsSection({
   // Load collapsed state from localStorage on mount
   useEffect(() => {
     const storageKey = selectedUseCase
-      ? `market-insights-collapsed-${selectedUseCase.title}`
+      ? `market-insights-collapsed-${selectedUseCase.problem}`
       : "market-insights-collapsed-total";
 
     const savedState = localStorage.getItem(storageKey);
@@ -34,7 +34,7 @@ export default function MarketInsightsSection({
       // Default to open for first time users
       setIsCollapsed(false);
     }
-  }, [selectedUseCase?.title]);
+  }, [selectedUseCase?.problem]);
 
   // Save collapsed state to localStorage when it changes
   const handleToggleCollapse = () => {
@@ -42,7 +42,7 @@ export default function MarketInsightsSection({
     setIsCollapsed(newState);
 
     const storageKey = selectedUseCase
-      ? `market-insights-collapsed-${selectedUseCase.title}`
+      ? `market-insights-collapsed-${selectedUseCase.problem}`
       : "market-insights-collapsed-total";
 
     localStorage.setItem(storageKey, JSON.stringify(newState));
@@ -143,10 +143,10 @@ export default function MarketInsightsSection({
         <div>
           {/* Total view: Overall Posts Summary across all use cases */}
           {!selectedUseCase &&
-            useCases &&
-            useCases.length > 0 &&
+            problems &&
+            problems.length > 0 &&
             (() => {
-              const allPosts = useCases.flatMap(
+              const allPosts = problems.flatMap(
                 (uc) => uc.subreddit_posts || []
               );
               const totalPosts = allPosts.length;
@@ -178,7 +178,7 @@ export default function MarketInsightsSection({
 
               const allKeywords = Array.from(
                 new Set(
-                  useCases
+                  problems
                     .flatMap((uc) => uc.keywords || [])
                     .map((k) => k.trim())
                     .filter(Boolean)
@@ -190,29 +190,8 @@ export default function MarketInsightsSection({
                 <>
                   <div className="p-6 space-y-6">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="p-2 rounded-xl"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3))",
-                        }}
-                      >
-                        <svg
-                          className="w-5 h-5 text-emerald-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 7h18M3 12h18M3 17h18"
-                          />
-                        </svg>
-                      </div>
                       <h2 className="text-white font-heading text-xl font-bold">
-                        Problem Validation Research Summary
+                        Research Summary
                       </h2>
                     </div>
 
@@ -263,7 +242,7 @@ export default function MarketInsightsSection({
                           </tr>
                         </thead>
                         <tbody>
-                          {useCases.map((uc) => {
+                          {problems.map((uc) => {
                             const ucPosts = uc.subreddit_posts || [];
                             const ucTotals = ucPosts.reduce(
                               (acc, post) => {
@@ -281,7 +260,7 @@ export default function MarketInsightsSection({
                                 className="border-t border-white/10"
                               >
                                 <td className="py-3 pr-4 text-white font-body">
-                                  {uc.title}
+                                  {uc.problem}
                                 </td>
                                 <td className="py-3 pr-4 text-emerald-300 font-heading">
                                   {ucTotals.potential_customer}
@@ -409,7 +388,7 @@ export default function MarketInsightsSection({
               {selectedUseCase.insights && (
                 <UseCaseInsightsComponent
                   insights={selectedUseCase.insights}
-                  insightTitle={selectedUseCase.title}
+                  insightTitle={selectedUseCase.problem}
                 />
               )}
 
