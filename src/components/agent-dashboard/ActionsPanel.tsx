@@ -23,7 +23,7 @@ interface CommentSuggestion {
   };
   llm_generated_reply: string;
   intent?: string;
-  use_case?: string;
+  problem?: string;
 }
 
 interface InitiativesPanelProps {
@@ -32,11 +32,17 @@ interface InitiativesPanelProps {
   isRefreshing?: boolean;
 }
 
-export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: InitiativesPanelProps) {
+export default function ActionsPanel({
+  refreshKey,
+  onRefresh,
+  isRefreshing,
+}: InitiativesPanelProps) {
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { data, isLoading, isFetching } = useQuery<{ suggestions: CommentSuggestion[] }>({
+  const { data, isLoading, isFetching } = useQuery<{
+    suggestions: CommentSuggestion[];
+  }>({
     queryKey: ["comment-suggestions", refreshKey],
     queryFn: async () => {
       setErrorMsg(null);
@@ -84,7 +90,9 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
               onClick={onRefresh}
               disabled={isRefreshing || isFetching}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm text-white transition-all duration-300 ${
-                isRefreshing || isFetching ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
+                isRefreshing || isFetching
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:scale-105"
               }`}
               style={{
                 background: "rgba(255, 255, 255, 0.1)",
@@ -93,7 +101,9 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
               }}
             >
               <svg
-                className={`w-4 h-4 ${isRefreshing || isFetching ? "animate-spin" : ""}`}
+                className={`w-4 h-4 ${
+                  isRefreshing || isFetching ? "animate-spin" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -111,9 +121,7 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
         </div>
       </div>
 
-      {errorMsg && (
-        <div className="mb-3 text-sm text-red-300">{errorMsg}</div>
-      )}
+      {errorMsg && <div className="mb-3 text-sm text-red-300">{errorMsg}</div>}
 
       {/* Suggestions List */}
       <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
@@ -142,7 +150,8 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
               {s.post.title}
             </h3>
             <div className="text-xs text-white/60 mb-2">
-              Posted in <span className="text-purple-300">r/{s.post.subreddit}</span>
+              Posted in{" "}
+              <span className="text-purple-300">r/{s.post.subreddit}</span>
               {" • "}by <span className="text-white/80">u/{s.post.author}</span>
             </div>
             <a
@@ -172,19 +181,17 @@ export default function ActionsPanel({ refreshKey, onRefresh, isRefreshing }: In
             {/* Action buttons */}
             <div className="flex gap-2 mt-4 justify-end">
               <button
-                onClick={() => router.push(`/dashboard/engage/actions/${s.action_id}`)}
+                onClick={() =>
+                  router.push(`/dashboard/engage/actions/${s.action_id}`)
+                }
                 className="px-3 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-medium transition-all"
               >
                 Edit
               </button>
-              <button
-                className="px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 text-xs font-medium transition-all"
-              >
+              <button className="px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 text-xs font-medium transition-all">
                 Schedule
               </button>
-              <button
-                className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-all"
-              >
+              <button className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-all">
                 Dismiss
               </button>
             </div>

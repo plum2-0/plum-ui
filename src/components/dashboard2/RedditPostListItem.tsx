@@ -126,7 +126,7 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brand_id: post.brand_id,
-          use_case_id: post.use_case_id,
+          problem_id: post.problem_id,
           subreddit_post_id: post.id,
           post_id: post.post_id,
           user_content_action: action,

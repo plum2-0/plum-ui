@@ -58,7 +58,7 @@ export function useAgentReply() {
           agent_persona: agent?.persona,
           agent_goal: agent?.goal,
           brand_id: post.brand_id,
-          use_case_id: post.use_case_id,
+          problem_id: post.problem_id,
         };
 
         const resp = await fetch(`${API_BASE}/api/agents/generate/reply`, {

@@ -19,7 +19,7 @@ interface CommentSuggestion {
   };
   llm_generated_reply: string;
   intent?: string;
-  use_case?: string;
+  problem?: string;
 }
 
 export const ENGAGEMENT_QUERY_KEYS = {
@@ -31,12 +31,12 @@ export function useCommentSuggestions() {
     queryKey: ENGAGEMENT_QUERY_KEYS.suggestions,
     queryFn: async () => {
       const response = await fetch("/api/engagement/comment-suggestions");
-      
+
       if (!response.ok) {
         const text = await response.text();
         throw new Error(text || "Failed to load suggestions");
       }
-      
+
       return response.json();
     },
     staleTime: 60 * 1000, // 1 minute
@@ -50,20 +50,25 @@ export function useGenerateCommentSuggestions() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/engagement/comment-suggestions/generate", {
-        method: "POST",
-      });
-      
+      const response = await fetch(
+        "/api/engagement/comment-suggestions/generate",
+        {
+          method: "POST",
+        }
+      );
+
       if (!response.ok) {
         const text = await response.text();
         throw new Error(text || "Failed to generate suggestions");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
       // Invalidate suggestions query to refetch latest data
-      queryClient.invalidateQueries({ queryKey: ENGAGEMENT_QUERY_KEYS.suggestions });
+      queryClient.invalidateQueries({
+        queryKey: ENGAGEMENT_QUERY_KEYS.suggestions,
+      });
     },
     onError: (error) => {
       console.error("Error generating suggestions:", error);

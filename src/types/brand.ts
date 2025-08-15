@@ -1,10 +1,18 @@
+export interface BrandOffering {
+  title: string;
+  description: string;
+}
+
 export interface Brand {
   id: string;
   name: string;
   website: string;
   image: string | null;
   detail: string | null;
-  target_use_cases: UseCase[];
+  brand_description?: string;
+  target_problems?: string[];
+  offerings?: BrandOffering[];
+  target_problems: UseCase[];
   users: any[];
   created_at: string;
   updated_at: string;
@@ -61,7 +69,7 @@ export interface SubredditPost {
   };
   status: string | null;
   tags: PostTags;
-  use_case_id: string;
+  problem_id: string;
   brand_id: string;
 }
 

@@ -74,7 +74,7 @@ export default function Dashboard2Page() {
       // After successful generation, find and select the new use case
       const updatedBrand = await refetch();
       if (updatedBrand.data?.brand) {
-        const created = updatedBrand.data.brand.target_use_cases.find(
+        const created = updatedBrand.data.brand.target_problems.find(
           (uc) => uc.title.trim().toLowerCase() === title.trim().toLowerCase()
         );
         if (created) {
@@ -85,7 +85,7 @@ export default function Dashboard2Page() {
       console.error(e);
       // On failure, reset selection
       setSelectedUseCase(() => {
-        const first = brandData?.target_use_cases[0];
+        const first = brandData?.target_problems[0];
         return first ?? null;
       });
     } finally {
@@ -137,7 +137,8 @@ export default function Dashboard2Page() {
       {/* Fixed Sidebar with existing styling */}
       <div className="w-64 shrink-0">
         <DashboardSidebar
-          useCases={brandData.target_use_cases}
+          brandName={brandData.name}
+          useCases={brandData.target_problems}
           selectedUseCase={selectedUseCase}
           onUseCaseSelect={setSelectedUseCase}
           onlyUnread={onlyUnread}
@@ -181,7 +182,7 @@ export default function Dashboard2Page() {
                           Use Cases:
                         </span>
                         <span className="text-purple-300 font-heading font-bold text-lg">
-                          {brandData.target_use_cases.length}
+                          {brandData.target_problems.length}
                         </span>
                       </div>
                       {brandData.website && (
@@ -218,7 +219,7 @@ export default function Dashboard2Page() {
             {/* Market Insights Section (Collapsible) */}
             <MarketInsightsSection
               selectedUseCase={selectedUseCase}
-              useCases={brandData?.target_use_cases || []}
+              useCases={brandData?.target_problems || []}
               isLoading={isSelectedUseCaseLoading || false}
             />
 

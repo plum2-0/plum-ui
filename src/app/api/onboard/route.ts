@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { adminDb } from "@/lib/firebase-admin";
 
+interface BrandOffering {
+  title: string;
+  description: string;
+}
+
 interface OnboardRequest {
   brandName: string;
-  description: string;
   website: string;
-  useCases: Array<{
+  brandDescription?: string;
+  targetProblems?: string[];
+  offerings?: BrandOffering[];
+  // Legacy fields for backward compatibility
+  description?: string;
+  useCases?: Array<{
     title: string;
     description: string;
   }>;
@@ -31,41 +40,57 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields
-    if (
-      !body.brandName?.trim() ||
-      !body.description?.trim() ||
-      !body.website?.trim()
-    ) {
+    if (!body.brandName?.trim() || !body.website?.trim()) {
       return NextResponse.json(
-        { error: "Brand name, description, and website are required" },
+        { error: "Brand name and website are required" },
         { status: 400 }
       );
     }
 
-    // Filter out empty use cases and validate at least one exists
-    const validUseCases =
-      body.useCases?.filter(
-        (uc) => uc.title?.trim() && uc.description?.trim()
-      ) || [];
-
-    if (validUseCases.length === 0) {
-      return NextResponse.json(
-        { error: "At least one valid use case is required" },
-        { status: 400 }
-      );
-    }
-
-    // Transform data to match backend API format
-    const payload = {
+    // Handle new structure with brandDescription, targetProblems, offerings
+    const payload: any = {
       brand_name: body.brandName.trim(),
       brand_website: body.website.trim(),
-      brand_detail: body.description.trim(),
-      use_cases: validUseCases.map((uc) => ({
-        title: uc.title.trim(),
-        description: uc.description.trim(),
-      })),
       user_id: userId,
     };
+
+    // Check if this is the new structure
+    if (body.brandDescription || body.targetProblems || body.offerings) {
+      payload.brand_description = body.brandDescription?.trim();
+      payload.target_problems =
+        body.targetProblems?.filter((p: string) => p.trim()) || [];
+      payload.offerings =
+        body.offerings?.filter(
+          (o: BrandOffering) => o.title?.trim() && o.description?.trim()
+        ) || [];
+      payload.brand_detail = body.brandDescription?.trim(); // Also set brand_detail for backward compatibility
+    }
+    // Handle legacy structure with description and useCases
+    else if (body.description || body.useCases) {
+      // Filter out empty use cases and validate at least one exists
+      const validUseCases =
+        body.useCases?.filter(
+          (uc) => uc.title?.trim() && uc.description?.trim()
+        ) || [];
+
+      if (validUseCases.length === 0) {
+        return NextResponse.json(
+          { error: "At least one valid use case is required" },
+          { status: 400 }
+        );
+      }
+
+      payload.brand_detail = body.description?.trim();
+      payload.problems = validUseCases.map((uc) => ({
+        title: uc.title.trim(),
+        description: uc.description.trim(),
+      }));
+    } else {
+      return NextResponse.json(
+        { error: "Brand description or use cases are required" },
+        { status: 400 }
+      );
+    }
 
     // Call the backend API
     const backendUrl =

@@ -39,10 +39,16 @@ export function useGenerateUseCaseInsight() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ brandId, title }: { brandId: string; title: string }) => {
+    mutationFn: async ({
+      brandId,
+      title,
+    }: {
+      brandId: string;
+      title: string;
+    }) => {
       const query = encodeURIComponent(title);
-      const url = `http://localhost:8000/api/brand/${brandId}/insight?use_case=${query}`;
-      
+      const url = `http://localhost:8000/api/brand/${brandId}/insight?problem=${query}`;
+
       const response = await fetch(url, {
         method: "GET",
         headers: { "User-Agent": "plum-ui" },
@@ -50,12 +56,14 @@ export function useGenerateUseCaseInsight() {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Failed to generate insight: ${response.status} ${text}`);
+        throw new Error(
+          `Failed to generate insight: ${response.status} ${text}`
+        );
       }
 
       // After generating insight, refetch brand data to get updated use cases
       await queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEY });
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -69,15 +77,22 @@ export function useFetchNewPosts() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ brandId, useCaseId }: { brandId: string; useCaseId: string }) => {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    mutationFn: async ({
+      brandId,
+      useCaseId,
+    }: {
+      brandId: string;
+      useCaseId: string;
+    }) => {
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(
-        `${backendUrl}/api/brand/${brandId}/new/posts?use_case_id=${useCaseId}`,
+        `${backendUrl}/api/brand/${brandId}/new/posts?problem_id=${useCaseId}`,
         {
           method: "GET",
-          headers: { 
-            "Content-Type": "application/json", 
-            "User-Agent": "Plum-UI/1.0" 
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "Plum-UI/1.0",
           },
         }
       );
@@ -87,25 +102,12 @@ export function useFetchNewPosts() {
       }
 
       const result = await response.json();
-      
+
       if (result.status !== "completed") {
         throw new Error("Failed to complete new posts fetch");
       }
 
       return result;
-    },
-    onSuccess: (data) => {
-      // Invalidate brand query to refresh posts data
-      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEY });
-      
-      const totalDiscovered = data.total_posts_discovered || 0;
-      const totalTagged = data.total_posts_tagged || 0;
-      
-      if (totalDiscovered > 0) {
-        alert(`Success! Discovered ${totalDiscovered} new posts, tagged ${totalTagged} posts.`);
-      } else {
-        alert("No new posts found at this time. Try again later!");
-      }
     },
     onError: (error) => {
       console.error("Error fetching new posts:", error);

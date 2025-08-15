@@ -14,10 +14,30 @@ export default {
           response_type: "code",
         },
       },
+      profile(profile: any) {
+        // Normalize email to lowercase to avoid linking issues
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: (profile.email || "").toLowerCase(),
+          image: profile.picture,
+          emailVerified: profile.email_verified ? new Date() : null,
+        } as any;
+      },
     }),
   ],
   session: {
     strategy: "jwt",
+  },
+  events: {
+    async linkAccount({ user, account }) {
+      console.log(
+        "[NextAuth] Linked account",
+        account?.provider,
+        "→ user:",
+        user?.id
+      );
+    },
   },
   cookies: {
     pkceCodeVerifier: {
@@ -65,11 +85,13 @@ export default {
     },
   },
   callbacks: {
-    async signIn({ account }) {
+    async signIn({ account, profile }) {
       // Add error handling for OAuth sign-in
       try {
         if (account?.provider === "google") {
-          return true;
+          // Only allow linking if Google says the email is verified
+          const emailVerified = (profile as any)?.email_verified;
+          return emailVerified === true;
         }
         return true;
       } catch (error) {

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const requiredFields = [
       "brand_id",
-      "use_case_id",
+      "problem_id",
       "subreddit_post_id",
       "post_id",
       "user_content_action",

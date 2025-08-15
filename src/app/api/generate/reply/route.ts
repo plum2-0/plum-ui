@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       post_content: string;
       prompt: string;
       brand_id?: string;
-      use_case_id?: string;
+      problem_id?: string;
     };
     try {
       body = await request.json();
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       post_content: body?.post_content,
       prompt: body?.prompt,
       brand_id: body?.brand_id || brandIdFromCookie,
-      use_case_id: body?.use_case_id,
+      problem_id: body?.problem_id,
     } as const;
 
     if (
@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
       !finalPayload.post_content ||
       !finalPayload.prompt ||
       !finalPayload.brand_id ||
-      !finalPayload.use_case_id
+      !finalPayload.problem_id
     ) {
       return NextResponse.json(
         {
           error:
-            "post_title, post_subreddit, post_content, prompt, brand_id, and use_case_id are required",
+            "post_title, post_subreddit, post_content, prompt, brand_id, and problem_id are required",
         },
         { status: 400 }
       );
