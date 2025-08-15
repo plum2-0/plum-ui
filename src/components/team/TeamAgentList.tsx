@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Agent } from "@/types/agent";
-import { useAgents } from "@/hooks/api/useAgentQueries";
+import { useAgents, useDeleteAgent, useGenerateAgent } from "@/hooks/api/useAgentQueries";
+import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import { useRouter } from "next/navigation";
 import AgentModal from "./AgentModal";
 
@@ -13,17 +14,60 @@ interface TeamAgentListProps {
 export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
   const router = useRouter();
   const { data, isLoading, error } = useAgents();
+  const { data: brandData } = useBrandQuery();
+  const deleteAgent = useDeleteAgent();
+  const generateAgent = useGenerateAgent();
   const [hoveredAgent, setHoveredAgent] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [deletingAgentId, setDeletingAgentId] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const agents = data?.agents || [];
 
-  const handleAgentClick = (agentId: string) => {
+  const handleAgentClick = (agentId: string, event: React.MouseEvent) => {
+    // Don't navigate if clicking the delete button
+    if ((event.target as HTMLElement).closest('.delete-button')) {
+      return;
+    }
     if (onAgentSelect) {
       onAgentSelect(agentId);
     } else {
       router.push(`/dashboard/team/${agentId}`);
+    }
+  };
+
+  const handleDeleteAgent = async (agentId: string, agentName: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete ${agentName}? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setDeletingAgentId(agentId);
+    try {
+      await deleteAgent.mutateAsync(agentId);
+    } catch (error) {
+      console.error("Failed to delete agent:", error);
+      alert("Failed to delete agent. Please try again.");
+    } finally {
+      setDeletingAgentId(null);
+    }
+  };
+
+  const handleGenerateAgent = async () => {
+    if (!brandData?.brand?.id) {
+      alert("Brand ID not found. Please refresh and try again.");
+      return;
+    }
+    
+    setIsGenerating(true);
+    try {
+      await generateAgent.mutateAsync(brandData.brand.id);
+    } catch (error) {
+      console.error("Failed to generate agent:", error);
+      alert("Failed to generate agent. Please try again.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -136,7 +180,7 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
         {agents.map((agent) => (
           <div
             key={agent.id}
-            onClick={() => handleAgentClick(agent.id)}
+            onClick={(e) => handleAgentClick(agent.id, e)}
             onMouseEnter={() => setHoveredAgent(agent.id)}
             onMouseLeave={() => setHoveredAgent(null)}
             className="shrink-0 snap-start w-72 h-28 rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-105 relative overflow-hidden"
@@ -157,12 +201,35 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
                   : "translateY(0)",
             }}
           >
-            {/* Glow Effect */}
-            {agent.isActive && (
-              <div className="absolute top-2 right-2">
+            {/* Status and Delete Button */}
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+              {agent.isActive && (
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              </div>
-            )}
+              )}
+              {hoveredAgent === agent.id && (
+                <button
+                  className="delete-button p-1 rounded-full transition-all duration-200 hover:scale-110"
+                  onClick={(e) => handleDeleteAgent(agent.id, agent.name, e)}
+                  disabled={deletingAgentId === agent.id}
+                  style={{
+                    background: "rgba(239, 68, 68, 0.2)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                  }}
+                >
+                  {deletingAgentId === agent.id ? (
+                    <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
 
             <div className="flex items-start gap-3">
               {/* Avatar */}
@@ -198,32 +265,73 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
           </div>
         ))}
 
-        {/* Add Agent Button */}
-        <button
-          onClick={() => setIsCreating(true)}
-          className="shrink-0 snap-start w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-90"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(34, 197, 94, 0.3))",
-            backdropFilter: "blur(15px)",
-            border: "2px dashed rgba(255, 255, 255, 0.3)",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
-          }}
-        >
-          <svg
-            className="w-8 h-8 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {/* Generate AI Agent Button */}
+          <button
+            onClick={handleGenerateAgent}
+            disabled={isGenerating}
+            className="shrink-0 snap-start w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.4))",
+              backdropFilter: "blur(15px)",
+              border: "2px solid rgba(168, 85, 247, 0.5)",
+              boxShadow: "0 8px 32px rgba(168, 85, 247, 0.2)",
+              opacity: isGenerating ? 0.7 : 1,
+            }}
+            title="Generate AI Agent"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
+            {isGenerating ? (
+              <svg className="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            ) : (
+              <svg
+                className="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            )}
+          </button>
+
+          {/* Add Agent Button */}
+          <button
+            onClick={() => setIsCreating(true)}
+            className="shrink-0 snap-start w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-90"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3))",
+              backdropFilter: "blur(15px)",
+              border: "2px dashed rgba(34, 197, 94, 0.4)",
+              boxShadow: "0 8px 32px rgba(34, 197, 94, 0.2)",
+            }}
+            title="Create Agent Manually"
+          >
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Create Agent Modal */}

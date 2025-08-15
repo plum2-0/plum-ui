@@ -337,3 +337,27 @@ export const useDeleteAgent = () => {
     },
   });
 };
+
+export const useGenerateAgent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<Agent, Error, string>({
+    mutationFn: async (brandId) => {
+      const response = await fetch(`${API_BASE}/api/agents/brand/${brandId}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Failed to generate agent");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate and refetch agent lists
+      queryClient.invalidateQueries({ queryKey: AGENT_QUERY_KEYS.lists() });
+    },
+  });
+};

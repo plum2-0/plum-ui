@@ -184,7 +184,7 @@ export default function MarketInsightsSection({
                     .filter(Boolean)
                 )
               );
-              const topKeywords = getTopKeywordCounts(allPosts, allKeywords, 8);
+              const topKeywords = getTopKeywordCounts(allPosts, allKeywords);
 
               return (
                 <>
@@ -358,8 +358,7 @@ export default function MarketInsightsSection({
                       size="sm"
                       items={getTopKeywordCounts(
                         ucPosts,
-                        uc.keywords || [],
-                        12
+                        uc.keywords || []
                       ).map(([kw, count]) => ({
                         label: kw as string,
                         count: count as number,

@@ -130,11 +130,11 @@ export default function AgentModal({ isOpen, agent, onClose, onSave }: AgentModa
       <div 
         className="relative w-full max-w-2xl rounded-t-3xl p-6 animate-slide-up max-h-[85vh] overflow-y-auto"
         style={{
-          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
+          background: "linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(30, 30, 45, 0.95) 100%)",
           backdropFilter: "blur(30px)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
+          border: "1px solid rgba(255, 255, 255, 0.3)",
           borderBottom: "none",
-          boxShadow: "0 -20px 60px rgba(0, 0, 0, 0.3)",
+          boxShadow: "0 -20px 60px rgba(0, 0, 0, 0.5)",
         }}
       >
         {/* Header */}
