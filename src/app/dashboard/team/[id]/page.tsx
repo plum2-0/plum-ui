@@ -50,7 +50,7 @@ export default function AgentDetailPage() {
     setIsDeleting(true);
     try {
       await deleteAgent.mutateAsync(agentId);
-      router.push("/dashboard/engage");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Failed to delete agent:", error);
       alert("Failed to delete agent. Please try again.");
@@ -129,7 +129,7 @@ export default function AgentDetailPage() {
               border: "1px solid rgba(255, 255, 255, 0.2)",
             }}
           >
-            Back to Engage
+            Back to Dashboard
           </button>
         </div>
       </div>
@@ -218,7 +218,7 @@ export default function AgentDetailPage() {
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                ← Back
+                ← Back to Dashboard
               </button>
               <button
                 onClick={() => setIsEditing(true)}

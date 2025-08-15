@@ -2,23 +2,34 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { Brand, UseCase } from "@/types/brand";
+import { UseCase } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
-import CompetitorSummary from "@/components/dashboard2/CompetitorSummary";
-import UseCaseInsightsComponent from "@/components/dashboard2/UseCaseInsights";
-import SummaryMetrics from "@/components/dashboard2/SummaryMetrics";
-import SummaryStatsCard from "@/components/dashboard2/SummaryStatsCard";
-import { getTopKeywordCounts } from "@/lib/keyword-utils";
-import { useBrandQuery, useGenerateUseCaseInsight } from "@/hooks/api/useBrandQuery";
+import MarketInsightsSection from "@/components/dashboard2/MarketInsightsSection";
+import RedditEngageSection from "@/components/dashboard2/RedditEngageSection";
+import AgentConversationDetail from "@/components/dashboard2/AgentConversationDetail";
+import { useAgents } from "@/hooks/api/useAgentQueries";
+import { AgentDetails } from "@/types/agent";
+import {
+  useBrandQuery,
+  useGenerateUseCaseInsight,
+} from "@/hooks/api/useBrandQuery";
 
 export default function Dashboard2Page() {
-  const { data: session } = useSession();
+  useSession();
   const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
   const generateInsight = useGenerateUseCaseInsight();
   const [selectedUseCase, setSelectedUseCase] = useState<UseCase | null>(null);
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [loadingUseCaseId, setLoadingUseCaseId] = useState<string | null>(null);
-  
+  const [conversationView, setConversationView] = useState<"all" | "active">(
+    "all"
+  );
+  const { data: agentsList, isLoading: isAgentsLoading } = useAgents();
+  const agents = agentsList?.agents || [];
+  const firstAgentWithConvos = (agents.find(
+    (a) => (a as unknown as AgentDetails).redditAgentConvos?.length > 0
+  ) || agents[0]) as unknown as AgentDetails | undefined;
+
   const brandData = brandResponse?.brand || null;
 
   // No posts filters needed when showing insights-only view
@@ -59,7 +70,7 @@ export default function Dashboard2Page() {
     try {
       // Generate insight and let React Query handle the refetch
       await generateInsight.mutateAsync({ brandId, title });
-      
+
       // After successful generation, find and select the new use case
       const updatedBrand = await refetch();
       if (updatedBrand.data?.brand) {
@@ -101,7 +112,9 @@ export default function Dashboard2Page() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-red-300 text-xl font-body">Error: {error.message}</div>
+        <div className="text-red-300 text-xl font-body">
+          Error: {error.message}
+        </div>
       </div>
     );
   }
@@ -136,373 +149,172 @@ export default function Dashboard2Page() {
       {/* Scrollable Main Content */}
       <main className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-6">
-          <div className="max-w-5xl mx-auto space-y-6">
-            {isSelectedUseCaseLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="flex items-center gap-3 text-white">
-                  <svg
-                    className="w-5 h-5 animate-spin text-white/80"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    ></path>
-                  </svg>
-                  <span className="font-body">Researching your topic...</span>
+          <div className="max-w-5xl mx-auto space-y-8">
+            {/* Brand/Use Case Header - Clean without container */}
+            <div className="pb-2">
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  {selectedUseCase && (
+                    <p className="text-white/50 font-body text-sm mb-1 tracking-wide">
+                      Problem
+                    </p>
+                  )}
+                  <h1 className="text-white font-heading text-3xl font-bold mb-2 tracking-tight">
+                    {selectedUseCase ? selectedUseCase.title : brandData.name}
+                  </h1>
+                  {selectedUseCase ? (
+                    <p className="text-white/80 font-body text-base leading-relaxed">
+                      {selectedUseCase.description ||
+                        `Research insights and Reddit engagement opportunities`}
+                    </p>
+                  ) : (
+                    brandData.detail && (
+                      <p className="text-white/80 font-body text-base leading-relaxed">
+                        {brandData.detail}
+                      </p>
+                    )
+                  )}
+                  {!selectedUseCase && (
+                    <div className="mt-4 flex items-center gap-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/60 font-body text-sm">
+                          Use Cases:
+                        </span>
+                        <span className="text-purple-300 font-heading font-bold text-lg">
+                          {brandData.target_use_cases.length}
+                        </span>
+                      </div>
+                      {brandData.website && (
+                        <a
+                          href={brandData.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-body text-sm transition-colors"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                          Visit Website
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-            ) : (
-              <>
-                {/* Total tab: Overall Posts Summary across all use cases */}
-                {!selectedUseCase &&
-                  brandData?.target_use_cases &&
-                  brandData.target_use_cases.length > 0 &&
-                  (() => {
-                    const allPosts = brandData.target_use_cases.flatMap(
-                      (uc) => uc.subreddit_posts || []
-                    );
-                    const totalPosts = allPosts.length;
-                    const tagTotals = allPosts.reduce(
-                      (acc, post) => {
-                        if (post.tags?.potential_customer)
-                          acc.potential_customer += 1;
-                        if (post.tags?.competitor_mention)
-                          acc.competitor_mention += 1;
-                        if (post.tags?.own_mention) acc.own_mention += 1;
-                        return acc;
-                      },
-                      {
-                        potential_customer: 0,
-                        competitor_mention: 0,
-                        own_mention: 0,
-                      }
-                    );
-                    const subredditCounts = allPosts.reduce<
-                      Record<string, number>
-                    >((acc, post) => {
-                      acc[post.subreddit] = (acc[post.subreddit] || 0) + 1;
-                      return acc;
-                    }, {});
-                    const topSubreddits = Object.entries(subredditCounts)
-                      .sort((a, b) => b[1] - a[1])
-                      .slice(0, 6);
+              {/* Subtle bottom border */}
+              <div className="mt-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+            </div>
 
-                    // Count posts containing each keyword (case-insensitive, phrase match by default)
-                    const allKeywords = Array.from(
-                      new Set(
-                        brandData.target_use_cases
-                          .flatMap((uc) => uc.keywords || [])
-                          .map((k) => k.trim())
-                          .filter(Boolean)
-                      )
-                    );
-                    const topKeywords = getTopKeywordCounts(
-                      allPosts,
-                      allKeywords,
-                      8
-                    );
+            {/* Market Insights Section (Collapsible) */}
+            <MarketInsightsSection
+              selectedUseCase={selectedUseCase}
+              useCases={brandData?.target_use_cases || []}
+              isLoading={isSelectedUseCaseLoading || false}
+            />
 
-                    return (
-                      <div
-                        className="rounded-2xl p-6 space-y-6"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.08)",
-                          backdropFilter: "blur(20px)",
-                          border: "1px solid rgba(255, 255, 255, 0.2)",
-                          boxShadow:
-                            "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="p-2 rounded-xl"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3))",
-                            }}
-                          >
-                            <svg
-                              className="w-5 h-5 text-emerald-300"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M3 7h18M3 12h18M3 17h18"
-                              />
-                            </svg>
-                          </div>
-                          <h2 className="text-white font-heading text-xl font-bold">
-                            Problem Validation Research Summary
-                          </h2>
-                        </div>
+            {/* Visual Separator */}
+            <div className="relative py-4">
+              <div
+                className="h-px"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  className="px-4 py-1 rounded-full"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.05)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-purple-400/50"></div>
+                    <div className="w-1 h-1 rounded-full bg-emerald-400/50"></div>
+                    <div className="w-1 h-1 rounded-full bg-indigo-400/50"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                        <SummaryMetrics
-                          totalPosts={totalPosts}
-                          potentialCustomers={tagTotals.potential_customer}
-                          competitorMentions={tagTotals.competitor_mention}
-                          ownMentions={tagTotals.own_mention}
-                        />
+            {/* Conversations View Toggle */}
+            <div className="flex items-center">
+              <div
+                className="ml-auto flex items-center gap-1 p-1 rounded-lg"
+                style={{
+                  background: "rgba(255, 255, 255, 0.08)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <button
+                  onClick={() => setConversationView("all")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-body transition-all ${
+                    conversationView === "all"
+                      ? "text-white bg-white/15"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setConversationView("active")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-body transition-all ${
+                    conversationView === "active"
+                      ? "text-white bg-white/15"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  Active
+                </button>
+              </div>
+            </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                          <SummaryStatsCard
-                            title="Top Keywords"
-                            items={topKeywords.map(([kw, count]) => ({
-                              label: kw as string,
-                              count: count as number,
-                            }))}
-                            emptyText="No keywords yet"
-                          />
-                          <SummaryStatsCard
-                            title="Top Subreddits"
-                            items={topSubreddits.map(([name, count]) => ({
-                              label: name as string,
-                              count: count as number,
-                            }))}
-                            prefix="r/"
-                            emptyText="No subreddit data yet"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })()}
-                {/* Total tab: Summary Table of all use cases */}
-                {!selectedUseCase && brandData?.target_use_cases?.length
-                  ? (() => {
-                      const rows = brandData.target_use_cases.map((uc) => {
-                        const ucPosts = uc.subreddit_posts || [];
-                        const ucTotals = ucPosts.reduce(
-                          (acc, post) => {
-                            if (post.tags?.potential_customer)
-                              acc.potential_customer += 1;
-                            if (post.tags?.competitor_mention)
-                              acc.competitor_mention += 1;
-                            return acc;
-                          },
-                          { potential_customer: 0, competitor_mention: 0 }
-                        );
-                        return {
-                          id: uc.id,
-                          title: uc.title,
-                          potential: ucTotals.potential_customer,
-                          competitor: ucTotals.competitor_mention,
-                          keywords: uc.keywords || [],
-                        };
-                      });
-                      return (
-                        <div
-                          className="rounded-2xl p-6"
-                          style={{
-                            background: "rgba(255, 255, 255, 0.06)",
-                            backdropFilter: "blur(16px)",
-                            border: "1px solid rgba(255, 255, 255, 0.18)",
-                          }}
-                        >
-                          <div className="text-white font-heading text-lg font-bold mb-3">
-                            By Use Case
-                          </div>
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full text-sm">
-                              <thead>
-                                <tr className="text-left text-white/70">
-                                  <th className="py-2 pr-4 font-body">
-                                    Use Case
-                                  </th>
-                                  <th className="py-2 pr-4 font-body">
-                                    Potential
-                                  </th>
-                                  <th className="py-2 pr-4 font-body">
-                                    Competitor
-                                  </th>
-                                  <th className="py-2 pr-4 font-body">
-                                    Keywords
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {rows.map((row) => (
-                                  <tr
-                                    key={row.id}
-                                    className="border-t border-white/10"
-                                  >
-                                    <td className="py-2 pr-4 text-white font-body">
-                                      {row.title}
-                                    </td>
-                                    <td className="py-2 pr-4 text-emerald-300 font-heading">
-                                      {row.potential}
-                                    </td>
-                                    <td className="py-2 pr-4 text-rose-300 font-heading">
-                                      {row.competitor}
-                                    </td>
-                                    <td className="py-2 pr-4">
-                                      <div className="flex flex-wrap gap-1">
-                                        {row.keywords.length ? (
-                                          row.keywords.slice(0, 8).map((kw) => (
-                                            <span
-                                              key={kw}
-                                              className="px-2 py-0.5 rounded-full text-xs font-body text-white/90"
-                                              style={{
-                                                background:
-                                                  "rgba(255, 255, 255, 0.08)",
-                                                border:
-                                                  "1px solid rgba(255, 255, 255, 0.15)",
-                                              }}
-                                            >
-                                              {kw}
-                                            </span>
-                                          ))
-                                        ) : (
-                                          <span className="text-white/60 text-xs font-body">
-                                            —
-                                          </span>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  : null}
-
-                {/* Selected Use Case: Activity for the chosen use case only */}
-                {selectedUseCase
-                  ? (() => {
-                      const uc = selectedUseCase;
-                      const ucPosts = uc.subreddit_posts || [];
-                      const ucTotals = ucPosts.reduce(
-                        (acc, post) => {
-                          if (post.tags?.potential_customer)
-                            acc.potential_customer += 1;
-                          if (post.tags?.competitor_mention)
-                            acc.competitor_mention += 1;
-                          if (post.tags?.own_mention) acc.own_mention += 1;
-                          return acc;
-                        },
-                        {
-                          potential_customer: 0,
-                          competitor_mention: 0,
-                          own_mention: 0,
-                        }
-                      );
-                      const ucSubCounts = ucPosts.reduce<
-                        Record<string, number>
-                      >((acc, post) => {
-                        acc[post.subreddit] = (acc[post.subreddit] || 0) + 1;
-                        return acc;
-                      }, {});
-                      const ucTopSubs = Object.entries(ucSubCounts)
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 5);
-                      return (
-                        <div
-                          className="rounded-2xl p-6 space-y-4"
-                          style={{
-                            background: "rgba(255, 255, 255, 0.06)",
-                            backdropFilter: "blur(16px)",
-                            border: "1px solid rgba(255, 255, 255, 0.18)",
-                          }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="p-2 rounded-xl"
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, rgba(59,130,246,0.28), rgba(99,102,241,0.28))",
-                              }}
-                            >
-                              <svg
-                                className="w-5 h-5 text-indigo-300"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1m-1 0h1a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h1m10 0H7"
-                                />
-                              </svg>
-                            </div>
-                            <h3 className="text-white font-heading text-lg font-bold">
-                              Use Case Activity — {uc.title}
-                            </h3>
-                          </div>
-
-                          <div className="mb-4">
-                            <SummaryMetrics
-                              totalPosts={ucPosts.length}
-                              potentialCustomers={ucTotals.potential_customer}
-                              competitorMentions={ucTotals.competitor_mention}
-                              ownMentions={ucTotals.own_mention}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <SummaryStatsCard
-                              title="Keywords"
-                              size="sm"
-                              items={getTopKeywordCounts(
-                                ucPosts,
-                                uc.keywords || [],
-                                12
-                              ).map(([kw, count]) => ({
-                                label: kw as string,
-                                count: count as number,
-                              }))}
-                              emptyText="No keywords"
-                            />
-                            <SummaryStatsCard
-                              title="Top Subreddits"
-                              size="sm"
-                              items={ucTopSubs.map(([name, count]) => ({
-                                label: name as string,
-                                count: count as number,
-                              }))}
-                              prefix="r/"
-                              emptyText="No subreddit data"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })()
-                  : null}
-
-                {/* Insights View */}
-                {selectedUseCase?.insights && (
-                  <UseCaseInsightsComponent
-                    insights={selectedUseCase.insights}
-                    insightTitle={selectedUseCase.title}
+            {/* Reddit Engagement / Active Conversations - Enhanced Container */}
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                boxShadow:
+                  "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <div className="p-6">
+                {conversationView === "all" ? (
+                  <RedditEngageSection
+                    selectedUseCase={selectedUseCase}
+                    brandId={brandData?.id}
                   />
-                )}
-
-                {/* Competitor Summary */}
-                {selectedUseCase?.competitor_summary && (
-                  <CompetitorSummary
-                    summary={selectedUseCase.competitor_summary}
-                    hotFeatures={selectedUseCase.hot_features_summary}
+                ) : isAgentsLoading ? (
+                  <div className="text-white/80 font-body">
+                    Loading active conversations...
+                  </div>
+                ) : firstAgentWithConvos ? (
+                  <AgentConversationDetail
+                    agent={firstAgentWithConvos}
+                    onBack={() => setConversationView("all")}
                   />
+                ) : (
+                  <div className="text-white/60 font-body">
+                    No agents available.
+                  </div>
                 )}
-              </>
-            )}
+              </div>
+            </div>
           </div>
         </div>
       </main>

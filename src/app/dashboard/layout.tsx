@@ -3,9 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { PlumSproutLogo } from "@/components/PlumSproutLogo";
-import Link from "next/link";
-import InviteTeammateButton from "@/components/InviteTeammateButton";
 
 export default function DashboardLayout({
   children,
@@ -114,39 +111,7 @@ export default function DashboardLayout({
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
-        .glass-header {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(30px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
       `}</style>
-
-      {/* Fixed Header */}
-      <header className="glass-header px-4 py-4 shrink-0 relative z-20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl glass-card">
-              <PlumSproutLogo className="w-6 h-6" />
-            </div>
-            <span className="font-heading text-lg font-bold text-white tracking-wide">
-              PlumSprout
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-white/80 font-body text-sm">
-              Welcome, {session?.user?.name || session?.user?.email}
-            </span>
-            <InviteTeammateButton brandId={session?.user?.brandId || null} />
-            <Link
-              href="/api/auth/signout"
-              className="text-white/60 hover:text-white font-body text-sm transition-colors"
-            >
-              Sign Out
-            </Link>
-          </div>
-        </div>
-      </header>
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden relative z-10">
