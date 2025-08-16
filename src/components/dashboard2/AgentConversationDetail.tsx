@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AgentDetails, RedditConvo } from "@/types/agent";
 import RedditAgentThread from "@/components/team/RedditAgentThread";
+import Image from "next/image";
 
 type FilterType = "all" | "engaged" | "monitoring" | "archived";
 type SortType = "newest" | "oldest" | "relevance" | "upvotes";
@@ -120,15 +121,29 @@ export default function AgentConversationDetail({
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div
-              className="w-16 h-16 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-2xl"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
-              }}
-            >
-              {agent.name.charAt(0).toUpperCase()}
-            </div>
+            {agent.avatarUrl ? (
+              <Image
+                src={agent.avatarUrl}
+                alt={agent.name}
+                width={64}
+                height={64}
+                className="rounded-full shrink-0"
+                style={{
+                  border: "2px solid rgba(255, 255, 255, 0.3)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                }}
+              />
+            ) : (
+              <div
+                className="w-16 h-16 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-2xl"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
+                }}
+              >
+                {agent.name.charAt(0).toUpperCase()}
+              </div>
+            )}
 
             {/* Info */}
             <div>

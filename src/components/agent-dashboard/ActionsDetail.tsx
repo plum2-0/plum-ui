@@ -107,7 +107,7 @@ export default function InitiativeDetail({
 
         if (action === "post") {
           // Redirect back to dashboard after posting
-          router.push("/dashboard/engage");
+          router.push("/dashboard");
         }
       }
     } catch (error) {
@@ -410,7 +410,7 @@ export default function InitiativeDetail({
         <div className="glass-card rounded-2xl p-4">
           <div className="flex items-center justify-end gap-3">
             <button
-              onClick={() => router.push("/dashboard/engage")}
+              onClick={() => router.push("/dashboard")}
               className="px-6 py-2 rounded-lg border border-white/20 text-white/80 hover:bg-white/10 transition-colors flex items-center gap-2"
               disabled={saving}
             >

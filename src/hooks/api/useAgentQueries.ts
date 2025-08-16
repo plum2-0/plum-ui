@@ -152,31 +152,6 @@ export const useAgent = (agentId: string) =>
     enabled: !!agentId,
   });
 
-export const useAgentTemplates = () =>
-  useQuery<AgentTemplatesResponse>({
-    queryKey: AGENT_QUERY_KEYS.templates,
-    queryFn: async () => {
-      const response = await fetch(`${API_BASE}/api/agents/templates`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch agent templates");
-      }
-      const templatesPython = await response.json();
-      const templates = Array.isArray(templatesPython)
-        ? templatesPython.map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            description: t.description,
-            defaultPersona: t.default_persona,
-            defaultGoal: t.default_goal,
-            category: t.category,
-            emoji: t.emoji,
-          }))
-        : [];
-      return { templates };
-    },
-    staleTime: 5 * 60 * 1000, // Templates don't change often
-    gcTime: 10 * 60 * 1000,
-  });
 
 // Fetch full Reddit thread (directly from Reddit API)
 export const useRedditThread = (threadId: string) =>

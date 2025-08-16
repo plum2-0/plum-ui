@@ -3,6 +3,7 @@ import { AgentListResponse, Agent, CreateAgentRequest } from "@/types/agent";
 import { auth } from "@/lib/auth";
 import { adminDb } from "@/lib/firebase-admin";
 import { getBrandIdFromRequest } from "@/lib/cookies";
+import { AvatarGenerator } from "@/lib/avatar";
 
 // GET /api/agents - List all agents for current brand (Firestore-backed)
 export async function GET(request: NextRequest) {
@@ -103,9 +104,14 @@ export async function POST(request: NextRequest) {
     const agentId =
       (globalThis as any).crypto?.randomUUID?.() || `${Date.now()}`;
     const nowIso = new Date().toISOString();
-    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-      body.name
-    )}`;
+    
+    // Generate avatar with enhanced options
+    const avatarUrl = body.avatarUrl || AvatarGenerator.generateUrl({
+      seed: body.name,
+      style: body.avatarStyle || 'avataaars',
+      size: 256,
+      backgroundColor: 'b6e3f4',
+    });
 
     const docData = {
       id: agentId,

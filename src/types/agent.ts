@@ -161,6 +161,8 @@ export interface CreateAgentRequest {
   persona: string;
   goal: string;
   templateId?: string;
+  avatarUrl?: string;
+  avatarStyle?: string;
 }
 
 export interface UpdateAgentRequest {
@@ -168,6 +170,7 @@ export interface UpdateAgentRequest {
   persona?: string;
   goal?: string;
   isActive?: boolean;
+  avatarUrl?: string;
 }
 
 // Reddit API Thread Structure

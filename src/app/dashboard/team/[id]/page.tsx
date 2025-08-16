@@ -122,7 +122,7 @@ export default function AgentDetailPage() {
             {error ? "Failed to load agent" : "Agent not found"}
           </p>
           <button
-            onClick={() => router.push("/dashboard/engage")}
+            onClick={() => router.push("/dashboard")}
             className="px-6 py-2 rounded-xl font-body text-white transition-all hover:scale-105"
             style={{
               background: "rgba(255, 255, 255, 0.1)",

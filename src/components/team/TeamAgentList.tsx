@@ -6,6 +6,7 @@ import { useAgents, useDeleteAgent, useGenerateAgent } from "@/hooks/api/useAgen
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import { useRouter } from "next/navigation";
 import AgentModal from "./AgentModal";
+import Image from "next/image";
 
 interface TeamAgentListProps {
   onAgentSelect?: (agentId: string) => void;
@@ -233,15 +234,29 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
 
             <div className="flex items-start gap-3">
               {/* Avatar */}
-              <div
-                className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-lg"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
-                }}
-              >
-                {agent.name.charAt(0).toUpperCase()}
-              </div>
+              {agent.avatar ? (
+                <Image
+                  src={agent.avatar}
+                  alt={agent.name}
+                  width={48}
+                  height={48}
+                  className="rounded-full shrink-0"
+                  style={{
+                    border: "2px solid rgba(255, 255, 255, 0.2)",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-lg"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
+                  }}
+                >
+                  {agent.name.charAt(0).toUpperCase()}
+                </div>
+              )}
 
               {/* Content */}
               <div className="flex-1 min-w-0">
