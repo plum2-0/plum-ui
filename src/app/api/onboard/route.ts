@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { adminDb } from "@/lib/firebase-admin";
 
 // Set maximum timeout duration (800s for Pro/Enterprise, 300s for Hobby)
-export const maxDuration = 800;
+export const maxDuration = 300;
 
 interface BrandOffering {
   title: string;
