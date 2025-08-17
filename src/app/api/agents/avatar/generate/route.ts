@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       } else {
         // Generate with specific options
         avatarUrl = AvatarGenerator.generateUrl({
-          seed,
+          seed: seed || undefined,
           style: style as AvatarStyle,
           ...options
         });
@@ -89,8 +89,8 @@ export async function GET(request: NextRequest) {
       avatarUrl = AvatarGenerator.generateRandom();
     } else {
       avatarUrl = AvatarGenerator.generateUrl({
-        seed,
-        style,
+        seed: seed || undefined,
+        style: style || undefined,
       });
     }
 

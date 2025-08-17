@@ -104,14 +104,16 @@ export async function POST(request: NextRequest) {
     const agentId =
       (globalThis as any).crypto?.randomUUID?.() || `${Date.now()}`;
     const nowIso = new Date().toISOString();
-    
-    // Generate avatar with enhanced options
-    const avatarUrl = body.avatarUrl || AvatarGenerator.generateUrl({
-      seed: body.name,
-      style: body.avatarStyle || 'avataaars',
-      size: 256,
-      backgroundColor: 'b6e3f4',
-    });
+
+    // // Generate avatar with enhanced options
+    // const avatarUrl =
+    //   body.avatarUrl ||
+    //   AvatarGenerator.generateUrl({
+    //     seed: body.name,
+    //     style: body.avatarStyle || "avataaars",
+    //     size: 256,
+    //     backgroundColor: "b6e3f4",
+    //   });
 
     const docData = {
       id: agentId,
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
       name: body.name,
       persona: body.persona,
       goal: body.goal,
-      avatar_url: avatarUrl,
+      avatar_url: "",
       template_id: body.templateId ?? null,
       status: "active",
       created_at: nowIso,
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
       name: body.name,
       persona: body.persona,
       goal: body.goal,
-      avatar: avatarUrl,
+      avatar: "",
       createdAt: new Date(nowIso),
       updatedAt: new Date(nowIso),
       isActive: true,
