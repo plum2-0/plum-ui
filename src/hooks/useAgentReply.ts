@@ -15,9 +15,9 @@ const API_BASE =
  * Shared hook for generating a reply using a selected agent
  * Creates a conversation for the agent and optional auto-reply to get content
  */
-export function useAgentReply() {
-  const { data, isLoading, error } = useAgents();
+export function useAgentReply(brandId: string) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const { data, isLoading, error } = useAgents(brandId);
 
   const agents: Agent[] = data?.agents ?? [];
 

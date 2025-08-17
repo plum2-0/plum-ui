@@ -2,7 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Agent } from "@/types/agent";
-import { useAgents, useDeleteAgent, useGenerateAgent } from "@/hooks/api/useAgentQueries";
+import {
+  useAgents,
+  useDeleteAgent,
+  useGenerateAgent,
+} from "@/hooks/api/useAgentQueries";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import { useRouter } from "next/navigation";
 import AgentModal from "./AgentModal";
@@ -14,8 +18,13 @@ interface TeamAgentListProps {
 
 export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
   const router = useRouter();
-  const { data, isLoading, error } = useAgents();
   const { data: brandData } = useBrandQuery();
+  const { data, isLoading, error } = useAgents();
+
+  // Debug logging
+  console.log("🔍 TeamAgentList - isLoading:", isLoading);
+  console.log("🔍 TeamAgentList - error:", error);
+  console.log("🔍 TeamAgentList - data:", data);
   const deleteAgent = useDeleteAgent();
   const generateAgent = useGenerateAgent();
   const [hoveredAgent, setHoveredAgent] = useState<string | null>(null);
@@ -28,7 +37,7 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
 
   const handleAgentClick = (agentId: string, event: React.MouseEvent) => {
     // Don't navigate if clicking the delete button
-    if ((event.target as HTMLElement).closest('.delete-button')) {
+    if ((event.target as HTMLElement).closest(".delete-button")) {
       return;
     }
     if (onAgentSelect) {
@@ -38,12 +47,20 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
     }
   };
 
-  const handleDeleteAgent = async (agentId: string, agentName: string, event: React.MouseEvent) => {
+  const handleDeleteAgent = async (
+    agentId: string,
+    agentName: string,
+    event: React.MouseEvent
+  ) => {
     event.stopPropagation();
-    if (!window.confirm(`Are you sure you want to delete ${agentName}? This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${agentName}? This action cannot be undone.`
+      )
+    ) {
       return;
     }
-    
+
     setDeletingAgentId(agentId);
     try {
       await deleteAgent.mutateAsync(agentId);
@@ -60,7 +77,7 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
       alert("Brand ID not found. Please refresh and try again.");
       return;
     }
-    
+
     setIsGenerating(true);
     try {
       await generateAgent.mutateAsync(brandData.brand.id);
@@ -219,13 +236,38 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
                   }}
                 >
                   {deletingAgentId === agent.id ? (
-                    <svg className="w-4 h-4 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="w-4 h-4 text-white animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                   ) : (
-                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <svg
+                      className="w-4 h-4 text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
                     </svg>
                   )}
                 </button>
@@ -298,9 +340,24 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
             title="Generate AI Agent"
           >
             {isGenerating ? (
-              <svg className="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <svg
+                className="w-8 h-8 text-white animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
             ) : (
               <svg

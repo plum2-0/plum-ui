@@ -8,7 +8,6 @@ import {
   UpdateAgentRequest,
   RedditThreadNode,
 } from "@/types/agent";
-import { getBrandIdFromCookie } from "@/lib/cookies";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_PLUM_API_BASE_URL || "http://localhost:8000";
@@ -32,15 +31,21 @@ export const useAgents = () =>
   useQuery<AgentListResponse>({
     queryKey: AGENT_QUERY_KEYS.lists(),
     queryFn: async () => {
-      const brandId = getBrandIdFromCookie();
-      if (!brandId) {
-        return { agents: [], totalCount: 0 };
-      }
-      const response = await fetch(`${API_BASE}/api/agents/brand/${brandId}`);
+      console.log("🚀 Fetching agents from /api/agents");
+      const response = await fetch("/api/agents");
+      console.log("📡 Response status:", response.status);
       if (!response.ok) {
+        if (response.status === 404) {
+          // User needs onboarding
+          console.log("ℹ️ User needs onboarding, returning empty agents list");
+          return { agents: [], totalCount: 0 };
+        }
+        console.error("❌ Failed to fetch agents:", response.statusText);
         throw new Error("Failed to fetch agents");
       }
-      return await response.json();
+      const data = await response.json();
+      console.log("✅ Agents data received:", data);
+      return data;
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -151,7 +156,6 @@ export const useAgent = (agentId: string) =>
     gcTime: 5 * 60 * 1000,
     enabled: !!agentId,
   });
-
 
 // Fetch full Reddit thread (directly from Reddit API)
 export const useRedditThread = (threadId: string) =>
@@ -318,10 +322,13 @@ export const useGenerateAgent = () => {
 
   return useMutation<Agent, Error, string>({
     mutationFn: async (brandId) => {
-      const response = await fetch(`${API_BASE}/api/agents/brand/${brandId}/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await fetch(
+        `${API_BASE}/api/agents/brand/${brandId}/generate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (!response.ok) {
         const error = await response.text();

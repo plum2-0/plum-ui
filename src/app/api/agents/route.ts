@@ -13,11 +13,46 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const brandId = getBrandIdFromRequest(request);
+    const userId = session.user.id;
+    let brandId: string | null = null;
+
+    // Strategy 1: Try to get brandId from session (fastest)
+    if (session.user.brandId) {
+      brandId = session.user.brandId;
+    } else {
+      // Strategy 2: Try to get brandId from cookie
+      brandId = getBrandIdFromRequest(request);
+
+      if (!brandId) {
+        // Strategy 3: Fetch from Firestore (most reliable but slower)
+        const firestore = adminDb();
+        if (firestore) {
+          try {
+            const userRef = firestore.collection("users").doc(userId);
+            const userDoc = await userRef.get();
+            const userData = userDoc.data();
+
+            if (userData?.brand_id) {
+              brandId = userData.brand_id;
+            }
+          } catch (firestoreError) {
+            console.error(
+              "Failed to fetch brandId from Firestore:",
+              firestoreError
+            );
+          }
+        }
+      }
+    }
+
+    // No brandId found - user hasn't completed onboarding
     if (!brandId) {
       return NextResponse.json(
-        { error: "Brand not selected" },
-        { status: 400 }
+        {
+          error: "Brand not found - user may need to complete onboarding",
+          needsOnboarding: true,
+        },
+        { status: 404 }
       );
     }
 
