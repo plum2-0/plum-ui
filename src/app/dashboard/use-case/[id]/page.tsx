@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Problems } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
-import OverviewInsights from "@/components/dashboard2/OverviewInsights";
+import UseCaseInsightsPage from "@/components/dashboard2/UseCaseInsightsPage";
+import RedditEngageSection from "@/components/dashboard2/RedditEngageSection";
 import AgentConversationDetail from "@/components/dashboard2/AgentConversationDetail";
 import { useAgent, useAgents } from "@/hooks/api/useAgentQueries";
 import {
@@ -13,12 +14,19 @@ import {
   useGenerateUseCaseInsight,
 } from "@/hooks/api/useBrandQuery";
 
-export default function DashboardPage() {
+export default function UseCasePage() {
   useSession();
+  const params = useParams();
   const router = useRouter();
+  const useCaseId = params.id as string;
+
   const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
   const generateInsight = useGenerateUseCaseInsight();
   const [onlyUnread, setOnlyUnread] = useState(false);
+  const [loadingUseCaseId, setLoadingUseCaseId] = useState<string | null>(null);
+  const [conversationView, setConversationView] = useState<"all" | "active">(
+    "all"
+  );
 
   const { data: agentsList, isLoading: isAgentsLoading } = useAgents();
   const agents = agentsList?.agents || [];
@@ -27,18 +35,31 @@ export default function DashboardPage() {
 
   const brandData = brandResponse?.brand || null;
 
+  // Find the selected use case based on URL parameter
+  const selectedUseCase =
+    brandData?.target_problems.find((problem) => problem.id === useCaseId) ||
+    null;
+
   const handleUseCaseSelect = (useCase: Problems | null) => {
-    if (useCase) {
+    if (!useCase) {
+      // Navigate to summary view
+      router.push("/dashboard");
+    } else {
       // Navigate to specific use case
       router.push(`/dashboard/use-case/${useCase.id}`);
     }
-    // If null, we're already on the summary page, do nothing
   };
 
   const handleAddUseCase = async (title: string) => {
     if (!brandData) return Promise.resolve();
 
     const brandId = brandData.id;
+    const tempId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : String(Date.now());
+
+    setLoadingUseCaseId(tempId);
 
     try {
       // Generate insight and let React Query handle the refetch
@@ -56,6 +77,8 @@ export default function DashboardPage() {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setLoadingUseCaseId(null);
     }
 
     return Promise.resolve();
@@ -89,13 +112,21 @@ export default function DashboardPage() {
     );
   }
 
+  // If use case not found, redirect to dashboard
+  if (!selectedUseCase) {
+    router.push("/dashboard");
+    return null;
+  }
+
+  const isSelectedUseCaseLoading = loadingUseCaseId === selectedUseCase.id;
+
   return (
     <div className="h-full flex overflow-hidden">
       {/* Sidebar - Desktop fixed, Mobile through wrapper */}
       <DashboardSidebar
         brandName={brandData.name}
         problems={brandData.target_problems}
-        selectedUseCase={null}
+        selectedUseCase={selectedUseCase}
         onUseCaseSelect={handleUseCaseSelect}
         onlyUnread={onlyUnread}
         setOnlyUnread={setOnlyUnread}
@@ -103,64 +134,33 @@ export default function DashboardPage() {
       />
 
       {/* Scrollable Main Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto w-full">
+      <main className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-6">
           <div className="max-w-5xl mx-auto space-y-8">
-            {/* Brand Summary Header */}
+            {/* Use Case Header */}
             <div className="pb-2">
               <div className="flex items-start gap-4">
                 <div className="flex-1">
-                  <h1 className="text-white font-heading text-3xl font-bold mb-2 tracking-tight">
-                    {brandData.name}
-                  </h1>
-                  {brandData.detail && (
-                    <p className="text-white/80 font-body text-base leading-relaxed">
-                      {brandData.detail}
-                    </p>
-                  )}
-                  <div className="mt-4 flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/60 font-body text-sm">
-                        Use Cases:
-                      </span>
-                      <span className="text-purple-300 font-heading font-bold text-lg">
-                        {brandData.target_problems.length}
-                      </span>
-                    </div>
-                    {brandData.website && (
-                      <a
-                        href={brandData.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-body text-sm transition-colors"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          />
-                        </svg>
-                        Visit Website
-                      </a>
-                    )}
-                  </div>
+                  <p className="text-white/50 font-body text-sm mb-1 tracking-wide">
+                    Problem
+                  </p>
+                  <h2 className="text-white/80 font-heading text-2xl font-bold mb-2 tracking-tight">
+                    {selectedUseCase.problem}
+                  </h2>
+                  <p className="text-white/80 font-body text-base leading-relaxed">
+                    {selectedUseCase.insights?.general_summary ||
+                      `Research insights and Reddit engagement opportunities`}
+                  </p>
                 </div>
               </div>
               {/* Subtle bottom border */}
               <div className="mt-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
             </div>
 
-            {/* Overview Insights Section (Collapsible) - Summary view */}
-            <OverviewInsights
-              problems={brandData?.target_problems || []}
-              isLoading={false}
+            {/* Use Case Insights Section (Collapsible) */}
+            <UseCaseInsightsPage
+              selectedUseCase={selectedUseCase}
+              isLoading={isSelectedUseCaseLoading}
             />
 
             {/* Visual Separator */}
@@ -190,45 +190,72 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Agent Conversation Detail - Always Display */}
-            {isAgentsLoading ? (
-              <div className="text-white/80 font-body text-center py-8">
-                Loading agent conversation...
-              </div>
-            ) : agent ? (
+            {/* Conversations View Toggle */}
+            <div className="flex items-center">
               <div
-                className="rounded-2xl overflow-hidden min-h-[50vh]"
+                className="ml-auto flex items-center gap-1 p-1 rounded-lg"
                 style={{
                   background: "rgba(255, 255, 255, 0.08)",
-                  backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  boxShadow:
-                    "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <div className="p-6 h-full overflow-y-auto">
+                <button
+                  onClick={() => setConversationView("all")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-body transition-all ${
+                    conversationView === "all"
+                      ? "text-white bg-white/15"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setConversationView("active")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-body transition-all ${
+                    conversationView === "active"
+                      ? "text-white bg-white/15"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  Active
+                </button>
+              </div>
+            </div>
+
+            {/* Reddit Engagement / Active Conversations - Enhanced Container */}
+            <div
+              className="rounded-2xl overflow-hidden min-h-[70vh]"
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                boxShadow:
+                  "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <div className="p-6 h-full overflow-y-auto">
+                {conversationView === "all" ? (
+                  <RedditEngageSection
+                    selectedProblem={selectedUseCase}
+                    brandId={brandData?.id}
+                  />
+                ) : isAgentsLoading ? (
+                  <div className="text-white/80 font-body">
+                    Loading active conversations...
+                  </div>
+                ) : agent ? (
                   <AgentConversationDetail
                     agent={agent}
-                    onBack={() => {}} // No back action needed on main dashboard
+                    onBack={() => setConversationView("all")}
                   />
-                </div>
+                ) : (
+                  <div className="text-white/60 font-body">
+                    No agents available.
+                  </div>
+                )}
               </div>
-            ) : (
-              <div
-                className="rounded-2xl overflow-hidden min-h-[20vh] flex items-center justify-center"
-                style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  boxShadow:
-                    "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <div className="text-white/60 font-body">
-                  No agents available.
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </main>

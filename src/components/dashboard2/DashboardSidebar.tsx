@@ -3,6 +3,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Problems } from "@/types/brand";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import SidebarBottomSection from "./SidebarBottomSection";
+import MobileSidebarWrapper from "@/components/shared/MobileSidebarWrapper";
 
 interface DashboardSidebarProps {
   brandName?: string;
@@ -61,9 +62,9 @@ export default function DashboardSidebar({
     }
   };
 
-  return (
+  const sidebarContent = (
     <aside
-      className="h-full flex flex-col"
+      className="h-full flex flex-col w-full md:w-64"
       style={{
         background: "rgba(255, 255, 255, 0.05)",
         backdropFilter: "blur(20px)",
@@ -255,4 +256,6 @@ export default function DashboardSidebar({
       </div>
     </aside>
   );
+
+  return <MobileSidebarWrapper>{sidebarContent}</MobileSidebarWrapper>;
 }

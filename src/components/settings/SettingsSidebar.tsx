@@ -1,4 +1,5 @@
 import { useRouter, usePathname } from "next/navigation";
+import MobileSidebarWrapper from "@/components/shared/MobileSidebarWrapper";
 
 export default function SettingsSidebar() {
   const router = useRouter();
@@ -97,8 +98,8 @@ export default function SettingsSidebar() {
     router.push(href);
   };
 
-  return (
-    <div className="w-64 glass-sidebar h-full border-r border-white/10">
+  const sidebarContent = (
+    <div className="w-full md:w-64 glass-sidebar h-full border-r border-white/10">
       <div className="p-6">
         <div className="mb-6 pb-6 border-b border-white/10">
           <button
@@ -174,4 +175,6 @@ export default function SettingsSidebar() {
       `}</style>
     </div>
   );
+
+  return <MobileSidebarWrapper>{sidebarContent}</MobileSidebarWrapper>;
 }

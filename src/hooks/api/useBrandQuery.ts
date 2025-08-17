@@ -47,7 +47,7 @@ export function useGenerateUseCaseInsight() {
       title: string;
     }) => {
       const query = encodeURIComponent(title);
-      const url = `http://localhost:8000/api/brand/${brandId}/insight?problem=${query}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/brand/${brandId}/insight?problem=${query}`;
 
       const response = await fetch(url, {
         method: "GET",
