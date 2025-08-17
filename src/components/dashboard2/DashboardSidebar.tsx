@@ -36,12 +36,6 @@ export default function DashboardSidebar({
     }
   }, [isAdding]);
 
-  // Determine which section is active based on the current path
-  const isResearchActive =
-    pathname === "/dashboard" ||
-    (pathname.startsWith("/dashboard/") &&
-      !pathname.startsWith("/dashboard/settings"));
-
   const submitNewUseCase = async () => {
     if (!onAddUseCase) return;
     const title = newTitle.trim();
