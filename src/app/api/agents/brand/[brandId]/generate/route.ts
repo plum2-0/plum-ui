@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 // POST /api/agents/brand/[brandId]/generate - Generate AI agent via backend API
 export async function POST(
   request: NextRequest,
-  { params }: { params: { brandId: string } }
+  { params }: { params: Promise<{ brandId: string }> }
 ) {
   try {
-    const { brandId } = params;
+    const { brandId } = await params;
     
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
