@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Brand } from "@/types/brand";
+import { clearRedditAuthCache } from "@/lib/verify-reddit";
 
 interface RedditConfigProps {
   brand: Brand | null;
@@ -73,6 +74,10 @@ export default function RedditConfig({ brand, onUpdate }: RedditConfigProps) {
       setSubreddits([]);
       setSelectedSubreddit("");
       setLinkedSubreddit("");
+      
+      // Clear Reddit auth cache from sessionStorage
+      clearRedditAuthCache();
+      
       setMessage({ type: "success", text: "Reddit account disconnected successfully" });
     } catch (error) {
       console.error("Error disconnecting Reddit:", error);

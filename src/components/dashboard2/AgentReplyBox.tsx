@@ -9,6 +9,7 @@ import type { SubredditPost } from "@/types/brand";
 import { useGenerateAgent } from "@/hooks/api/useAgentQueries";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import AgentModal from "@/components/team/AgentModal";
+import { ensureRedditConnectedOrRedirect } from "@/lib/verify-reddit";
 
 type AgentReplyBoxProps = {
   agents: Agent[];
@@ -44,6 +45,7 @@ export default function AgentReplyBox({
   submitPostAction,
   replySent,
   isSubmittingAction,
+  post,
 }: AgentReplyBoxProps) {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -51,6 +53,10 @@ export default function AgentReplyBox({
   const { data: brandData } = useBrandQuery();
   const generateAgent = useGenerateAgent();
   const [isGeneratingAgent, setIsGeneratingAgent] = useState(false);
+  const [isCheckingReddit, setIsCheckingReddit] = useState(false);
+
+  // Storage key for draft state
+  const draftKey = `reddit-reply-draft-${post.id}`;
 
   const handleGenerateAgent = async () => {
     if (!brandData?.brand?.id) {
@@ -68,6 +74,73 @@ export default function AgentReplyBox({
       setIsGeneratingAgent(false);
     }
   };
+
+  // Handle reply submission with Reddit auth check
+  const handleSendReply = async () => {
+    if (!customReply.trim() || isSubmittingAction || replySent) return;
+    
+    setIsCheckingReddit(true);
+    try {
+      // Save draft state before potential redirect
+      sessionStorage.setItem(draftKey, JSON.stringify({
+        reply: customReply,
+        agentId: selectedAgentId,
+        timestamp: Date.now()
+      }));
+      
+      // Add post ID to URL hash so we can scroll back to it after redirect
+      window.location.hash = `post-${post.id}`;
+      
+      // Check Reddit connection - will redirect if not connected
+      const isConnected = await ensureRedditConnectedOrRedirect();
+      
+      if (isConnected) {
+        // Reddit is connected, proceed with submission
+        await submitPostAction("reply", customReply);
+      }
+    } catch (error) {
+      console.error("Error during reply submission:", error);
+      // If ensureRedditConnectedOrRedirect throws due to redirect, this won't execute
+      // Otherwise, show error
+      alert("Failed to submit reply. Please try again.");
+    } finally {
+      setIsCheckingReddit(false);
+    }
+  };
+
+  // Restore draft on mount if returning from redirect
+  useEffect(() => {
+    const draftData = sessionStorage.getItem(draftKey);
+    if (draftData) {
+      try {
+        const { reply, agentId, timestamp } = JSON.parse(draftData);
+        // Only restore if draft is less than 10 minutes old
+        if (Date.now() - timestamp < 10 * 60 * 1000) {
+          setCustomReply(reply);
+          if (agentId) {
+            setSelectedAgentId(agentId);
+          }
+        }
+        // Clear the draft after restoring
+        sessionStorage.removeItem(draftKey);
+      } catch (error) {
+        console.error("Error restoring draft:", error);
+        sessionStorage.removeItem(draftKey);
+      }
+    }
+  }, []);
+
+  // Clear reply and draft when successfully sent
+  useEffect(() => {
+    if (replySent) {
+      setCustomReply("");
+      sessionStorage.removeItem(draftKey);
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+    }
+  }, [replySent, draftKey]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -476,8 +549,8 @@ export default function AgentReplyBox({
 
       <div className="flex justify-end">
         <motion.button
-          onClick={() => submitPostAction("reply", customReply)}
-          disabled={!customReply.trim() || isSubmittingAction || replySent}
+          onClick={handleSendReply}
+          disabled={!customReply.trim() || isSubmittingAction || replySent || isCheckingReddit}
           className="px-4 py-2 rounded-xl font-body font-semibold text-sm transition-all duration-300 hover:scale-105"
           style={{
             background: customReply.trim()
@@ -494,7 +567,9 @@ export default function AgentReplyBox({
           }}
           whileTap={{ scale: 0.98 }}
         >
-          {isSubmittingAction
+          {isCheckingReddit
+            ? "Checking Reddit..."
+            : isSubmittingAction
             ? "Submitting..."
             : replySent
             ? "Sent!"

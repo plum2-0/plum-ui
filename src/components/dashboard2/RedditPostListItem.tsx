@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -42,6 +42,34 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
   const [replySent, setReplySent] = useState(false);
   const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
     useAgentReply();
+
+  // Check if we're returning from Reddit auth for this specific post
+  useEffect(() => {
+    // Check URL hash for post ID
+    const hash = window.location.hash;
+    if (hash === `#post-${post.id}`) {
+      // This is the post user was working on before redirect
+      // Check for saved draft
+      const draftKey = `reddit-reply-draft-${post.id}`;
+      const draftData = sessionStorage.getItem(draftKey);
+      
+      if (draftData) {
+        // Open reply box automatically
+        setShowReplyBox(true);
+        
+        // Scroll to this post after a brief delay to ensure DOM is ready
+        setTimeout(() => {
+          const element = document.getElementById(`post-${post.id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+        
+        // Clear the hash after handling
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
+  }, [post.id]);
 
   // Extract mentioned brand from llm_explanation
   const mentionedBrand = post.llm_explanation
@@ -160,7 +188,7 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
   const shouldShowExpandButton = contentToShow.length > 200;
 
   return (
-    <div className="group">
+    <div id={`post-${post.id}`} className="group">
       <div className="rounded-lg border border-[#343536] bg-[#1a1a1b] p-5 transition-colors duration-200 hover:border-[#4f5355]">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -239,50 +267,7 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
             {contentToShow && (
               <div className="mb-4" onClick={(e) => e.stopPropagation()}>
                 <div className="relative">
-                  {shouldShowExpandButton && (
-                    <div className="absolute right-0 -top-1">
-                      <button
-                        onClick={() => setIsContentExpanded(!isContentExpanded)}
-                        className="text-white/60 hover:text-white transition-colors text-xs font-body flex items-center gap-1"
-                      >
-                        {isContentExpanded ? (
-                          <>
-                            <span>Collapse</span>
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 15l7-7 7 7"
-                              />
-                            </svg>
-                          </>
-                        ) : (
-                          <>
-                            <span>Expand</span>
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )}
+                  {false && shouldShowExpandButton && <div />}
                   <div
                     className="font-body text-[15px] md:text-[16px] leading-relaxed"
                     style={{
@@ -310,6 +295,50 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
                     />
                   )}
                 </div>
+                {shouldShowExpandButton && (
+                  <div className="mt-2 flex justify-start">
+                    <button
+                      onClick={() => setIsContentExpanded(!isContentExpanded)}
+                      className="text-white/60 hover:text-white transition-colors text-xs font-body flex items-center gap-1"
+                    >
+                      {isContentExpanded ? (
+                        <>
+                          <span>Collapse</span>
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 15l7-7 7 7"
+                            />
+                          </svg>
+                        </>
+                      ) : (
+                        <>
+                          <span>Expand</span>
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AgentDetails, RedditConvo } from "@/types/agent";
 import RedditAgentThread from "@/components/team/RedditAgentThread";
 import Image from "next/image";
@@ -9,22 +10,23 @@ type FilterType = "all" | "engaged" | "monitoring" | "archived";
 type SortType = "newest" | "oldest" | "relevance" | "upvotes";
 
 interface AgentConversationDetailProps {
-  agent: AgentDetails;
+  agent: AgentDetails | null;
   onBack: () => void;
 }
 
 export default function AgentConversationDetail({
   agent,
-  onBack,
 }: AgentConversationDetailProps) {
+  const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortType>("newest");
   const [expandedConversations, setExpandedConversations] = useState<
     Set<string>
   >(new Set());
 
-  const conversations = agent.redditAgentConvos || [];
-  const metrics = agent.metrics;
+  const conversations = agent?.redditAgentConvos || [];
+  const metrics = agent?.metrics;
+  console.log(agent);
 
   const handleConversationExpand = (conversationId: string) => {
     setExpandedConversations((prev) => new Set(prev).add(conversationId));
@@ -105,11 +107,9 @@ export default function AgentConversationDetail({
       </div>
 
       {/* Agent Header */}
-      <h2 className="text-xl font-heading font-bold text-white">
-        Using Persona
-      </h2>
+      <h2 className="text-xl font-heading font-bold text-white">My Agent</h2>
       <div
-        className="rounded-2xl p-6"
+        className="rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:bg-white/5 hover:border-purple-300/30 hover:scale-[1.02]"
         style={{
           background:
             "linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(34, 197, 94, 0.1))",
@@ -117,14 +117,19 @@ export default function AgentConversationDetail({
           border: "1px solid rgba(255, 255, 255, 0.2)",
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
         }}
+        onClick={() => {
+          if (agent?.id) {
+            router.push(`/dashboard/team/${agent.id}`);
+          }
+        }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            {agent.avatarUrl ? (
+            {agent?.avatarUrl ? (
               <Image
                 src={agent.avatarUrl}
-                alt={agent.name}
+                alt={agent.name || ""}
                 width={64}
                 height={64}
                 className="rounded-full shrink-0"
@@ -141,29 +146,29 @@ export default function AgentConversationDetail({
                     "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
                 }}
               >
-                {agent.name.charAt(0).toUpperCase()}
+                {agent?.name?.charAt(0).toUpperCase() || ""}
               </div>
             )}
 
             {/* Info */}
             <div>
               <h1 className="text-2xl font-heading font-bold text-white mb-1">
-                {agent.name}
+                {agent?.name || ""}
               </h1>
               <p className="text-white/60 text-sm font-body mb-3">
-                Created {new Date(agent.createdAt).toLocaleDateString()}
+                Created {new Date(agent?.createdAt || "").toLocaleDateString()}
               </p>
               <div className="flex items-center gap-4">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-body font-medium ${
-                    agent.isActive
+                    agent?.isActive
                       ? "bg-green-500/20 text-green-400"
                       : "bg-gray-500/20 text-gray-400"
                   }`}
                 >
-                  {agent.isActive ? "Active" : "Inactive"}
+                  {agent?.isActive ? "Active" : "Inactive"}
                 </span>
-                {agent.templateId && (
+                {agent?.templateId && (
                   <span className="text-white/50 text-xs font-body">
                     Template: {agent.templateId.replace("-", " ")}
                   </span>
@@ -245,39 +250,6 @@ export default function AgentConversationDetail({
         </div>
       )}
 
-      {/* Persona & Goal */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div
-          className="rounded-xl p-5"
-          style={{
-            background: "rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-          }}
-        >
-          <h3 className="text-white font-heading font-semibold mb-3">
-            Persona
-          </h3>
-          <p className="text-white/70 text-sm font-body leading-relaxed">
-            {agent.persona}
-          </p>
-        </div>
-
-        <div
-          className="rounded-xl p-5"
-          style={{
-            background: "rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-          }}
-        >
-          <h3 className="text-white font-heading font-semibold mb-3">Goal</h3>
-          <p className="text-white/70 text-sm font-body leading-relaxed">
-            {agent.goal}
-          </p>
-        </div>
-      </div>
-
       {/* Divider */}
       <div className="p-6 border-t border-white/10" />
 
@@ -354,8 +326,8 @@ export default function AgentConversationDetail({
                 redditConvo={convo}
                 onExpand={handleConversationExpand}
                 onCollapse={handleConversationCollapse}
-                agentName={agent.name}
-                agentAvatarUrl={agent.avatarUrl}
+                agentName={agent?.name || ""}
+                agentAvatarUrl={agent?.avatarUrl || ""}
               />
             ))
           )}

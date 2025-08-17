@@ -7,7 +7,7 @@ import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import MarketInsightsSection from "@/components/dashboard2/MarketInsightsSection";
 import RedditEngageSection from "@/components/dashboard2/RedditEngageSection";
 import AgentConversationDetail from "@/components/dashboard2/AgentConversationDetail";
-import { useAgents } from "@/hooks/api/useAgentQueries";
+import { useAgent, useAgents } from "@/hooks/api/useAgentQueries";
 import { AgentDetails } from "@/types/agent";
 import {
   useBrandQuery,
@@ -26,9 +26,12 @@ export default function Dashboard2Page() {
   );
   const { data: agentsList, isLoading: isAgentsLoading } = useAgents();
   const agents = agentsList?.agents || [];
-  const firstAgentWithConvos = (agents.find(
-    (a) => (a as unknown as AgentDetails).redditAgentConvos?.length > 0
-  ) || agents[0]) as unknown as AgentDetails | undefined;
+  let firstAgent;
+  if (agents?.length) {
+    firstAgent = agents[0];
+  }
+
+  const { data: agent } = useAgent(firstAgent?.id || "");
 
   const brandData = brandResponse?.brand || null;
 
@@ -95,7 +98,7 @@ export default function Dashboard2Page() {
     return Promise.resolve();
   };
 
-  console.log(JSON.stringify(brandData, null, 2));
+  console.log(JSON.stringify(agent, null, 2));
 
   // No tab state to manage in insights-only view
 
@@ -304,9 +307,9 @@ export default function Dashboard2Page() {
                   <div className="text-white/80 font-body">
                     Loading active conversations...
                   </div>
-                ) : firstAgentWithConvos ? (
+                ) : agent ? (
                   <AgentConversationDetail
-                    agent={firstAgentWithConvos}
+                    agent={agent}
                     onBack={() => setConversationView("all")}
                   />
                 ) : (

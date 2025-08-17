@@ -18,7 +18,27 @@ export interface VerifyResponseErr {
 
 export type VerifyResponse = VerifyResponseOk | VerifyResponseErr;
 
+const REDDIT_AUTH_CACHE_KEY = "reddit-auth-verified";
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export async function verifyRedditAccount(): Promise<VerifyResponse> {
+  // Check sessionStorage cache first
+  const cachedAuth = sessionStorage.getItem(REDDIT_AUTH_CACHE_KEY);
+  if (cachedAuth) {
+    try {
+      const cached = JSON.parse(cachedAuth);
+      // Check if cache is still valid (within 5 minutes)
+      if (cached.timestamp && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.data as VerifyResponseOk;
+      }
+      // Cache expired, remove it
+      sessionStorage.removeItem(REDDIT_AUTH_CACHE_KEY);
+    } catch (e) {
+      // Invalid cache, remove it
+      sessionStorage.removeItem(REDDIT_AUTH_CACHE_KEY);
+    }
+  }
+
   const res = await fetch("/api/reddit/verify", {
     method: "GET",
     headers: { "Content-Type": "application/json" },
@@ -27,8 +47,21 @@ export async function verifyRedditAccount(): Promise<VerifyResponse> {
 
   const data = await res.json();
   if (res.ok) {
-    return { ok: true, ...data } as VerifyResponseOk;
+    const response = { ok: true, ...data } as VerifyResponseOk;
+    // Cache successful verification
+    sessionStorage.setItem(
+      REDDIT_AUTH_CACHE_KEY,
+      JSON.stringify({
+        data: response,
+        timestamp: Date.now(),
+      })
+    );
+    return response;
   }
+  
+  // Clear cache on auth failure
+  sessionStorage.removeItem(REDDIT_AUTH_CACHE_KEY);
+  
   return {
     ok: false,
     status: res.status,
@@ -63,6 +96,12 @@ export async function ensureRedditConnectedOrRedirect(): Promise<boolean> {
   if (result.ok) return true;
   if ((result as VerifyResponseErr).needsRedditAuth) {
     await redirectToRedditConnect();
+    return true
   }
   return false;
+}
+
+// Helper function to clear Reddit auth cache (call this on signout)
+export function clearRedditAuthCache(): void {
+  sessionStorage.removeItem(REDDIT_AUTH_CACHE_KEY);
 }

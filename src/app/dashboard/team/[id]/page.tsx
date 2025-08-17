@@ -122,7 +122,7 @@ export default function AgentDetailPage() {
             {error ? "Failed to load agent" : "Agent not found"}
           </p>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.back()}
             className="px-6 py-2 rounded-xl font-body text-white transition-all hover:scale-105"
             style={{
               background: "rgba(255, 255, 255, 0.1)",
@@ -138,20 +138,6 @@ export default function AgentDetailPage() {
 
   return (
     <div className="h-full flex overflow-hidden">
-      {/* Fixed Sidebar */}
-      {brandData && (
-        <div className="w-64 shrink-0">
-          <DashboardSidebar
-            brandName={brandData.name}
-            problems={brandData.target_problems}
-            selectedUseCase={selectedUseCase}
-            onUseCaseSelect={setSelectedUseCase}
-            onlyUnread={onlyUnread}
-            setOnlyUnread={setOnlyUnread}
-          />
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -212,7 +198,7 @@ export default function AgentDetailPage() {
               {/* Actions */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => router.push("/dashboard/engage")}
+                  onClick={() => router.back()}
                   className="px-4 py-2 rounded-xl font-body text-white/80 hover:text-white transition-all hover:scale-105"
                   style={{
                     background: "rgba(255, 255, 255, 0.05)",

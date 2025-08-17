@@ -14,25 +14,6 @@ interface DashboardSidebarProps {
   onAddUseCase?: (title: string) => Promise<void> | void;
 }
 
-const getUseCaseIcon = () => {
-  // Always use a briefcase icon for use cases to be consistent with panel headers
-  return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1m-1 0h1a2 2 0 012 2v9a 2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h1m10 0H7"
-      />
-    </svg>
-  );
-};
-
 export default function DashboardSidebar({
   brandName = "Total",
   problems = [],
@@ -188,7 +169,6 @@ export default function DashboardSidebar({
                   }
                 }}
               >
-                <div className="flex-shrink-0">{getUseCaseIcon()}</div>
                 <span className="flex-1 text-left font-body text-sm">
                   {problem?.problem}
                 </span>
@@ -237,21 +217,6 @@ export default function DashboardSidebar({
                   border: "1px solid rgba(255, 255, 255, 0.15)",
                 }}
               >
-                <div className="flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 text-white/70"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </div>
                 <input
                   ref={inputRef}
                   type="text"
