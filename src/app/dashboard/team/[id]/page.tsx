@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAgent, useDeleteAgent } from "@/hooks/api/useAgentQueries";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
-import { Problems } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import AgentModal from "@/components/team/AgentModal";
 import RedditAgentThread from "@/components/team/RedditAgentThread";
@@ -26,7 +25,6 @@ export default function AgentDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortType>("newest");
-  const [selectedUseCase, setSelectedUseCase] = useState<Problems | null>(null);
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [expandedConversations, setExpandedConversations] = useState<
     Set<string>

@@ -15,6 +15,7 @@ import ProspectCard from "./ProspectCard";
 interface SwipeableProspectModalProps {
   isOpen: boolean;
   posts: RedditPost[];
+  brandId: string;
   onClose: () => void;
   onLike: (post: RedditPost) => void;
   onIgnore: (post: RedditPost) => void;
@@ -28,6 +29,7 @@ const VISIBLE_CARDS = 3; // Number of cards visible in the stack
 export default function SwipeableProspectModal({
   isOpen,
   posts,
+  brandId,
   onClose,
   onLike,
   onIgnore,
@@ -56,11 +58,11 @@ export default function SwipeableProspectModal({
 
   // Dynamic transforms for background cards based on top card movement
   const dragProgress = useTransform(x, [-300, 0, 300], [1, 0, 1]);
-  
+
   // Scale and opacity for second card
   const secondCardScale = useTransform(dragProgress, [0, 1], [1, 0.95]);
   const secondCardOpacity = useTransform(dragProgress, [0, 1], [1, 0.6]);
-  
+
   // Scale and opacity for third card
   const thirdCardScale = useTransform(dragProgress, [0, 1], [0.95, 0.9]);
   const thirdCardOpacity = useTransform(dragProgress, [0, 1], [0.5, 0.3]);
@@ -130,12 +132,12 @@ export default function SwipeableProspectModal({
           // Reset motion values for the new top card
           x.set(0);
           y.set(0);
-        }, 200);  // Delay to let exit animation start properly
-        
+        }, 200); // Delay to let exit animation start properly
+
         // Clear animation flag after transition completes
         setTimeout(() => {
           setIsAnimating(false);
-        }, 800);  // Match the longer animation duration
+        }, 800); // Match the longer animation duration
       } else {
         // Last card: allow exit animation, then signal completion and close
         setTimeout(() => {
@@ -145,7 +147,7 @@ export default function SwipeableProspectModal({
           setIsAnimating(false);
           x.set(0);
           y.set(0);
-        }, 750);  // Match the longer animation duration
+        }, 750); // Match the longer animation duration
       }
     },
     [
@@ -199,25 +201,25 @@ export default function SwipeableProspectModal({
     exit: (custom: "left" | "right" | null) => {
       const exitX =
         custom === "left"
-          ? -(window.innerWidth + 400)  // Ensure card goes fully off screen
+          ? -(window.innerWidth + 400) // Ensure card goes fully off screen
           : custom === "right"
-          ? window.innerWidth + 400  // Ensure card goes fully off screen
+          ? window.innerWidth + 400 // Ensure card goes fully off screen
           : 0;
-      const exitRotate = 
+      const exitRotate =
         custom === "left"
-          ? -60  // More dramatic rotation
+          ? -60 // More dramatic rotation
           : custom === "right"
-          ? 60  // More dramatic rotation
+          ? 60 // More dramatic rotation
           : 0;
       return {
         x: exitX,
-        y: custom ? -50 + Math.random() * 100 : 0,  // Slight upward motion
+        y: custom ? -50 + Math.random() * 100 : 0, // Slight upward motion
         rotate: exitRotate,
         opacity: 0,
         transition: {
-          duration: 0.7,  // Slightly longer for complete animation
-          ease: [0.25, 0.1, 0.25, 1],  // Custom easing for natural motion
-          opacity: { duration: 0.4 },  // Fade out faster than movement
+          duration: 0.7, // Slightly longer for complete animation
+          ease: [0.25, 0.1, 0.25, 1], // Custom easing for natural motion
+          opacity: { duration: 0.4 }, // Fade out faster than movement
         },
       };
     },
@@ -275,45 +277,73 @@ export default function SwipeableProspectModal({
             </div>
 
             {/* Card Stack */}
-            <div className="relative" style={{ height: "600px", perspective: "1000px" }}>
+            <div
+              className="relative"
+              style={{ height: "min(75vh, 800px)", perspective: "1000px" }}
+            >
               {/* Render background cards first (in reverse order for proper stacking) */}
-              {[...Array(Math.min(VISIBLE_CARDS - 1, posts.length - currentIndex - 1))].map((_, idx) => {
+              {[
+                ...Array(
+                  Math.min(VISIBLE_CARDS - 1, posts.length - currentIndex - 1)
+                ),
+              ].map((_, idx) => {
                 const cardIndex = VISIBLE_CARDS - 1 - idx;
                 const postIndex = currentIndex + cardIndex;
-                
+
                 if (postIndex >= posts.length) return null;
-                
+
                 const post = posts[postIndex];
                 const offset = cardIndex * 8;
-                const baseScale = 1 - (cardIndex * 0.05);
-                const baseOpacity = 1 - (cardIndex * 0.3);
-                
+                const baseScale = 1 - cardIndex * 0.05;
+                const baseOpacity = 1 - cardIndex * 0.3;
+
+                // For the third card (cardIndex === 2), use a different initial state
+                // to prevent it from appearing to slide in from the side
+                const isBottomCard = cardIndex === 2;
+
                 return (
                   <motion.div
-                    key={`bg-${post.thing_id}`}
+                    key={`stack-${postIndex}`} // Use postIndex for more stable keys
                     className="absolute inset-0 pointer-events-none"
-                    initial={{ 
-                      scale: baseScale - 0.05,
-                      y: offset + 10,
-                      opacity: 0
-                    }}
-                    animate={{ 
+                    initial={
+                      isBottomCard
+                        ? {
+                            scale: 0.85,
+                            y: offset + 20,
+                            opacity: 0,
+                            x: 0, // Explicitly set x to 0 to prevent side movement
+                          }
+                        : {
+                            scale: baseScale,
+                            y: offset,
+                            opacity: baseOpacity,
+                            x: 0,
+                          }
+                    }
+                    animate={{
                       scale: cardIndex === 1 ? secondCardScale : thirdCardScale,
                       y: offset,
-                      opacity: cardIndex === 1 ? secondCardOpacity : thirdCardOpacity,
+                      x: 0, // Ensure x stays at 0
+                      opacity:
+                        cardIndex === 1 ? secondCardOpacity : thirdCardOpacity,
                       rotateX: cardIndex * 2, // Slight tilt for depth
                     }}
                     transition={{
-                      scale: { type: "spring", stiffness: 300, damping: 30 },
-                      opacity: { duration: 0.2 },
-                      y: { type: "spring", stiffness: 300, damping: 30 }
+                      scale: { type: "spring", stiffness: 200, damping: 25 },
+                      opacity: { duration: isBottomCard ? 0.4 : 0.2 },
+                      y: { type: "spring", stiffness: 200, damping: 25 },
+                      x: { duration: 0 }, // Instant x position to prevent sliding
                     }}
-                    style={{ 
+                    style={{
                       zIndex: VISIBLE_CARDS - cardIndex,
-                      transformStyle: "preserve-3d"
+                      transformStyle: "preserve-3d",
                     }}
                   >
-                    <ProspectCard post={post} className="h-full" />
+                    <ProspectCard
+                      post={post}
+                      brandId={brandId}
+                      className="h-full"
+                    />
                   </motion.div>
                 );
               })}
@@ -357,6 +387,7 @@ export default function SwipeableProspectModal({
                   >
                     <ProspectCard
                       post={currentPost}
+                      brandId={brandId}
                       className="h-full overflow-y-auto"
                     />
 

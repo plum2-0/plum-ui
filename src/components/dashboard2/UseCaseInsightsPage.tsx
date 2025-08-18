@@ -10,11 +10,13 @@ import HeroMetric from "./ProspectTargetsSwiper";
 
 interface UseCaseInsightsProps {
   selectedUseCase: Prospect;
+  brandId: string;
   isLoading?: boolean;
 }
 
 export default function UseCaseInsightsPage({
   selectedUseCase,
+  brandId,
   isLoading = false,
 }: UseCaseInsightsProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -157,6 +159,7 @@ export default function UseCaseInsightsPage({
             <HeroMetric
               value={ucPosts.length}
               posts={ucPosts}
+              brandId={brandId}
               label="Potential Customers Identified"
               subtext="Click To View"
               onLike={(post) => {

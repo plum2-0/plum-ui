@@ -7,6 +7,7 @@ import SwipeableProspectModal from "./SwipeableProspectModal";
 interface ProspectTargetsProps {
   value: number;
   posts?: RedditPost[];
+  brandId: string;
   onLike?: (post: RedditPost) => void;
   onIgnore?: (post: RedditPost) => void;
   onStackCompleted?: () => void;
@@ -17,6 +18,7 @@ interface ProspectTargetsProps {
 export default function ProspectTargets({ 
   value, 
   posts = [],
+  brandId,
   onLike,
   onIgnore,
   onStackCompleted,
@@ -85,6 +87,7 @@ export default function ProspectTargets({
       <SwipeableProspectModal
         isOpen={isModalOpen}
         posts={posts}
+        brandId={brandId}
         onClose={() => setIsModalOpen(false)}
         onLike={handleLike}
         onIgnore={handleIgnore}

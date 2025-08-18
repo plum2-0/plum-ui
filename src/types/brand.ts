@@ -51,17 +51,6 @@ export interface Brand {
   };
 }
 
-export interface Problems {
-  id: string;
-  problem: string;
-  keywords?: string[];
-  hot_features_summary: string | null;
-  competitor_summary: string | null;
-  created_at: string;
-  brand_id: string;
-  subreddit_posts: SubredditPost[];
-  insights?: UseCaseInsights;
-}
 
 export interface UseCaseInsights {
   general_summary: string;

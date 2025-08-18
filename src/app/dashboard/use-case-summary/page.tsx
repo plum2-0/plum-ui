@@ -154,6 +154,7 @@ export default function UseCaseSummaryPage() {
 
             <OverviewInsights
               prospects={brandData?.prospects || []}
+              brandId={brandData?.id || ""}
               isLoading={false}
             />
 

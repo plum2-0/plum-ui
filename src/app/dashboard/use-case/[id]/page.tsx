@@ -160,6 +160,7 @@ export default function UseCasePage() {
             {/* Use Case Insights Section (Collapsible) */}
             <UseCaseInsightsPage
               selectedUseCase={selectedUseCase}
+              brandId={brandData?.id || ""}
               isLoading={isSelectedUseCaseLoading}
             />
 

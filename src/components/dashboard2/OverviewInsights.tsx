@@ -8,11 +8,13 @@ import SolutionsOpportunities from "./SolutionsOpportunities";
 
 interface OverviewInsightsProps {
   prospects: Prospect[];
+  brandId: string;
   isLoading?: boolean;
 }
 
 export default function OverviewInsights({
   prospects,
+  brandId,
   isLoading = false,
 }: OverviewInsightsProps) {
   console.log(JSON.stringify(prospects, null, 2));
@@ -154,6 +156,7 @@ export default function OverviewInsights({
             <HeroMetric
               value={totalPosts}
               posts={allPosts}
+              brandId={brandId}
               label="Total Potential Customers Identified"
               subtext="Click To View"
               onLike={(post) => {
