@@ -8,6 +8,7 @@ import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import UseCaseInsightsPage from "@/components/dashboard2/UseCaseInsightsPage";
 import RedditEngageSection from "@/components/dashboard2/RedditEngageSection";
 import AgentConversationDetail from "@/components/dashboard2/AgentConversationDetail";
+import GenerateFirstAgent from "@/components/dashboard2/GenerateFirstAgent";
 import { useAgent, useAgents } from "@/hooks/api/useAgentQueries";
 import {
   useBrandQuery,
@@ -190,39 +191,6 @@ export default function UseCasePage() {
               </div>
             </div>
 
-            {/* Conversations View Toggle */}
-            <div className="flex items-center">
-              <div
-                className="ml-auto flex items-center gap-1 p-1 rounded-lg"
-                style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <button
-                  onClick={() => setConversationView("all")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-body transition-all ${
-                    conversationView === "all"
-                      ? "text-white bg-white/15"
-                      : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setConversationView("active")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-body transition-all ${
-                    conversationView === "active"
-                      ? "text-white bg-white/15"
-                      : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  Active
-                </button>
-              </div>
-            </div>
-
             {/* Reddit Engagement / Active Conversations - Enhanced Container */}
             <div
               className="rounded-2xl overflow-hidden min-h-[70vh]"
@@ -235,25 +203,10 @@ export default function UseCasePage() {
               }}
             >
               <div className="p-6 h-full overflow-y-auto">
-                {conversationView === "all" ? (
-                  <RedditEngageSection
-                    selectedProblem={selectedUseCase}
-                    brandId={brandData?.id}
-                  />
-                ) : isAgentsLoading ? (
-                  <div className="text-white/80 font-body">
-                    Loading active conversations...
-                  </div>
-                ) : agent ? (
-                  <AgentConversationDetail
-                    agent={agent}
-                    onBack={() => setConversationView("all")}
-                  />
-                ) : (
-                  <div className="text-white/60 font-body">
-                    No agents available.
-                  </div>
-                )}
+                <RedditEngageSection
+                  selectedProblem={selectedUseCase}
+                  brandId={brandData?.id}
+                />
               </div>
             </div>
           </div>

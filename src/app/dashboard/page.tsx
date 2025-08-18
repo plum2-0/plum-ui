@@ -7,6 +7,7 @@ import { Problems } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import OverviewInsights from "@/components/dashboard2/OverviewInsights";
 import AgentConversationDetail from "@/components/dashboard2/AgentConversationDetail";
+import GenerateFirstAgent from "@/components/dashboard2/GenerateFirstAgent";
 import { useAgent, useAgents } from "@/hooks/api/useAgentQueries";
 import {
   useBrandQuery,
@@ -119,14 +120,6 @@ export default function DashboardPage() {
                     </p>
                   )}
                   <div className="mt-4 flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/60 font-body text-sm">
-                        Use Cases:
-                      </span>
-                      <span className="text-purple-300 font-heading font-bold text-lg">
-                        {brandData.target_problems.length}
-                      </span>
-                    </div>
                     {brandData.website && (
                       <a
                         href={brandData.website}
@@ -224,9 +217,10 @@ export default function DashboardPage() {
                     "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <div className="text-white/60 font-body">
-                  No agents available.
-                </div>
+                <GenerateFirstAgent
+                  message="No agents available. Generate your first AI agent to get started."
+                  center
+                />
               </div>
             )}
           </div>

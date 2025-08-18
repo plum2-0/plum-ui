@@ -238,7 +238,6 @@ export default function UseCaseInsightsPage({
           {selectedUseCase.insights && (
             <UseCaseInsightsComponent
               insights={selectedUseCase.insights}
-              insightTitle={selectedUseCase.problem}
             />
           )}
 

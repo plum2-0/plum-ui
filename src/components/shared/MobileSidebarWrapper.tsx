@@ -18,7 +18,7 @@ export default function MobileSidebarWrapper({
   const [mounted, setMounted] = useState(false);
   const [showHamburger, setShowHamburger] = useState(true);
   const lastScrollY = useRef(0);
-  const scrollTimeout = useRef<NodeJS.Timeout>();
+  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Use external state if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;

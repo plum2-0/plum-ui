@@ -8,8 +8,8 @@ import type { Agent } from "@/types/agent";
 import type { SubredditPost } from "@/types/brand";
 import { useGenerateAgent } from "@/hooks/api/useAgentQueries";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
-import AgentModal from "@/components/team/AgentModal";
 import { ensureRedditConnectedOrRedirect } from "@/lib/verify-reddit";
+import GenerateFirstAgent from "@/components/dashboard2/GenerateFirstAgent";
 
 type AgentReplyBoxProps = {
   agents: Agent[];
@@ -49,7 +49,6 @@ export default function AgentReplyBox({
 }: AgentReplyBoxProps) {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const { data: brandData } = useBrandQuery();
   const generateAgent = useGenerateAgent();
   const [isGeneratingAgent, setIsGeneratingAgent] = useState(false);
@@ -78,22 +77,25 @@ export default function AgentReplyBox({
   // Handle reply submission with Reddit auth check
   const handleSendReply = async () => {
     if (!customReply.trim() || isSubmittingAction || replySent) return;
-    
+
     setIsCheckingReddit(true);
     try {
       // Save draft state before potential redirect
-      sessionStorage.setItem(draftKey, JSON.stringify({
-        reply: customReply,
-        agentId: selectedAgentId,
-        timestamp: Date.now()
-      }));
-      
+      sessionStorage.setItem(
+        draftKey,
+        JSON.stringify({
+          reply: customReply,
+          agentId: selectedAgentId,
+          timestamp: Date.now(),
+        })
+      );
+
       // Add post ID to URL hash so we can scroll back to it after redirect
       window.location.hash = `post-${post.id}`;
-      
+
       // Check Reddit connection - will redirect if not connected
       const isConnected = await ensureRedditConnectedOrRedirect();
-      
+
       if (isConnected) {
         // Reddit is connected, proceed with submission
         await submitPostAction("reply", customReply);
@@ -128,7 +130,7 @@ export default function AgentReplyBox({
         sessionStorage.removeItem(draftKey);
       }
     }
-  }, []);
+  }, [draftKey, setCustomReply, setSelectedAgentId]);
 
   // Clear reply and draft when successfully sent
   useEffect(() => {
@@ -140,7 +142,7 @@ export default function AgentReplyBox({
         textareaRef.current.style.height = "auto";
       }
     }
-  }, [replySent, draftKey]);
+  }, [replySent, draftKey, setCustomReply]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -168,76 +170,12 @@ export default function AgentReplyBox({
       layout
     >
       <div className="mb-4">
-        <h4 className="text-white font-heading text-sm font-semibold mb-3">
-          Which of your Team mates should engage with this post?
-        </h4>
-
         {isLoadingAgents ? (
           <div className="flex items-center justify-center py-8">
             <div className="text-white/50 text-sm">Loading agents...</div>
           </div>
         ) : agents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="text-white/60 text-sm text-center">
-              No agents available yet. Generate your first AI agent to start
-              engaging with posts.
-            </div>
-            <button
-              onClick={handleGenerateAgent}
-              disabled={isGeneratingAgent}
-              className="px-6 py-3 rounded-xl font-body font-semibold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(147, 51, 234, 0.8))",
-                color: "white",
-                border: "1px solid rgba(168, 85, 247, 0.3)",
-                boxShadow: "0 4px 12px rgba(168, 85, 247, 0.3)",
-                opacity: isGeneratingAgent ? 0.7 : 1,
-              }}
-            >
-              {isGeneratingAgent ? (
-                <>
-                  <svg
-                    className="w-5 h-5 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Generating AI Agent...
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Generate Your First AI Agent
-                </>
-              )}
-            </button>
-          </div>
+          <GenerateFirstAgent />
         ) : (
           <LayoutGroup id="agent-chooser">
             <AnimatePresence initial={false} mode="wait">
@@ -550,7 +488,12 @@ export default function AgentReplyBox({
       <div className="flex justify-end">
         <motion.button
           onClick={handleSendReply}
-          disabled={!customReply.trim() || isSubmittingAction || replySent || isCheckingReddit}
+          disabled={
+            !customReply.trim() ||
+            isSubmittingAction ||
+            replySent ||
+            isCheckingReddit
+          }
           className="px-4 py-2 rounded-xl font-body font-semibold text-sm transition-all duration-300 hover:scale-105"
           style={{
             background: customReply.trim()

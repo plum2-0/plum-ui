@@ -8,6 +8,7 @@ import {
   UpdateAgentRequest,
   RedditThreadNode,
 } from "@/types/agent";
+import { getBrandIdFromCookie } from "@/lib/cookies";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_PLUM_API_BASE_URL || "http://localhost:8000";
@@ -27,9 +28,9 @@ export const AGENT_QUERY_KEYS = {
 } as const;
 
 // Queries
-export const useAgents = () =>
+export const useAgents = (brandId?: string) =>
   useQuery<AgentListResponse>({
-    queryKey: AGENT_QUERY_KEYS.lists(),
+    queryKey: brandId ? [...AGENT_QUERY_KEYS.lists(), brandId] : AGENT_QUERY_KEYS.lists(),
     queryFn: async () => {
       console.log("🚀 Fetching agents from /api/agents");
       const response = await fetch("/api/agents");

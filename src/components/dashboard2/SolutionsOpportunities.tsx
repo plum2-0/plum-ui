@@ -18,7 +18,7 @@ export default function SolutionsOpportunities({
   return (
     <div>
       {showTitle && (
-        <h4 className="text-white/90 font-heading text-lg font-semibold mb-4 flex items-center gap-2">
+        <h4 className="text-white/90 font-heading text-lg font-semibold mb-2 flex items-center gap-2">
           <svg
             className="w-5 h-5 text-emerald-400"
             fill="none"
@@ -35,53 +35,25 @@ export default function SolutionsOpportunities({
           {title}
         </h4>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {items.map((item: string, index: number) => (
-          <div
-            key={index}
-            className="group relative p-4 rounded-xl transition-all duration-300 hover:scale-[1.02] cursor-default"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              boxShadow:
-                "0 4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-            }}
-          >
-            <div
-              className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(34, 197, 94, 0.1))",
-              }}
-            />
-            <div className="relative flex items-center gap-3">
-              <div
-                className="p-1.5 rounded-lg shrink-0"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(34, 197, 94, 0.2))",
-                }}
-              >
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <p className="text-white/90 font-body text-sm leading-relaxed">
-                {item}
-              </p>
-            </div>
+          <div key={index} className="flex items-start gap-2">
+            <svg
+              className="w-4 h-4 mt-0.5 text-emerald-400 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-white/90 font-body text-[15px] md:text-base font-semibold leading-snug">
+              {item}
+            </p>
           </div>
         ))}
       </div>

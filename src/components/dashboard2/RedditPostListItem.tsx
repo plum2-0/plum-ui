@@ -13,6 +13,7 @@ import AgentReplyBox from "./AgentReplyBox";
 
 interface RedditPostListItemProps {
   post: SubredditPost;
+  brandId?: string;
   onGenerate?: (post: SubredditPost) => Promise<void>;
   onIgnore?: (post: SubredditPost) => Promise<void>;
   onSend?: (post: SubredditPost, message: string) => Promise<void>;
@@ -32,7 +33,7 @@ function formatTimeAgo(dateString: string): string {
 
 // Agents will be used for reply generation instead of personas
 
-export default function RedditPostListItem({ post }: RedditPostListItemProps) {
+export default function RedditPostListItem({ post, brandId = "" }: RedditPostListItemProps) {
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [customReply, setCustomReply] = useState<string>("");
   const [showReplyBox, setShowReplyBox] = useState(false);
@@ -41,7 +42,7 @@ export default function RedditPostListItem({ post }: RedditPostListItemProps) {
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [replySent, setReplySent] = useState(false);
   const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
-    useAgentReply();
+    useAgentReply(brandId);
 
   // Check if we're returning from Reddit auth for this specific post
   useEffect(() => {

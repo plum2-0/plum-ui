@@ -161,6 +161,8 @@ export default function OverviewInsights({
               subtext={`across ${problems.length} use cases • ${totalPosts} posts analyzed`}
             />
 
+            <div className="border-t border-white/10"></div>
+
             {/* Solutions & Opportunities Section */}
             <SolutionsOpportunities
               items={allSolutionsAndOpportunities}
@@ -237,7 +239,7 @@ export default function OverviewInsights({
                         Posts
                       </th>
                       <th className="text-left p-4 font-heading text-white/80 font-semibold">
-                        Top Keywords
+                        Keywords
                       </th>
                     </tr>
                   </thead>

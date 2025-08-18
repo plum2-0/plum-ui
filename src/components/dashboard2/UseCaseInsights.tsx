@@ -19,10 +19,6 @@ export default function UseCaseInsightsComponent({
   return (
     <div className="border-t border-white/10">
       <div className="p-6 space-y-6">
-        <h3 className="text-white font-heading text-xl font-bold">
-          Market Insights
-        </h3>
-
         {/* Solutions & Opportunities - Glass Cards Grid */}
         <SolutionsOpportunities items={solutionsAndOpportunities} />
 

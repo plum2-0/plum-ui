@@ -111,7 +111,7 @@ export default function RedditEngageSection({
 
     await fetchNewPosts.mutateAsync({
       brandId,
-        problemId: selectedProblem.id,
+      problemId: selectedProblem.id,
     });
 
     setPage(1);
@@ -144,7 +144,7 @@ export default function RedditEngageSection({
             </svg>
           </div>
           <h2 className="text-white font-heading text-xl font-bold">
-            Reddit Posts of Interest
+            Sourced Reddit Posts
           </h2>
         </div>
         <div className="flex items-center gap-3">
@@ -215,7 +215,7 @@ export default function RedditEngageSection({
           </div>
         ) : (
           visiblePosts.map((post) => (
-            <RedditPostListItem key={post.id} post={post} />
+            <RedditPostListItem key={post.id} post={post} brandId={brandId} />
           ))
         )}
       </div>

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { useOnboardingState } from "@/hooks/useOnboardingState";
+import { SecondaryButton } from "@/components/ui/SecondaryButton";
 
 interface BrandOffering {
   title: string;
@@ -29,8 +30,8 @@ function OnboardingContent() {
   const [formData, setFormData] = useState({
     brandName: "",
     brandDescription: "",
-    problems: ["", "", ""],
-    offerings: [{ title: "", description: "" }] as BrandOffering[],
+    problems: [""],
+    offerings: [] as BrandOffering[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
@@ -170,7 +171,7 @@ function OnboardingContent() {
       setFormData({
         brandName: brandName,
         brandDescription: data.brand_description,
-        problems: data.target_problems.slice(0, 3),
+        problems: data.target_problems.length > 0 ? data.target_problems : [""],
         offerings: data.offerings || [{ title: "", description: "" }],
       });
 
@@ -185,6 +186,18 @@ function OnboardingContent() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleSkipWebsite = () => {
+    // Skip website analysis and go directly to manual form
+    setWebsiteUrl("");
+    setFormData({
+      brandName: "",
+      brandDescription: "",
+      problems: [""],
+      offerings: [],
+    });
+    setPhase("details");
   };
 
   const handleInputChange = (
@@ -204,6 +217,22 @@ function OnboardingContent() {
         i === index ? value : problem
       ),
     }));
+  };
+
+  const addProblem = () => {
+    setFormData((prev) => ({
+      ...prev,
+      problems: [...prev.problems, ""],
+    }));
+  };
+
+  const removeProblem = (index: number) => {
+    if (formData.problems.length > 1) {
+      setFormData((prev) => ({
+        ...prev,
+        problems: prev.problems.filter((_, i) => i !== index),
+      }));
+    }
   };
 
   const handleOfferingChange = (
@@ -227,12 +256,10 @@ function OnboardingContent() {
   };
 
   const removeOffering = (index: number) => {
-    if (formData.offerings.length > 1) {
-      setFormData((prev) => ({
-        ...prev,
-        offerings: prev.offerings.filter((_, i) => i !== index),
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      offerings: prev.offerings.filter((_, i) => i !== index),
+    }));
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {
@@ -248,7 +275,7 @@ function OnboardingContent() {
         },
         body: JSON.stringify({
           brandName: formData.brandName,
-          website: websiteUrl,
+          website: websiteUrl || null,
           brandDescription: formData.brandDescription,
           problems: formData.problems.filter((p) => p.trim()),
           offerings: formData.offerings.filter(
@@ -282,8 +309,7 @@ function OnboardingContent() {
   const isFormValid =
     formData.brandName.trim() &&
     formData.brandDescription.trim() &&
-    formData.problems.some((p) => p.trim()) &&
-    formData.offerings.some((o) => o.title.trim() && o.description.trim());
+    formData.problems.some((p) => p.trim());
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -499,6 +525,16 @@ function OnboardingContent() {
                   >
                     {isGenerating ? "Analyzing..." : "Analyze My Brand 🔍"}
                   </button>
+
+                  <p className="mt-6">
+                    <button
+                      type="button"
+                      onClick={handleSkipWebsite}
+                      className="text-white/70 hover:text-white underline text-lg font-body transition-colors"
+                    >
+                      I don't have a website yet →
+                    </button>
+                  </p>
                 </div>
               </form>
             </>
@@ -512,10 +548,6 @@ function OnboardingContent() {
                   </span>{" "}
                   ✨
                 </h1>
-                <p className="font-body text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-                  Review and customize the information we've gathered about your
-                  brand.
-                </p>
               </div>
 
               <form
@@ -571,34 +603,54 @@ function OnboardingContent() {
                   <div className="space-y-4">
                     {formData.problems.map((problem, index) => (
                       <div key={index} className="glass-card rounded-xl p-4">
-                        <input
-                          type="text"
-                          value={problem}
-                          onChange={(e) =>
-                            handleProblemChange(index, e.target.value)
-                          }
-                          placeholder={`Problem #${index + 1}`}
-                          className="w-full px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body"
-                        />
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="text"
+                            value={problem}
+                            onChange={(e) =>
+                              handleProblemChange(index, e.target.value)
+                            }
+                            placeholder={`Problem #${index + 1}`}
+                            className="flex-1 px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body"
+                          />
+                          {formData.problems.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeProblem(index)}
+                              className="px-4 py-2 text-red-300 hover:text-red-200 transition-colors font-medium text-lg"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
+                  </div>
+
+                  <div className="mt-4">
+                    <SecondaryButton type="button" onClick={addProblem}>
+                      + Add Another Problem
+                    </SecondaryButton>
                   </div>
                 </div>
 
                 {/* Offerings */}
                 <div className="mb-8">
-                  <label className="block text-white font-heading text-lg font-bold mb-6 tracking-wide">
+                  <label className="block text-white font-heading text-lg font-bold mb-3 tracking-wide">
                     Your Offerings 💼
                   </label>
+                  <p className="text-white/60 text-sm font-body mb-6">
+                    Have products or services? List them here (optional)
+                  </p>
 
-                  <div className="space-y-6">
-                    {formData.offerings.map((offering, index) => (
-                      <div key={index} className="glass-card rounded-2xl p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-white font-heading font-bold tracking-wide">
-                            Offering #{index + 1}
-                          </h3>
-                          {formData.offerings.length > 1 && (
+                  {formData.offerings.length > 0 ? (
+                    <div className="space-y-6">
+                      {formData.offerings.map((offering, index) => (
+                        <div key={index} className="glass-card rounded-2xl p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-white font-heading font-bold tracking-wide">
+                              Offering #{index + 1}
+                            </h3>
                             <button
                               type="button"
                               onClick={() => removeOffering(index)}
@@ -606,53 +658,51 @@ function OnboardingContent() {
                             >
                               ✕ Remove
                             </button>
-                          )}
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <input
-                              type="text"
-                              value={offering.title}
-                              onChange={(e) =>
-                                handleOfferingChange(
-                                  index,
-                                  "title",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="e.g., AI-Powered Analytics"
-                              className="w-full px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body"
-                            />
                           </div>
-                          <div>
-                            <textarea
-                              value={offering.description}
-                              onChange={(e) =>
-                                handleOfferingChange(
-                                  index,
-                                  "description",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Describe this offering..."
-                              rows={3}
-                              className="w-full px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body resize-none"
-                            />
+
+                          <div className="space-y-4">
+                            <div>
+                              <input
+                                type="text"
+                                value={offering.title}
+                                onChange={(e) =>
+                                  handleOfferingChange(
+                                    index,
+                                    "title",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="e.g., AI-Powered Analytics"
+                                className="w-full px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body"
+                              />
+                            </div>
+                            <div>
+                              <textarea
+                                value={offering.description}
+                                onChange={(e) =>
+                                  handleOfferingChange(
+                                    index,
+                                    "description",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Describe this offering..."
+                                rows={3}
+                                className="w-full px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body resize-none"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : null}
 
-                  <div className="mt-6 text-center">
-                    <button
-                      type="button"
-                      onClick={addOffering}
-                      className="px-6 py-3 glass-button text-white rounded-xl transition-all font-heading font-semibold transform hover:scale-105 shadow-lg"
-                    >
-                      ✨ Add Another Offering
-                    </button>
+                  <div className="mt-4">
+                    <SecondaryButton type="button" onClick={addOffering}>
+                      {formData.offerings.length === 0
+                        ? "+ Add Offering"
+                        : "+ Add Another Offering"}
+                    </SecondaryButton>
                   </div>
                 </div>
 

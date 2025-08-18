@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields
-    if (!body.brandName?.trim() || !body.website?.trim()) {
+    if (!body.brandName?.trim()) {
       return NextResponse.json(
-        { error: "Brand name and website are required" },
+        { error: "Brand name is required" },
         { status: 400 }
       );
     }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Handle new structure with brandDescription, problems/targetProblems, offerings
     const payload: any = {
       brand_name: body.brandName.trim(),
-      brand_website: body.website.trim(),
+      brand_website: body.website?.trim() || null,
       user_id: userId,
     };
 
