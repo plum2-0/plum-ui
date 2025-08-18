@@ -290,7 +290,23 @@ function OnboardingContent() {
       }
 
       const result = await response.json();
-      console.log("Brand profile created successfully:", result);
+
+      // Handle the new response structure
+      if (!result.success) {
+        throw new Error(result.message || "Failed to create brand profile");
+      }
+
+      console.log("Brand profile created successfully:", result.data);
+
+      // Set brand_id cookie for subsequent requests
+      if (result.data?.brand_id) {
+        document.cookie = `brand_id=${result.data.brand_id}; path=/; max-age=${
+          60 * 60 * 24 * 30
+        }`; // 30 days
+      }
+
+      // Clear onboarding data from localStorage since we're done
+      localStorage.removeItem("onboardingData");
 
       // Redirect to dashboard after successful onboarding
       router.push("/dashboard");

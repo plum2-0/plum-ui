@@ -1,35 +1,73 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Brand, Problems } from "@/types/brand";
+import { useSession } from "next-auth/react";
+import { Brand } from "@/types/brand";
 
 export const BRAND_QUERY_KEY = ["brand"] as const;
 
 export function useBrandQuery() {
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   return useQuery<{ brand: Brand }>({
     queryKey: BRAND_QUERY_KEY,
     queryFn: async () => {
-      const response = await fetch("/api/brand");
+      // Check if user is authenticated
+      if (!session?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      // Get brandId from session, fallback to checking if user needs onboarding
+      const brandId = session.user.brandId;
+
+      if (!brandId) {
+        // If no brandId in session, user likely needs onboarding
+        router.push("/onboarding");
+        throw new Error("User needs onboarding");
+      }
+
+      // Call Python API directly
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${backendUrl}/api/brand/${brandId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Plum-UI/1.0",
+        },
+      });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        console.error("Backend API error:", errorText);
 
-        if (errorData.needsOnboarding) {
+        if (response.status === 404) {
           router.push("/onboarding");
           throw new Error("User needs onboarding");
         }
 
-        throw new Error(errorData.error || "Failed to fetch brand data");
+        throw new Error(`Failed to fetch brand data: ${errorText}`);
       }
 
-      return response.json();
+      const brandData = await response.json();
+
+      // The Python API now returns the brand data directly, not wrapped in a response object
+      return {
+        brand: brandData,
+      };
     },
+    // Only run query when session is loaded and user is authenticated
+    enabled: status !== "loading" && !!session?.user?.id,
     // Cache persists indefinitely - only mutations will invalidate
     refetchOnWindowFocus: false,
     retry: (failureCount, error) => {
-      // Don't retry if user needs onboarding
-      if (error.message === "User needs onboarding") return false;
+      // Don't retry if user needs onboarding or is not authenticated
+      if (
+        error.message === "User needs onboarding" ||
+        error.message === "User not authenticated"
+      ) {
+        return false;
+      }
       return failureCount < 3;
     },
   });

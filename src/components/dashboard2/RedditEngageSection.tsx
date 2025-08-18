@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Problems, SubredditPost } from "@/types/brand";
+import { Prospect, SubredditPost } from "@/types/brand";
 import RedditPostListItem from "./RedditPostListItem";
-import TagFiltersDropdown from "./TagFiltersDropdown";
+// import TagFiltersDropdown from "./TagFiltersDropdown"; // TODO: Re-enable when tags are implemented
 import { useFetchNewPosts } from "@/hooks/api/useBrandQuery";
 
 interface RedditEngageSectionProps {
-  selectedProblem: Problems | null;
+  selectedProblem: Prospect | null;
   brandId?: string;
 }
 
@@ -55,28 +55,11 @@ export default function RedditEngageSection({
     );
   }
 
-  const allPosts = selectedProblem.subreddit_posts || [];
+  const allPosts = selectedProblem.sourced_reddit_posts || [];
 
-  // Filter posts by selected tags
-  const filteredPosts = allPosts.filter((post: SubredditPost) => {
-    if (selectedTags.size === 0) return true;
-    return Array.from(selectedTags).some((selectedTag) => {
-      switch (selectedTag) {
-        case "potential_customer":
-          return post.tags?.potential_customer;
-        case "competitor_mention":
-          return post.tags?.competitor_mention;
-        case "own_mention":
-          return post.tags?.own_mention;
-        case "positive_sentiment":
-          return post.tags?.positive_sentiment;
-        case "negative_sentiment":
-          return post.tags?.negative_sentiment;
-        default:
-          return false;
-      }
-    });
-  });
+  // TODO: Update filtering logic when tags are implemented in new API
+  // For now, show all posts as filtering isn't available yet
+  const filteredPosts = allPosts;
 
   const totalPosts = filteredPosts.length;
   const totalPages = Math.ceil(totalPosts / pageSize);
@@ -185,12 +168,13 @@ export default function RedditEngageSection({
               </>
             )}
           </button>
-          <TagFiltersDropdown
+          {/* TODO: Re-enable when tags are implemented in new API */}
+          {/* <TagFiltersDropdown
             posts={allPosts}
             selectedTags={selectedTags}
             onTagToggle={handleTagToggle}
             onClearAll={handleClearAllTags}
-          />
+          /> */}
         </div>
       </div>
 
@@ -214,9 +198,44 @@ export default function RedditEngageSection({
             </p>
           </div>
         ) : (
-          visiblePosts.map((post) => (
-            <RedditPostListItem key={post.id} post={post} brandId={brandId} />
-          ))
+          visiblePosts.map((redditPost) => {
+            // Temporary adapter to convert RedditPost to SubredditPost structure
+            const adaptedPost = {
+              id: redditPost.thing_id,
+              post_id: redditPost.thing_id,
+              subreddit: redditPost.subreddit,
+              title: redditPost.title,
+              author: redditPost.author,
+              content: redditPost.content,
+              created_at: new Date(redditPost.created_utc * 1000).toISOString(),
+              updated_at: null,
+              link: `https://reddit.com${redditPost.permalink}`,
+              image: null,
+              up_votes: redditPost.upvotes,
+              down_votes: redditPost.downvotes,
+              num_comments: redditPost.reply_count,
+              llm_explanation: "",
+              llm_response: { index: 0, model: "" },
+              status: redditPost.status,
+              tags: {
+                potential_customer: false,
+                competitor_mention: false,
+                own_mention: false,
+                positive_sentiment: false,
+                negative_sentiment: false,
+                neutral_sentiment: true,
+              },
+              problem_id: "",
+              brand_id: brandId || "",
+            };
+            return (
+              <RedditPostListItem
+                key={redditPost.thing_id}
+                post={adaptedPost}
+                brandId={brandId}
+              />
+            );
+          })
         )}
       </div>
 

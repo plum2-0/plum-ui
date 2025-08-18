@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Problems } from "@/types/brand";
+import { Prospect } from "@/types/brand";
 import UseCaseInsightsComponent from "./UseCaseInsights";
-import CompetitorSummary from "./CompetitorSummary";
+// import CompetitorSummary from "./CompetitorSummary"; // TODO: Re-enable when API supports it
 import GlassPills from "./GlassPills";
-import HeroMetric from "./HeroMetric";
-import { getTopKeywordCounts } from "@/lib/keyword-utils";
+import HeroMetric from "./ProspectTargetsSwiper";
+// import { getTopKeywordCounts } from "@/lib/keyword-utils"; // TODO: Update for new RedditPost structure
 
 interface UseCaseInsightsProps {
-  selectedUseCase: Problems;
+  selectedUseCase: Prospect;
   isLoading?: boolean;
 }
 
@@ -21,7 +21,7 @@ export default function UseCaseInsightsPage({
 
   // Load collapsed state from localStorage on mount
   useEffect(() => {
-    const storageKey = `market-insights-collapsed-${selectedUseCase.problem}`;
+    const storageKey = `market-insights-collapsed-${selectedUseCase.problem_to_solve}`;
     const savedState = localStorage.getItem(storageKey);
     if (savedState !== null) {
       setIsCollapsed(JSON.parse(savedState));
@@ -29,13 +29,13 @@ export default function UseCaseInsightsPage({
       // Default to open for first time users
       setIsCollapsed(false);
     }
-  }, [selectedUseCase.problem]);
+  }, [selectedUseCase.problem_to_solve]);
 
   // Save collapsed state to localStorage when it changes
   const handleToggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    const storageKey = `market-insights-collapsed-${selectedUseCase.problem}`;
+    const storageKey = `market-insights-collapsed-${selectedUseCase.problem_to_solve}`;
     localStorage.setItem(storageKey, JSON.stringify(newState));
   };
 
@@ -70,20 +70,13 @@ export default function UseCaseInsightsPage({
 
   // Calculate use case specific statistics
   const uc = selectedUseCase;
-  const ucPosts = uc.subreddit_posts || [];
-  const ucTotals = ucPosts.reduce(
-    (acc, post) => {
-      if (post.tags?.potential_customer) acc.potential_customer += 1;
-      if (post.tags?.competitor_mention) acc.competitor_mention += 1;
-      if (post.tags?.own_mention) acc.own_mention += 1;
-      return acc;
-    },
-    {
-      potential_customer: 0,
-      competitor_mention: 0,
-      own_mention: 0,
-    }
-  );
+  const ucPosts = uc.sourced_reddit_posts || [];
+  // TODO: Update tag logic when tags are implemented in new API
+  const ucTotals = {
+    potential_customer: 0,
+    competitor_mention: 0,
+    own_mention: 0,
+  };
 
   const ucSubCounts = ucPosts.reduce<Record<string, number>>((acc, post) => {
     acc[post.subreddit] = (acc[post.subreddit] || 0) + 1;
@@ -162,9 +155,22 @@ export default function UseCaseInsightsPage({
           <div className="p-6 space-y-6">
             {/* Hero Metric - Potential Customers Only */}
             <HeroMetric
-              value={ucTotals.potential_customer}
+              value={ucPosts.length}
+              posts={ucPosts}
               label="Potential Customers Identified"
-              subtext={`from ${ucPosts.length} total posts analyzed`}
+              subtext="Click To View"
+              onLike={(post) => {
+                console.log("Liked post:", post.thing_id, post.title);
+                // TODO: Implement actual like functionality
+              }}
+              onIgnore={(post) => {
+                console.log("Ignored post:", post.thing_id, post.title);
+                // TODO: Implement actual ignore functionality
+              }}
+              onStackCompleted={() => {
+                console.log("All prospects for this use case reviewed!");
+                // TODO: Show completion message or refresh data
+              }}
             />
 
             {/* Enhanced Keywords and Subreddits - Using Standardized Component */}
@@ -188,12 +194,10 @@ export default function UseCaseInsightsPage({
                   Trending Keywords
                 </h4>
                 <GlassPills
-                  items={getTopKeywordCounts(ucPosts, uc.keywords || []).map(
-                    ([kw, count]) => ({
-                      label: kw as string,
-                      count: count as number,
-                    })
-                  )}
+                  items={(uc.keywords || []).map((kw) => ({
+                    label: kw,
+                    count: 1, // TODO: Implement keyword counting for new RedditPost structure
+                  }))}
                   variant="keywords"
                   size="lg"
                   maxVisible={8}
@@ -236,18 +240,16 @@ export default function UseCaseInsightsPage({
 
           {/* Insights View */}
           {selectedUseCase.insights && (
-            <UseCaseInsightsComponent
-              insights={selectedUseCase.insights}
-            />
+            <UseCaseInsightsComponent insights={selectedUseCase.insights} />
           )}
 
-          {/* Competitor Summary */}
-          {selectedUseCase.competitor_summary && (
+          {/* TODO: Competitor Summary - Waiting for new API structure */}
+          {/* {selectedUseCase.competitor_summary && (
             <CompetitorSummary
               summary={selectedUseCase.competitor_summary}
               hotFeatures={selectedUseCase.hot_features_summary}
             />
-          )}
+          )} */}
         </div>
       )}
     </div>

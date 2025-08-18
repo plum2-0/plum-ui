@@ -3,20 +3,49 @@ export interface BrandOffering {
   description: string;
 }
 
+export interface RedditPost {
+  thing_id: string;
+  title: string;
+  content: string;
+  author: string;
+  subreddit: string;
+  permalink: string;
+  created_utc: number;
+  score: number;
+  upvotes: number;
+  downvotes: number;
+  reply_count: number;
+  thumbnail: string;
+  link_flair: string;
+  suggested_agent_reply: string | null;
+  status: string;
+}
+
+export interface Prospect {
+  id: string;
+  agent: any | null;
+  problem_to_solve: string;
+  keywords: string[];
+  insights: any | null;
+  sourced_reddit_posts: RedditPost[];
+  prosepect_profiles: any[];
+}
+
 export interface Brand {
   id: string;
   name: string;
   website: string;
   image: string | null;
   detail: string | null;
-  brand_description?: string;
-  offerings?: BrandOffering[];
-  target_problems: Problems[];
-  users: any[];
-  created_at: string;
-  updated_at: string;
-  brand_configs: BrandConfig[];
-  // Optional source configuration for connected platforms (e.g., Reddit)
+  brand_description: string | null;
+  offerings: BrandOffering[];
+  prospects: Prospect[];
+  logo_url: string | null;
+  user_ids: string[];
+  users?: any[];
+  created_at?: string;
+  updated_at?: string;
+  brand_configs?: BrandConfig[];
   source?: {
     reddit?: RedditSource;
   };

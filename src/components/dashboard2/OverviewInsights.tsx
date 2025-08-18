@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Problems } from "@/types/brand";
+import { Prospect } from "@/types/brand";
 import GlassPills from "./GlassPills";
-import HeroMetric from "./HeroMetric";
+import HeroMetric from "./ProspectTargetsSwiper";
 import SolutionsOpportunities from "./SolutionsOpportunities";
 
 interface OverviewInsightsProps {
-  problems: Problems[];
+  prospects: Prospect[];
   isLoading?: boolean;
 }
 
 export default function OverviewInsights({
-  problems,
+  prospects,
   isLoading = false,
 }: OverviewInsightsProps) {
+  console.log(JSON.stringify(prospects, null, 2));
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Load collapsed state from localStorage on mount
@@ -67,25 +68,20 @@ export default function OverviewInsights({
   }
 
   // Calculate overview statistics
-  const allPosts = problems.flatMap((uc) => uc.subreddit_posts || []);
-  const totalPosts = allPosts.length;
-  const tagTotals = allPosts.reduce(
-    (acc, post) => {
-      if (post.tags?.potential_customer) acc.potential_customer += 1;
-      if (post.tags?.competitor_mention) acc.competitor_mention += 1;
-      if (post.tags?.own_mention) acc.own_mention += 1;
-      return acc;
-    },
-    {
-      potential_customer: 0,
-      competitor_mention: 0,
-      own_mention: 0,
-    }
+  const allPosts = prospects.flatMap(
+    (prospect) => prospect.sourced_reddit_posts || []
   );
+  const totalPosts = allPosts.length;
+  // TODO: Update tag logic when tags are implemented in new API
+  const tagTotals = {
+    potential_customer: 0,
+    competitor_mention: 0,
+    own_mention: 0,
+  };
 
   // Collect all solutions and opportunities across all use cases
-  const allSolutionsAndOpportunities = problems.flatMap((uc) => [
-    ...(uc.insights?.identified_solutions || []),
+  const allSolutionsAndOpportunities = prospects.flatMap((prospect) => [
+    ...(prospect.insights?.identified_solutions || []),
   ]);
 
   return (
@@ -150,15 +146,28 @@ export default function OverviewInsights({
       </div>
 
       {/* Collapsible Content */}
-      {!isCollapsed && problems && problems.length > 0 && (
+      {!isCollapsed && prospects && prospects.length > 0 && (
         <div>
           {/* Research Summary - Simplified with Hero Metric */}
           <div className="p-6 space-y-6">
             {/* Hero Metric - Total Potential Customers */}
             <HeroMetric
-              value={tagTotals.potential_customer}
+              value={totalPosts}
+              posts={allPosts}
               label="Total Potential Customers Identified"
-              subtext={`across ${problems.length} use cases • ${totalPosts} posts analyzed`}
+              subtext="Click To View"
+              onLike={(post) => {
+                console.log("Liked post:", post.thing_id, post.title);
+                // TODO: Implement actual like functionality
+              }}
+              onIgnore={(post) => {
+                console.log("Ignored post:", post.thing_id, post.title);
+                // TODO: Implement actual ignore functionality
+              }}
+              onStackCompleted={() => {
+                console.log("All prospects reviewed!");
+                // TODO: Show completion message or refresh data
+              }}
             />
 
             <div className="border-t border-white/10"></div>
@@ -244,33 +253,28 @@ export default function OverviewInsights({
                     </tr>
                   </thead>
                   <tbody>
-                    {problems.map((uc, index) => {
-                      const ucPosts = uc.subreddit_posts || [];
-                      const ucTotals = ucPosts.reduce(
-                        (acc, post) => {
-                          if (post.tags?.potential_customer)
-                            acc.potential_customer += 1;
-                          if (post.tags?.competitor_mention)
-                            acc.competitor_mention += 1;
-                          return acc;
-                        },
-                        { potential_customer: 0, competitor_mention: 0 }
-                      );
+                    {prospects.map((prospect, index) => {
+                      const ucPosts = prospect.sourced_reddit_posts || [];
+                      // TODO: Update tag logic when tags are implemented in new API
+                      const ucTotals = {
+                        potential_customer: 0,
+                        competitor_mention: 0,
+                      };
 
                       return (
                         <tr
-                          key={uc.id}
+                          key={prospect.id}
                           className="group transition-all duration-200 hover:bg-white/[0.02]"
                           style={{
                             borderBottom:
-                              index < problems.length - 1
+                              index < prospects.length - 1
                                 ? "1px solid rgba(255, 255, 255, 0.08)"
                                 : "none",
                           }}
                         >
                           <td className="p-4">
                             <div className="text-white font-heading font-medium text-base">
-                              {uc.problem}
+                              {prospect.problem_to_solve}
                             </div>
                           </td>
 
@@ -312,7 +316,7 @@ export default function OverviewInsights({
 
                           <td className="p-4">
                             <GlassPills
-                              items={(uc.keywords || []).map((kw) => ({
+                              items={(prospect.keywords || []).map((kw) => ({
                                 label: kw,
                               }))}
                               variant="keywords"
