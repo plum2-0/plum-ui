@@ -94,30 +94,18 @@ export default function DashboardSidebar({
         <div className="px-4 py-4 space-y-2 h-[70%] overflow-y-auto">
           {/* Brand Total View */}
           <button
-            onClick={() => onUseCaseSelect?.(null)}
-            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
-              !selectedUseCase ? "text-white" : "text-white/70 hover:text-white"
-            }`}
+            onClick={() => router.push("/dashboard")}
+            className="w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 text-white/70 hover:text-white"
             style={{
-              background: !selectedUseCase
-                ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(34, 197, 94, 0.15))"
-                : "rgba(255, 255, 255, 0.05)",
+              background: "rgba(255, 255, 255, 0.05)",
               backdropFilter: "blur(10px)",
-              border: `1px solid ${
-                !selectedUseCase
-                  ? "rgba(168, 85, 247, 0.3)"
-                  : "rgba(255, 255, 255, 0.1)"
-              }`,
+              border: "1px solid rgba(255, 255, 255, 0.1)",
             }}
             onMouseEnter={(e) => {
-              if (selectedUseCase) {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-              }
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
             }}
             onMouseLeave={(e) => {
-              if (selectedUseCase) {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-              }
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
             }}
           >
             <svg
@@ -140,7 +128,7 @@ export default function DashboardSidebar({
 
           <div className="border-t border-white/10"></div>
 
-          {/* Use Case Summary */}
+          {/* Prospect Summary */}
           <button
             onClick={() => router.push("/dashboard/use-case-summary")}
             className="w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 text-white/70 hover:text-white"
