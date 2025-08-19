@@ -59,13 +59,6 @@ export function useProspectPostAction() {
       replyContent,
       agentId,
     }) => {
-      console.log("useProspectPostAction mutation called with:", {
-        action,
-        brandId,
-        prospectId,
-        postId: post.thing_id,
-      });
-      
       const payload: ProspectPostActionRequest = {
         user_content_action: action,
         brand_name: brandName,
@@ -94,9 +87,6 @@ export function useProspectPostAction() {
         prospect_id: prospectId,
       };
 
-      console.log("Sending API request to:", `${API_BASE}/api/brand/post/action`);
-      console.log("Payload:", JSON.stringify(payload, null, 2));
-      
       const response = await fetch(`${API_BASE}/api/brand/post/action`, {
         method: "POST",
         headers: {
@@ -105,8 +95,6 @@ export function useProspectPostAction() {
         body: JSON.stringify(payload),
       });
 
-      console.log("API Response status:", response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error("API Error response:", errorText);
@@ -114,14 +102,15 @@ export function useProspectPostAction() {
       }
 
       const result = await response.json();
-      console.log("API Success result:", result);
       return result;
     },
     onSuccess: (data, variables) => {
       // Invalidate relevant queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["brand"] });
-      queryClient.invalidateQueries({ queryKey: ["prospects"] });
-      queryClient.invalidateQueries({ queryKey: ["prospect-profiles", variables.brandId] });
+      // queryClient.invalidateQueries({ queryKey: ["brand"] });
+      // queryClient.invalidateQueries({ queryKey: ["prospects"] });
+      // queryClient.invalidateQueries({
+      //   queryKey: ["prospect-profiles", variables.brandId],
+      // });
     },
     onError: (error) => {
       console.error("Error performing prospect post action:", error);

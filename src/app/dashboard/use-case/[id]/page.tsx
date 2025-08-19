@@ -161,6 +161,8 @@ export default function UseCasePage() {
             <UseCaseInsightsPage
               selectedUseCase={selectedUseCase}
               brandId={brandData?.id || ""}
+              brandName={brandData?.name}
+              brandDetail={brandData?.detail}
               isLoading={isSelectedUseCaseLoading}
             />
 

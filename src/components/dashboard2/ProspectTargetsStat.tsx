@@ -8,6 +8,8 @@ interface ProspectTargetsProps {
   value: number;
   posts?: RedditPost[];
   brandId: string;
+  brandName?: string;
+  brandDetail?: string;
   prospectId: string;
   problemToSolve?: string;
   onStackCompleted?: () => void;
@@ -19,6 +21,8 @@ export default function ProspectTargetStat({
   value,
   posts = [],
   brandId,
+  brandName,
+  brandDetail,
   prospectId,
   problemToSolve,
   onStackCompleted,
@@ -80,6 +84,8 @@ export default function ProspectTargetStat({
         isOpen={isModalOpen}
         posts={posts}
         brandId={brandId}
+        brandName={brandName}
+        brandDetail={brandDetail}
         prospectId={prospectId}
         problemToSolve={problemToSolve}
         onClose={() => setIsModalOpen(false)}

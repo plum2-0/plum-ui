@@ -11,12 +11,16 @@ import HeroMetric from "./ProspectTargetsStat";
 interface UseCaseInsightsProps {
   selectedUseCase: Prospect;
   brandId: string;
+  brandName?: string;
+  brandDetail?: string;
   isLoading?: boolean;
 }
 
 export default function UseCaseInsightsPage({
   selectedUseCase,
   brandId,
+  brandName,
+  brandDetail,
   isLoading = false,
 }: UseCaseInsightsProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -160,6 +164,8 @@ export default function UseCaseInsightsPage({
               value={ucPosts.length}
               posts={ucPosts}
               brandId={brandId}
+              brandName={brandName}
+              brandDetail={brandDetail}
               prospectId={selectedUseCase.id}
               problemToSolve={selectedUseCase.problem_to_solve}
               label="Potential Customers Identified"

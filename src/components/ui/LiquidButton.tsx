@@ -8,31 +8,44 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "icon";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 interface LiquidButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof HTMLMotionProps<"button">> {
+  extends Omit<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    keyof HTMLMotionProps<"button">
+  > {
   variant?: ButtonVariant;
   size?: ButtonSize;
   shimmer?: boolean;
   liquid?: boolean;
   children: React.ReactNode;
   className?: string;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
 }
 
 const variants = {
   primary: {
     base: "text-white font-semibold",
-    gradient: "linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(34, 197, 94, 0.9))",
-    hoverGradient: "linear-gradient(135deg, rgba(147, 51, 234, 1), rgba(16, 185, 129, 1))",
+    gradient:
+      "linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(34, 197, 94, 0.9))",
+    hoverGradient:
+      "linear-gradient(135deg, rgba(147, 51, 234, 1), rgba(16, 185, 129, 1))",
     border: "1px solid rgba(168, 85, 247, 0.3)",
-    shadow: "0 8px 32px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-    hoverShadow: "0 12px 48px rgba(168, 85, 247, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+    shadow:
+      "0 8px 32px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+    hoverShadow:
+      "0 12px 48px rgba(168, 85, 247, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
   },
   secondary: {
     base: "text-white/90 font-medium",
-    gradient: "linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))",
-    hoverGradient: "linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08))",
+    gradient:
+      "linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))",
+    hoverGradient:
+      "linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08))",
     border: "1px solid rgba(255, 255, 255, 0.2)",
-    shadow: "0 4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-    hoverShadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+    shadow:
+      "0 4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+    hoverShadow:
+      "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
   },
   ghost: {
     base: "text-white/70 font-medium",
@@ -44,19 +57,27 @@ const variants = {
   },
   danger: {
     base: "text-white font-semibold",
-    gradient: "linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9))",
-    hoverGradient: "linear-gradient(135deg, rgba(220, 38, 38, 1), rgba(185, 28, 28, 1))",
+    gradient:
+      "linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9))",
+    hoverGradient:
+      "linear-gradient(135deg, rgba(220, 38, 38, 1), rgba(185, 28, 28, 1))",
     border: "1px solid rgba(239, 68, 68, 0.3)",
-    shadow: "0 8px 32px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-    hoverShadow: "0 12px 48px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+    shadow:
+      "0 8px 32px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+    hoverShadow:
+      "0 12px 48px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
   },
   icon: {
     base: "text-white/80",
-    gradient: "linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))",
-    hoverGradient: "linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))",
+    gradient:
+      "linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04))",
+    hoverGradient:
+      "linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))",
     border: "1px solid rgba(255, 255, 255, 0.15)",
-    shadow: "0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-    hoverShadow: "0 6px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+    shadow:
+      "0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+    hoverShadow:
+      "0 6px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
   },
 };
 
@@ -68,7 +89,19 @@ const sizes = {
 };
 
 export const LiquidButton = forwardRef<HTMLButtonElement, LiquidButtonProps>(
-  ({ variant = "primary", size = "md", shimmer = false, liquid = true, children, className, disabled, ...props }, ref) => {
+  (
+    {
+      variant = "primary",
+      size = "md",
+      shimmer = false,
+      liquid = true,
+      children,
+      className,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
     const variantStyles = variants[variant];
     const sizeStyles = sizes[size];
 
@@ -124,7 +157,8 @@ export const LiquidButton = forwardRef<HTMLButtonElement, LiquidButtonProps>(
           <motion.div
             className="absolute inset-0 -translate-x-full"
             style={{
-              background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+              background:
+                "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
             }}
             animate={{
               translateX: ["0%", "200%"],
