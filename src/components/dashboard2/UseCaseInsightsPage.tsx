@@ -5,7 +5,7 @@ import { Prospect } from "@/types/brand";
 import UseCaseInsightsComponent from "./UseCaseInsights";
 // import CompetitorSummary from "./CompetitorSummary"; // TODO: Re-enable when API supports it
 import GlassPills from "./GlassPills";
-import HeroMetric from "./ProspectTargetsSwiper";
+import HeroMetric from "./ProspectTargetsStat";
 // import { getTopKeywordCounts } from "@/lib/keyword-utils"; // TODO: Update for new RedditPost structure
 
 interface UseCaseInsightsProps {
@@ -160,16 +160,10 @@ export default function UseCaseInsightsPage({
               value={ucPosts.length}
               posts={ucPosts}
               brandId={brandId}
+              prospectId={selectedUseCase.id}
+              problemToSolve={selectedUseCase.problem_to_solve}
               label="Potential Customers Identified"
               subtext="Click To View"
-              onLike={(post) => {
-                console.log("Liked post:", post.thing_id, post.title);
-                // TODO: Implement actual like functionality
-              }}
-              onIgnore={(post) => {
-                console.log("Ignored post:", post.thing_id, post.title);
-                // TODO: Implement actual ignore functionality
-              }}
               onStackCompleted={() => {
                 console.log("All prospects for this use case reviewed!");
                 // TODO: Show completion message or refresh data

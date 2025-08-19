@@ -2,13 +2,16 @@
 
 import { RedditPost } from "@/types/brand";
 import { formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { useGenerateReply } from "@/hooks/useGenerateReply";
 import SimplifiedAgentReply from "./SimplifiedAgentReply";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { LiquidBadge } from "@/components/ui/LiquidBadge";
+import { AttractiveText } from "@/components/ui/AttractiveText";
 
 interface ProspectCardProps {
   post: RedditPost;
@@ -21,12 +24,13 @@ export default function ProspectCard({
   brandId,
   className = "",
 }: ProspectCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   // const [showReplyBox, setShowReplyBox] = useState(false);
 
   const [customReply, setCustomReply] = useState<string>("");
   const [replySent, setReplySent] = useState(false);
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [showScrollFade, setShowScrollFade] = useState(true);
+  const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
 
   const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
     useGenerateReply(brandId);
@@ -36,9 +40,22 @@ export default function ProspectCard({
     addSuffix: true,
   });
 
-  // Truncate content for preview
-  const maxLength = 280;
-  const shouldTruncate = post.content && post.content.length > maxLength;
+  // Handle scroll detection for fade indicator
+  useEffect(() => {
+    if (!contentRef) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = contentRef;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5; // 5px threshold
+      setShowScrollFade(!isAtBottom);
+    };
+
+    // Check initial state
+    handleScroll();
+
+    contentRef.addEventListener("scroll", handleScroll);
+    return () => contentRef.removeEventListener("scroll", handleScroll);
+  }, [contentRef]);
 
   // Markdown renderers for Reddit-like dark theme
   const markdownComponents: Components = {
@@ -131,19 +148,18 @@ export default function ProspectCard({
   }
 
   return (
-    <div
-      className={`w-full max-w-4xl rounded-2xl p-6 flex flex-col ${className}`}
+    <GlassCard
+      blur="heavy"
+      border="gradient"
+      glow
+      className={`w-full max-w-4xl px-6 py-4 flex flex-col ${className}`}
       style={{
-        background: "rgba(255, 255, 255, 0.08)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        boxShadow:
-          "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-        minHeight: "400px",
-        maxHeight: "80vh",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {/* Header */}
+      {/* Header - Fixed */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-white font-heading text-lg font-bold mb-2 line-clamp-2">
@@ -151,18 +167,9 @@ export default function ProspectCard({
           </h3>
           <div className="flex items-center gap-3 text-sm">
             {/* Subreddit Badge */}
-            <div
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(254, 215, 170, 0.2))",
-                border: "1px solid rgba(251, 146, 60, 0.3)",
-              }}
-            >
-              <span className="text-orange-300 font-medium">
-                r/{post.subreddit}
-              </span>
-            </div>
+            <LiquidBadge variant="orange" size="md">
+              r/{post.subreddit}
+            </LiquidBadge>
 
             {/* Author */}
             <span className="text-white/60">by u/{post.author}</span>
@@ -173,15 +180,16 @@ export default function ProspectCard({
         </div>
       </div>
 
-      {/* Content - Make it scrollable if needed */}
+      {/* Content - Scrollable with fixed height */}
       {post.content && (
-        <div className="flex-1 mb-4 min-h-0">
+        <div className="mb-4 relative">
           <div
-            className="text-white/80 font-body text-sm leading-relaxed overflow-y-auto"
+            ref={setContentRef}
+            className="overflow-y-auto text-white/80 font-body text-sm leading-relaxed rounded-lg"
             style={{
-              height: isExpanded ? "100%" : "auto",
-              maxHeight: isExpanded ? "100%" : "150px",
-              paddingRight: "8px",
+              maxHeight: "240px", // Fixed height for content area
+              minHeight: "100px",
+              paddingRight: "8px", // Space for scrollbar
             }}
           >
             <ReactMarkdown
@@ -192,20 +200,29 @@ export default function ProspectCard({
               {post.content}
             </ReactMarkdown>
           </div>
-          {shouldTruncate && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="mt-2 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
-            >
-              {isExpanded ? "Show less" : "Show more"}
-            </button>
-          )}
+          {/* Fade gradient indicator at bottom when content is scrollable */}
+          <div
+            className="rounded-lg absolute bottom-0 left-0 right-0 h-16 pointer-events-none transition-opacity duration-300"
+            style={{
+              background:
+                "linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.1) 20%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 80%, rgba(0, 0, 0, 0.6) 100%)",
+              opacity: showScrollFade ? 1 : 0,
+            }}
+          >
+            {/* Small scroll hint at the bottom */}
+            {showScrollFade && (
+              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                <div className="text-white/30 text-xs animate-pulse">
+                  ↓ scroll
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Action Buttons - Keep at bottom */}
-      <div className="flex items-center justify-between gap-4 pt-4 mt-auto border-t border-white/10">
-        {/* Metrics */}
+      {/* Metrics - Fixed */}
+      <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/10">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <svg
@@ -237,21 +254,14 @@ export default function ProspectCard({
 
           {/* Link Flair */}
           {post.link_flair && (
-            <div
-              className="px-2 py-1 rounded text-xs font-medium"
-              style={{
-                background: "rgba(168, 85, 247, 0.2)",
-                color: "rgb(216, 180, 254)",
-                border: "1px solid rgba(168, 85, 247, 0.3)",
-              }}
-            >
+            <LiquidBadge variant="purple" size="sm">
               {post.link_flair}
-            </div>
+            </LiquidBadge>
           )}
         </div>
       </div>
 
-      {/* Reply box */}
+      {/* Reply box - Fixed at bottom */}
       <SimplifiedAgentReply
         agents={agents}
         isLoadingAgents={isLoadingAgents}
@@ -296,13 +306,13 @@ export default function ProspectCard({
 
       {/* Suggested Reply (if exists) */}
       {post.suggested_agent_reply && (
-        <div
-          className="mt-4 p-3 rounded-lg overflow-y-auto"
+        <GlassCard
+          blur="medium"
+          border="gradient"
+          className="mt-4 p-3"
           style={{
-            background:
-              "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(168, 85, 247, 0.1))",
-            border: "1px solid rgba(34, 197, 94, 0.2)",
             maxHeight: "120px",
+            overflow: "hidden",
           }}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -319,15 +329,15 @@ export default function ProspectCard({
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="text-emerald-300 text-xs font-semibold">
+            <AttractiveText variant="gradient" size="xs">
               Suggested Reply
-            </span>
+            </AttractiveText>
           </div>
           <p className="text-white/70 text-xs font-body leading-relaxed">
             {post.suggested_agent_reply}
           </p>
-        </div>
+        </GlassCard>
       )}
-    </div>
+    </GlassCard>
   );
 }

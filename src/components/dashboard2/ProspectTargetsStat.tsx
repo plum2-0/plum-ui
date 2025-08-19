@@ -8,19 +8,19 @@ interface ProspectTargetsProps {
   value: number;
   posts?: RedditPost[];
   brandId: string;
-  onLike?: (post: RedditPost) => void;
-  onIgnore?: (post: RedditPost) => void;
+  prospectId: string;
+  problemToSolve?: string;
   onStackCompleted?: () => void;
   label?: string;
   subtext?: string;
 }
 
-export default function ProspectTargets({ 
-  value, 
+export default function ProspectTargetStat({
+  value,
   posts = [],
   brandId,
-  onLike,
-  onIgnore,
+  prospectId,
+  problemToSolve,
   onStackCompleted,
   label = "Potential Customers Identified",
   subtext = "Click To View"
@@ -31,14 +31,6 @@ export default function ProspectTargets({
     if (posts.length > 0) {
       setIsModalOpen(true);
     }
-  };
-
-  const handleLike = (post: RedditPost) => {
-    onLike?.(post);
-  };
-
-  const handleIgnore = (post: RedditPost) => {
-    onIgnore?.(post);
   };
 
   const handleStackCompleted = () => {
@@ -88,9 +80,9 @@ export default function ProspectTargets({
         isOpen={isModalOpen}
         posts={posts}
         brandId={brandId}
+        prospectId={prospectId}
+        problemToSolve={problemToSolve}
         onClose={() => setIsModalOpen(false)}
-        onLike={handleLike}
-        onIgnore={handleIgnore}
         onStackCompleted={handleStackCompleted}
       />
     </>

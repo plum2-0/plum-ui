@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Prospect } from "@/types/brand";
 import GlassPills from "./GlassPills";
-import HeroMetric from "./ProspectTargetsSwiper";
+import HeroMetric from "./ProspectTargetsStat";
 import SolutionsOpportunities from "./SolutionsOpportunities";
 
 interface OverviewInsightsProps {
@@ -157,16 +157,10 @@ export default function OverviewInsights({
               value={totalPosts}
               posts={allPosts}
               brandId={brandId}
+              prospectId={prospects[0]?.id || "overview"} // Use first prospect or overview as fallback
+              problemToSolve="Overview - All Use Cases"
               label="Total Potential Customers Identified"
               subtext="Click To View"
-              onLike={(post) => {
-                console.log("Liked post:", post.thing_id, post.title);
-                // TODO: Implement actual like functionality
-              }}
-              onIgnore={(post) => {
-                console.log("Ignored post:", post.thing_id, post.title);
-                // TODO: Implement actual ignore functionality
-              }}
               onStackCompleted={() => {
                 console.log("All prospects reviewed!");
                 // TODO: Show completion message or refresh data

@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import type { Agent } from "@/types/agent";
 import type { SubredditPost } from "@/types/brand";
 import { ensureRedditConnectedOrRedirect } from "@/lib/verify-reddit";
+import { LiquidButton } from "@/components/ui/LiquidButton";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { AttractiveText } from "@/components/ui/AttractiveText";
 
 type SimplifiedAgentReplyProps = {
   agents: Agent[];
@@ -124,99 +127,141 @@ export default function SimplifiedAgentReply({
 
   if (isLoadingAgents) {
     return (
-      <motion.div
-        className="mt-4 p-4 rounded-xl"
-        style={{
-          background: "rgba(255, 255, 255, 0.05)",
-          backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-        }}
-      >
+      <GlassCard blur="medium" border="animated" className="mt-4 p-4">
         <div className="flex items-center justify-center py-4">
-          <div className="text-white/50 text-sm">Loading agent...</div>
+          <AttractiveText variant="gradient" size="sm">
+            Loading agent...
+          </AttractiveText>
         </div>
-      </motion.div>
+      </GlassCard>
     );
   }
 
   if (!primaryAgent) {
     return (
-      <motion.div
-        className="mt-4 p-4 rounded-xl"
-        style={{
-          background: "rgba(255, 255, 255, 0.05)",
-          backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-        }}
-      >
+      <GlassCard blur="medium" border="static" className="mt-4 p-4">
         <div className="text-center py-4">
           <div className="text-white/60 text-sm mb-2">No agents available</div>
           <div className="text-white/40 text-xs">
             Create an agent to generate replies
           </div>
         </div>
-      </motion.div>
+      </GlassCard>
     );
   }
 
   return (
-    <motion.div
-      className="mt-4 p-4 rounded-xl"
-      style={{
-        background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(10px)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-      }}
-      layout
-    >
-      {/* Agent Display and Suggest Reply Button */}
-      <div className="flex items-center gap-3 mb-4">
-        <Link
-          href={`/dashboard/team/${primaryAgent.id}`}
-          aria-label={`View ${primaryAgent.name}`}
-          className="relative cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-green-400 flex items-center justify-center text-lg font-bold text-white shadow-lg">
-            {primaryAgent.avatar && primaryAgent.avatar.startsWith("http") ? (
-              <Image
-                src={primaryAgent.avatar}
-                alt={primaryAgent.name}
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-              />
-            ) : primaryAgent.avatar &&
-              !primaryAgent.avatar.startsWith("http") ? (
-              <span>{primaryAgent.avatar}</span>
-            ) : (
-              <span>{primaryAgent.name.charAt(0).toUpperCase()}</span>
-            )}
+    <GlassCard blur="medium" border="gradient" className="mt-4 p-3" reflection>
+      {/* AI Agent Helper Section */}
+      <div className="mb-3">
+        <div className="flex items-center gap-3 p-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-400/20">
+          <div className="flex flex-col items-center gap-2">
+            <Link
+              href={`/dashboard/team/${primaryAgent.id}`}
+              aria-label={`View ${primaryAgent.name}`}
+              className="relative cursor-pointer group"
+            >
+              <motion.div
+                className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold text-white shadow-lg relative"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(34, 197, 94, 0.9))",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
+                {primaryAgent.avatar &&
+                primaryAgent.avatar.startsWith("http") ? (
+                  <Image
+                    src={primaryAgent.avatar}
+                    alt={primaryAgent.name}
+                    width={24}
+                    height={24}
+                    className="w-full h-full object-cover"
+                  />
+                ) : primaryAgent.avatar &&
+                  !primaryAgent.avatar.startsWith("http") ? (
+                  <span className="text-[10px]">{primaryAgent.avatar}</span>
+                ) : (
+                  <span>{primaryAgent.name.charAt(0).toUpperCase()}</span>
+                )}
+              </motion.div>
+              {/* AI Agent badge positioned absolutely */}
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 flex items-center justify-center border border-white/20">
+                <svg
+                  className="w-2 h-2 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9.504 1.132a1 1 0 01.992 0l1.75 1a1 1 0 11-.992 1.736L10 3.152l-1.254.716a1 1 0 11-.992-1.736l1.75-1zM5.618 4.504a1 1 0 01-.372 1.364L5.016 6l.23.132a1 1 0 11-.992 1.736L3 7.723V8a1 1 0 01-2 0V6a.996.996 0 01.52-.878l1.734-.99a1 1 0 011.364.372zm8.764 0a1 1 0 011.364-.372l1.734.99A.996.996 0 0118 6v2a1 1 0 11-2 0v-.277l-1.254.145a1 1 0 11-.992-1.736L14.984 6l-.23-.132a1 1 0 01-.372-1.364zm-7 4a1 1 0 011.364-.372L10 8.848l1.254-.716a1 1 0 11.992 1.736L11 10.723V12a1 1 0 11-2 0v-1.277l-1.246-.855a1 1 0 01-.372-1.364zM3 11a1 1 0 011 1v1.277l1.246.855a1 1 0 11-.992 1.736l-1.75-1A1 1 0 012 14v-2a1 1 0 011-1zm14 0a1 1 0 011 1v2a1 1 0 01-.504.868l-1.75 1a1 1 0 11-.992-1.736L16 13.277V12a1 1 0 011-1zm-9.618 5.504a1 1 0 011.364-.372l.254.145V16a1 1 0 112 0v.277l.254-.145a1 1 0 11.992 1.736l-1.75 1a.996.996 0 01-.992 0l-1.75-1a1 1 0 01-.372-1.364z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </Link>
+
+            <Link
+              href={`/dashboard/team/${primaryAgent.id}`}
+              className="text-white font-semibold text-xs cursor-pointer hover:underline"
+              aria-label={`View ${primaryAgent.name}`}
+            >
+              {primaryAgent.name}
+            </Link>
           </div>
-        </Link>
-        <div className="flex-1 flex flex-col">
-          <Link
-            href={`/dashboard/team/${primaryAgent.id}`}
-            className="text-white font-medium text-sm cursor-pointer hover:underline"
-            aria-label={`View ${primaryAgent.name}`}
-          >
-            {primaryAgent.name}
-          </Link>
-          <button
-            onClick={handleSuggestReply}
-            disabled={isGenerating}
-            className="mt-1 text-purple-400 hover:text-purple-300 text-xs font-medium transition-colors underline decoration-dotted disabled:opacity-50 text-left"
-          >
-            {isGenerating ? "Generating..." : "Suggest Reply"}
-          </button>
+
+          <div className="flex-1">
+            <p className="text-white/70 text-xs mb-2">
+              Let me help you craft the perfect reply for this conversation
+            </p>
+
+            <LiquidButton
+              variant="primary"
+              size="sm"
+              onClick={handleSuggestReply}
+              disabled={isGenerating}
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-xs py-1 px-2"
+              shimmer={!isGenerating}
+            >
+              <div className="flex items-center gap-1">
+                {isGenerating ? (
+                  <motion.div
+                    className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  />
+                ) : (
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                )}
+                <span className="text-white font-medium">
+                  {isGenerating ? "Generating..." : "Draft Reply"}
+                </span>
+              </div>
+            </LiquidButton>
+          </div>
         </div>
-        {isGenerating && (
-          <div className="w-4 h-4 border border-white/30 border-t-white rounded-full animate-spin"></div>
-        )}
       </div>
 
-      {/* Reply Textarea */}
-      <div className="mb-3">
-        <textarea
+      <div className="space-y-3">
+        <motion.textarea
           ref={textareaRef}
           value={customReply}
           onChange={(e) => {
@@ -224,56 +269,66 @@ export default function SimplifiedAgentReply({
             e.currentTarget.style.height = "auto";
             e.currentTarget.style.height = e.currentTarget.scrollHeight + "px";
           }}
-          placeholder="Write your reply or use AI generation above..."
-          className="w-full p-3 rounded-xl font-body text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-400/50 transition-all overflow-hidden"
+          placeholder="Type your reply here..."
+          className="w-full p-3 rounded-xl font-body text-sm resize-none focus:outline-none transition-all overflow-hidden"
           style={{
-            background: "rgba(255, 255, 255, 0.1)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
+            background: "rgba(255, 255, 255, 0.08)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
             color: "white",
             minHeight: "80px",
-            maxHeight: "200px",
+            maxHeight: "150px",
             overflowY: customReply.length > 500 ? "auto" : "hidden",
+            boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.1)",
           }}
-          rows={3}
+          whileFocus={{
+            boxShadow:
+              "inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(34, 197, 94, 0.3)",
+            borderColor: "rgba(34, 197, 94, 0.5)",
+          }}
+          rows={2}
         />
-      </div>
 
-      {/* Send Button */}
-      <div className="flex justify-end">
-        <motion.button
-          onClick={handleSendReply}
-          disabled={
-            !customReply.trim() ||
-            isSubmittingAction ||
-            replySent ||
-            isCheckingReddit
-          }
-          className="px-4 py-2 rounded-xl font-body font-semibold text-sm transition-all duration-300 hover:scale-105"
-          style={{
-            background: customReply.trim()
-              ? "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))"
-              : "rgba(255, 255, 255, 0.05)",
-            color: customReply.trim() ? "white" : "rgba(255, 255, 255, 0.5)",
-            border: "1px solid rgba(34, 197, 94, 0.3)",
-            boxShadow: customReply.trim()
-              ? "0 4px 12px rgba(34, 197, 94, 0.3)"
-              : "none",
-            textShadow: customReply.trim()
-              ? "0 1px 2px rgba(0, 0, 0, 0.3)"
-              : "none",
-          }}
-          whileTap={{ scale: 0.98 }}
-        >
-          {isCheckingReddit
-            ? "Checking Reddit..."
-            : isSubmittingAction
-            ? "Submitting..."
-            : replySent
-            ? "Sent!"
-            : "Send Reply"}
-        </motion.button>
+        {/* Send Button */}
+        <div className="flex justify-end">
+          <LiquidButton
+            variant={customReply.trim() ? "primary" : "secondary"}
+            size="md"
+            onClick={handleSendReply}
+            disabled={
+              !customReply.trim() ||
+              isSubmittingAction ||
+              replySent ||
+              isCheckingReddit
+            }
+            shimmer={customReply.trim()}
+            className={
+              customReply.trim()
+                ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                : ""
+            }
+          >
+            <div className="flex items-center gap-2">
+              {(isCheckingReddit || isSubmittingAction) && (
+                <motion.div
+                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
+              )}
+              <span>
+                {isCheckingReddit
+                  ? "Checking Reddit..."
+                  : isSubmittingAction
+                  ? "Submitting..."
+                  : replySent
+                  ? "Reply Sent!"
+                  : "Send Reply"}
+              </span>
+            </div>
+          </LiquidButton>
+        </div>
       </div>
-    </motion.div>
+    </GlassCard>
   );
 }
