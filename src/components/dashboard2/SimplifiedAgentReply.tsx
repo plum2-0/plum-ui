@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import type { Agent } from "@/types/agent";
-import type { SubredditPost } from "@/types/brand";
+import type { RedditPost } from "@/types/brand";
 import { ensureRedditConnectedOrRedirect } from "@/lib/verify-reddit";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { AttractiveText } from "@/components/ui/AttractiveText";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { glassStyles } from "@/lib/styles/glassMorphism";
+import { liquidGradients } from "@/lib/styles/gradients";
 
 type SimplifiedAgentReplyProps = {
   agents: Agent[];
@@ -18,13 +21,10 @@ type SimplifiedAgentReplyProps = {
   onGenerateWithAgent: (agentId?: string) => Promise<void>;
   customReply: string;
   setCustomReply: (value: string) => void;
-  submitPostAction: (
-    action: "reply" | "ignore",
-    text?: string
-  ) => Promise<void>;
+  onReplySubmit: (content: string) => Promise<void>;
   replySent: boolean;
   isSubmittingAction: boolean;
-  post: SubredditPost;
+  post: RedditPost;
 };
 
 export default function SimplifiedAgentReply({
@@ -34,7 +34,7 @@ export default function SimplifiedAgentReply({
   onGenerateWithAgent,
   customReply,
   setCustomReply,
-  submitPostAction,
+  onReplySubmit,
   replySent,
   isSubmittingAction,
   post,
@@ -43,7 +43,7 @@ export default function SimplifiedAgentReply({
   const [isCheckingReddit, setIsCheckingReddit] = useState(false);
 
   // Storage key for draft state
-  const draftKey = `reddit-reply-draft-${post.id}`;
+  const draftKey = `reddit-reply-draft-${post.thing_id}`;
 
   // Get the first available agent for display
   const primaryAgent = agents.length > 0 ? agents[0] : null;
@@ -64,14 +64,14 @@ export default function SimplifiedAgentReply({
       );
 
       // Add post ID to URL hash so we can scroll back to it after redirect
-      window.location.hash = `post-${post.id}`;
+      window.location.hash = `post-${post.thing_id}`;
 
       // Check Reddit connection - will redirect if not connected
       const isConnected = await ensureRedditConnectedOrRedirect();
 
       if (isConnected) {
         // Reddit is connected, proceed with submission
-        await submitPostAction("reply", customReply);
+        await onReplySubmit(customReply);
       }
     } catch (error) {
       console.error("Error during reply submission:", error);
@@ -151,15 +151,39 @@ export default function SimplifiedAgentReply({
   }
 
   return (
-    <GlassCard blur="medium" border="gradient" className="mt-4 p-3" reflection>
-      {/* AI Agent Helper Section */}
+    <div 
+      className="mt-4 p-3 rounded-2xl"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)",
+        backdropFilter: "blur(20px)",
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        boxShadow:
+          "0 8px 32px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+      }}
+    >
+      {/* AI Agent Helper Section - Entire section clickable */}
       <div className="mb-3">
-        <div className="flex items-center gap-3 p-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-400/20">
+        <motion.button
+          onClick={handleSuggestReply}
+          disabled={isGenerating}
+          className="w-full flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            background: "linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+          }}
+          whileHover={{
+            scale: isGenerating ? 1 : 1.02,
+          }}
+          whileTap={{
+            scale: isGenerating ? 1 : 0.98,
+          }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
           <div className="flex flex-col items-center gap-2">
-            <Link
-              href={`/dashboard/team/${primaryAgent.id}`}
-              aria-label={`View ${primaryAgent.name}`}
-              className="relative cursor-pointer group"
+            <div
+              className="relative pointer-events-none"
             >
               <motion.div
                 className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold text-white shadow-lg relative"
@@ -168,8 +192,6 @@ export default function SimplifiedAgentReply({
                     "linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(34, 197, 94, 0.9))",
                   border: "1px solid rgba(255, 255, 255, 0.3)",
                 }}
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
               >
                 {primaryAgent.avatar &&
                 primaryAgent.avatar.startsWith("http") ? (
@@ -201,34 +223,23 @@ export default function SimplifiedAgentReply({
                   />
                 </svg>
               </div>
-            </Link>
+            </div>
 
-            <Link
-              href={`/dashboard/team/${primaryAgent.id}`}
-              className="text-white font-semibold text-xs cursor-pointer hover:underline"
-              aria-label={`View ${primaryAgent.name}`}
-            >
+            <span className="text-white font-semibold text-xs">
               {primaryAgent.name}
-            </Link>
+            </span>
           </div>
 
-          <div className="flex-1">
-            <p className="text-white/70 text-xs mb-2">
-              Let me help you craft the perfect reply for this conversation
+          <div className="flex-1 text-left">
+            <p className="text-white/70 text-xs mb-1.5">
+              brainstorm the perfect reply for this conversation
             </p>
 
-            <LiquidButton
-              variant="primary"
-              size="sm"
-              onClick={handleSuggestReply}
-              disabled={isGenerating}
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-xs py-1 px-2"
-              shimmer={!isGenerating}
-            >
-              <div className="flex items-center gap-1">
-                {isGenerating ? (
+            <div className="inline-flex items-center gap-1.5 text-white/50 text-xs">
+              {isGenerating ? (
+                <>
                   <motion.div
-                    className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full"
+                    className="w-3 h-3 border-2 border-white/30 border-t-white/50 rounded-full"
                     animate={{ rotate: 360 }}
                     transition={{
                       duration: 1,
@@ -236,7 +247,10 @@ export default function SimplifiedAgentReply({
                       ease: "linear",
                     }}
                   />
-                ) : (
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
                   <svg
                     className="w-3 h-3"
                     fill="none"
@@ -250,44 +264,37 @@ export default function SimplifiedAgentReply({
                       d="M13 10V3L4 14h7v7l9-11h-7z"
                     />
                   </svg>
-                )}
-                <span className="text-white font-medium">
-                  {isGenerating ? "Generating..." : "Draft Reply"}
-                </span>
-              </div>
-            </LiquidButton>
+                  <span>Draft Reply</span>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </motion.button>
       </div>
 
       <div className="space-y-3">
-        <motion.textarea
-          ref={textareaRef}
-          value={customReply}
-          onChange={(e) => {
-            setCustomReply(e.target.value);
-            e.currentTarget.style.height = "auto";
-            e.currentTarget.style.height = e.currentTarget.scrollHeight + "px";
-          }}
-          placeholder="Type your reply here..."
-          className="w-full p-3 rounded-xl font-body text-sm resize-none focus:outline-none transition-all overflow-hidden"
-          style={{
-            background: "rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            color: "white",
-            minHeight: "80px",
-            maxHeight: "150px",
-            overflowY: customReply.length > 500 ? "auto" : "hidden",
-            boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-          whileFocus={{
-            boxShadow:
-              "inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(34, 197, 94, 0.3)",
-            borderColor: "rgba(34, 197, 94, 0.5)",
-          }}
-          rows={2}
-        />
+        <div className="relative">
+          <GlassInput
+            ref={textareaRef as any}
+            type="textarea"
+            value={customReply}
+            onChange={(e) => setCustomReply(e.target.value)}
+            placeholder="Type your reply here..."
+            variant="ultra"
+            autoResize
+            className="pt-3 pb-4"
+            rows={2}
+            style={{
+              maxHeight: "120px",
+              overflowY: "auto",
+            }}
+          />
+          {customReply && (
+            <div className="absolute bottom-2 right-2 text-xs text-white/40">
+              {customReply.length}/500
+            </div>
+          )}
+        </div>
 
         {/* Send Button */}
         <div className="flex justify-end">
@@ -301,7 +308,7 @@ export default function SimplifiedAgentReply({
               replySent ||
               isCheckingReddit
             }
-            shimmer={customReply.trim()}
+            shimmer={!!customReply.trim()}
             className={
               customReply.trim()
                 ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
@@ -329,6 +336,6 @@ export default function SimplifiedAgentReply({
           </LiquidButton>
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }

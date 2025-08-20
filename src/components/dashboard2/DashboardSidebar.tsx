@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Prospect } from "@/types/brand";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import SidebarBottomSection from "./SidebarBottomSection";
@@ -29,6 +29,7 @@ export default function DashboardSidebar({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (isAdding && inputRef.current) {
@@ -95,17 +96,30 @@ export default function DashboardSidebar({
           {/* Brand Total View */}
           <button
             onClick={() => router.push("/dashboard")}
-            className="w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 text-white/70 hover:text-white"
+            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+              pathname === "/dashboard" ? "text-white" : "text-white/70 hover:text-white"
+            } ${pathname === "/dashboard" ? "shadow-lg" : ""}`}
             style={{
-              background: "rgba(255, 255, 255, 0.05)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              background: pathname === "/dashboard" 
+                ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%)"
+                : "rgba(255, 255, 255, 0.05)",
+              backdropFilter: "blur(20px)",
+              border: pathname === "/dashboard"
+                ? "1px solid rgba(168, 85, 247, 0.3)"
+                : "1px solid rgba(255, 255, 255, 0.1)",
+              boxShadow: pathname === "/dashboard"
+                ? "0 8px 32px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+                : "none",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+              if (pathname !== "/dashboard") {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              if (pathname !== "/dashboard") {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              }
             }}
           >
             <svg
@@ -131,17 +145,30 @@ export default function DashboardSidebar({
           {/* Prospect Summary */}
           <button
             onClick={() => router.push("/dashboard/use-case-summary")}
-            className="w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 text-white/70 hover:text-white"
+            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+              pathname === "/dashboard/use-case-summary" ? "text-white" : "text-white/70 hover:text-white"
+            } ${pathname === "/dashboard/use-case-summary" ? "shadow-lg" : ""}`}
             style={{
-              background: "rgba(255, 255, 255, 0.05)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              background: pathname === "/dashboard/use-case-summary"
+                ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%)"
+                : "rgba(255, 255, 255, 0.05)",
+              backdropFilter: "blur(20px)",
+              border: pathname === "/dashboard/use-case-summary"
+                ? "1px solid rgba(168, 85, 247, 0.3)"
+                : "1px solid rgba(255, 255, 255, 0.1)",
+              boxShadow: pathname === "/dashboard/use-case-summary"
+                ? "0 8px 32px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
+                : "none",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+              if (pathname !== "/dashboard/use-case-summary") {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              if (pathname !== "/dashboard/use-case-summary") {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              }
             }}
           >
             <svg
@@ -210,7 +237,7 @@ export default function DashboardSidebar({
               <button
                 className="w-full flex items-center gap-2 p-2 text-white/60 hover:text-white rounded-lg transition-all duration-300"
                 style={{
-                  background: "rgba(255, 255, 255, 0.05)",
+                  background: "rgba(61, 49, 49, 0.05)",
                   backdropFilter: "blur(10px)",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}

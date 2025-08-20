@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useAgents } from "@/hooks/api/useAgentQueries";
 import type { Agent } from "@/types/agent";
-import type { SubredditPost } from "@/types/brand";
+import type { RedditPost } from "@/types/brand";
 
 type GenerateResult = {
   content: string;
@@ -19,29 +19,15 @@ export function useAgentReply(brandId: string) {
   const [isGenerating, setIsGenerating] = useState(false);
   const { data, isLoading, error } = useAgents(brandId);
 
-  const agents: Agent[] = data?.agents ?? [];
+  const agents: Agent[] = useMemo(() => data?.agents ?? [], [data?.agents]);
 
-  const mapSubredditPostToAgentRedditPost = (post: SubredditPost) => {
-    const createdUtc = Math.floor(new Date(post.created_at).getTime() / 1000);
-    return {
-      thing_id: `t3_${post.post_id}`,
-      content: post.content || post.title,
-      author: post.author,
-      subreddit: post.subreddit,
-      permalink: post.link,
-      created_utc: createdUtc,
-      score: post.up_votes ?? 0,
-      upvotes: post.up_votes ?? undefined,
-      downvotes: post.down_votes ?? undefined,
-      reply_count: post.num_comments ?? 0,
-    };
-  };
+  // No mapping needed; UI RedditPost matches backend RedditPost
 
   const generateWithAgent = useCallback(
     async (
       agentId: string,
-      post: SubredditPost,
-      options?: { autoReply?: boolean }
+      post: RedditPost,
+      options?: { autoReply?: boolean; problemId?: string }
     ): Promise<GenerateResult> => {
       setIsGenerating(true);
       try {
@@ -57,8 +43,8 @@ export function useAgentReply(brandId: string) {
           agent_name: agent?.name,
           agent_persona: agent?.persona,
           agent_goal: agent?.goal,
-          brand_id: post.brand_id,
-          problem_id: post.problem_id,
+          brand_id: brandId,
+          problem_id: options?.problemId,
         };
 
         const resp = await fetch(`${API_BASE}/api/agents/generate/reply`, {
@@ -81,7 +67,7 @@ export function useAgentReply(brandId: string) {
         setIsGenerating(false);
       }
     },
-    [agents]
+    [agents, brandId]
   );
 
   return {

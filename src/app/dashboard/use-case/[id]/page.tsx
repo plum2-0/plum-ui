@@ -162,7 +162,7 @@ export default function UseCasePage() {
               selectedUseCase={selectedUseCase}
               brandId={brandData?.id || ""}
               brandName={brandData?.name}
-              brandDetail={brandData?.detail}
+              brandDetail={brandData?.detail || undefined}
               isLoading={isSelectedUseCaseLoading}
             />
 

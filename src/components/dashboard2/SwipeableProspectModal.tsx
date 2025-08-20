@@ -14,6 +14,8 @@ import ProspectCard from "./ProspectCard";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { AttractiveText } from "@/components/ui/AttractiveText";
 import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
+import { glassStyles } from "@/lib/styles/glassMorphism";
+import { liquidGradients } from "@/lib/styles/gradients";
 
 interface SwipeableProspectModalProps {
   isOpen: boolean;
@@ -219,12 +221,11 @@ export default function SwipeableProspectModal({
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={onClose}
         >
-          {/* Backdrop with blur */}
+          {/* Backdrop with enhanced liquid blur */}
           <div
             className="absolute inset-0"
             style={{
-              background: "rgba(0, 0, 0, 0.8)",
-              backdropFilter: "blur(30px)",
+              ...glassStyles.dark,
             }}
           />
 
@@ -240,11 +241,10 @@ export default function SwipeableProspectModal({
             {/* Progress Bar */}
             <div className="mb-4">
               <div
-                className="h-1.5 rounded-full overflow-hidden"
+                className="h-2 rounded-full overflow-hidden"
                 style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  ...glassStyles.light,
+                  borderRadius: "9999px",
                 }}
               >
                 <motion.div
@@ -253,17 +253,15 @@ export default function SwipeableProspectModal({
                   animate={{ width: `${progress}%` }}
                   transition={{ type: "spring", damping: 20, stiffness: 100 }}
                   style={{
-                    background:
-                      "linear-gradient(90deg, #22c55e, #10b981, #a855f7, #9333ea)",
-                    boxShadow: "0 0 20px rgba(168, 85, 247, 0.5)",
+                    background: liquidGradients.progressBar,
+                    boxShadow: "0 0 15px rgba(168, 85, 247, 0.3)",
                   }}
                 >
                   {/* Shimmer effect on progress bar */}
                   <motion.div
                     className="absolute inset-0"
                     style={{
-                      background:
-                        "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
+                      background: liquidGradients.shimmer,
                     }}
                     animate={{
                       x: ["-100%", "200%"],
@@ -275,11 +273,6 @@ export default function SwipeableProspectModal({
                     }}
                   />
                 </motion.div>
-              </div>
-              <div className="mt-2 text-center text-white/60 text-sm">
-                <AttractiveText variant="subtle" size="sm">
-                  {currentIndex + 1} of {posts.length} prospects
-                </AttractiveText>
               </div>
             </div>
 
@@ -643,27 +636,6 @@ export default function SwipeableProspectModal({
               </LiquidButton>
             </div>
 
-            {/* Close button */}
-            <LiquidButton
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="absolute -top-12 right-0"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </LiquidButton>
           </motion.div>
         </motion.div>
       )}

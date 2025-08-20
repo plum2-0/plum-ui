@@ -1,8 +1,8 @@
-import { SubredditPost } from "@/types/brand";
+// Tag filtering temporarily disabled until tags are reintroduced
 import FilterTag from "./FilterTag";
 
 interface TagFiltersProps {
-  posts: SubredditPost[];
+  posts: any[];
   selectedTags: Set<string>;
   onTagToggle: (tagName: string) => void;
   onClearAll: () => void;
@@ -24,17 +24,20 @@ export default function TagFilters({
   const hasActiveFilters = selectedTags.size > 0;
 
   return (
-    <div 
+    <div
       className="rounded-2xl p-4 mb-6"
       style={{
-        background: 'rgba(255, 255, 255, 0.08)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+        background: "rgba(255, 255, 255, 0.08)",
+        backdropFilter: "blur(20px)",
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        boxShadow:
+          "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
       }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-heading font-semibold tracking-wide">Filter by Tags</h3>
+        <h3 className="text-white font-heading font-semibold tracking-wide">
+          Filter by Tags
+        </h3>
         {hasActiveFilters && (
           <button
             onClick={onClearAll}
@@ -44,7 +47,7 @@ export default function TagFilters({
           </button>
         )}
       </div>
-      
+
       <div className="flex flex-wrap gap-2">
         <FilterTag
           label="Potential Customer"

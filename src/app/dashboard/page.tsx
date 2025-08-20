@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Prospect } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
-import { useBrandQuery, useGenerateUseCaseInsight } from "@/hooks/api/useBrandQuery";
+import {
+  useBrandQuery,
+  useGenerateUseCaseInsight,
+} from "@/hooks/api/useBrandQuery";
+import { useAgents } from "@/hooks/api/useAgentQueries";
+import { ProspectProfilesInbox } from "@/components/dashboard/ProspectProfilesInbox";
+import { ProspectProfileDetail } from "@/components/dashboard/ProspectProfileDetail";
+import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
+import { useProspectProfilesQuery } from "@/hooks/api/useProspectProfilesQuery";
 
 export default function DashboardPage() {
   useSession();
@@ -13,6 +21,21 @@ export default function DashboardPage() {
   const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
   const generateInsight = useGenerateUseCaseInsight();
   const [onlyUnread, setOnlyUnread] = useState(false);
+  const [selectedProfile, setSelectedProfile] =
+    useState<ProspectProfile | null>(null);
+
+  // Fetch agents for the reply component
+  const { data: agentsData, isLoading: isLoadingAgents } = useAgents();
+
+  // Fetch prospect profiles
+  const { data: prospectProfiles } = useProspectProfilesQuery();
+
+  // Auto-select first profile if none is selected
+  useEffect(() => {
+    if (!selectedProfile && prospectProfiles && prospectProfiles.length > 0) {
+      setSelectedProfile(prospectProfiles[0]);
+    }
+  }, [selectedProfile, prospectProfiles]);
 
   const brandData = brandResponse?.brand || null;
 
@@ -88,18 +111,31 @@ export default function DashboardPage() {
         onAddUseCase={handleAddUseCase}
       />
 
-      <main className="flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="p-6">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center space-y-4">
-              <h1 className="text-white font-heading text-4xl font-bold">
-                Welcome to Your Dashboard
-              </h1>
-              <p className="text-white/60 font-body text-lg">
-                Select a use case from the sidebar to get started.
-              </p>
+      <main className="flex-1 flex min-h-0 h-full">
+        {/* Prospect Profiles Inbox - 30% width */}
+        <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
+          <ProspectProfilesInbox
+            onProfileSelect={setSelectedProfile}
+            selectedProfileId={selectedProfile?.id}
+          />
+        </div>
+
+        {/* Detail View - 70% width */}
+        <div className="flex-1 h-full">
+          {selectedProfile ? (
+            <ProspectProfileDetail
+              profile={selectedProfile}
+              onClose={() => setSelectedProfile(null)}
+              agents={agentsData?.agents || []}
+              isLoadingAgents={isLoadingAgents}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-white/60 text-xl font-body">
+                No prospect profile selected
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>

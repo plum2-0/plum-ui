@@ -7,33 +7,40 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import Link from "next/link";
 import { useGenerateReply } from "@/hooks/useGenerateReply";
+import { useProspectReplyAction } from "@/hooks/api/useProspectReplyAction";
 import SimplifiedAgentReply from "./SimplifiedAgentReply";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LiquidBadge } from "@/components/ui/LiquidBadge";
 import { AttractiveText } from "@/components/ui/AttractiveText";
+import { FloatingOrbGroup } from "@/components/ui/FloatingOrb";
+import { glassStyles } from "@/lib/styles/glassMorphism";
 
 interface ProspectCardProps {
   post: RedditPost;
   brandId: string;
   className?: string;
+  onReply?: () => void;
 }
 
 export default function ProspectCard({
   post,
   brandId,
   className = "",
+  onReply,
 }: ProspectCardProps) {
   // const [showReplyBox, setShowReplyBox] = useState(false);
 
   const [customReply, setCustomReply] = useState<string>("");
   const [replySent, setReplySent] = useState(false);
-  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [showScrollFade, setShowScrollFade] = useState(true);
   const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
 
   const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
     useGenerateReply(brandId);
+  
+  const replyMutation = useProspectReplyAction();
 
   // Format timestamp
   const timeAgo = formatDistanceToNow(new Date(post.created_utc * 1000), {
@@ -116,44 +123,30 @@ export default function ProspectCard({
     }
   };
 
-  async function submitPostAction(action: "reply" | "ignore", text?: string) {
-    setIsSubmittingAction(true);
+  const handleReplySubmit = async (content: string) => {
     try {
-      const response = await fetch(`/api/brand/post/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brand_id: brandId,
-          prospect_id: post.thing_id,
-          post_id: post.thing_id,
-          user_content_action: action,
-          content: action === "reply" ? text || "" : undefined,
-          agent_id:
-            action === "reply"
-              ? agents.length > 0
-                ? agents[0].id
-                : undefined
-              : undefined,
-        }),
+      await replyMutation.mutateAsync({
+        brandId,
+        prospectId: post.thing_id,
+        postId: post.thing_id,
+        content,
+        agentId: agents.length > 0 ? agents[0].id : undefined,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit action");
-      }
-
-      if (action === "reply") {
-        setReplySent(true);
-        setTimeout(() => {
-          setReplySent(false);
-        }, 2500);
+      
+      setReplySent(true);
+      setTimeout(() => {
+        setReplySent(false);
+      }, 2500);
+      
+      // Call the onReply callback if provided
+      if (onReply) {
+        onReply();
       }
     } catch (error) {
-      console.error("Error submitting action:", error);
-      alert("Failed to submit action. Please try again.");
-    } finally {
-      setIsSubmittingAction(false);
+      console.error("Error submitting reply:", error);
+      alert("Failed to submit reply. Please try again.");
     }
-  }
+  };
 
   return (
     <div
@@ -164,238 +157,26 @@ export default function ProspectCard({
         flexDirection: "column",
       }}
     >
-      {/* Outer Liquid Glass Frame - Multiple layers for depth */}
+      {/* Simplified Liquid Glass Frame */}
       <div
         className="absolute inset-0 rounded-3xl"
         style={{
-          background: `
-            linear-gradient(45deg,
-              rgba(255, 255, 255, 0.15) 0%,
-              rgba(255, 255, 255, 0.05) 25%,
-              transparent 50%,
-              rgba(255, 255, 255, 0.05) 75%,
-              rgba(255, 255, 255, 0.15) 100%
-            ),
-            linear-gradient(135deg,
-              rgba(0, 200, 255, 0.1) 0%,
-              rgba(128, 0, 255, 0.1) 50%,
-              rgba(255, 0, 128, 0.1) 100%
-            )
-          `,
-          padding: "3px",
+          ...glassStyles.medium,
+          padding: "2px",
           borderRadius: "24px",
         }}
       >
-        {/* Floating Liquid Glass Orbs */}
-        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-          {/* Orb 1 - Top Left */}
-          <div
-            className="absolute rounded-full opacity-20"
-            style={{
-              width: "60px",
-              height: "60px",
-              top: "15%",
-              left: "12%",
-              background: `
-                radial-gradient(circle,
-                  rgba(0, 255, 200, 0.6) 0%,
-                  rgba(0, 255, 200, 0.3) 40%,
-                  transparent 70%
-                )
-              `,
-              filter: "blur(8px)",
-              animation: "float-pulse-1 6s ease-in-out infinite",
-            }}
-          />
-
-          {/* Orb 2 - Top Right */}
-          <div
-            className="absolute rounded-full opacity-15"
-            style={{
-              width: "80px",
-              height: "80px",
-              top: "8%",
-              right: "18%",
-              background: `
-                radial-gradient(circle,
-                  rgba(128, 0, 255, 0.5) 0%,
-                  rgba(128, 0, 255, 0.2) 50%,
-                  transparent 80%
-                )
-              `,
-              filter: "blur(12px)",
-              animation: "float-pulse-2 8s ease-in-out infinite",
-            }}
-          />
-
-          {/* Orb 3 - Bottom Left */}
-          <div
-            className="absolute rounded-full opacity-18"
-            style={{
-              width: "45px",
-              height: "45px",
-              bottom: "20%",
-              left: "8%",
-              background: `
-                radial-gradient(circle,
-                  rgba(255, 0, 128, 0.7) 0%,
-                  rgba(255, 0, 128, 0.3) 45%,
-                  transparent 75%
-                )
-              `,
-              filter: "blur(6px)",
-              animation: "float-pulse-3 7s ease-in-out infinite",
-            }}
-          />
-
-          {/* Orb 4 - Bottom Right */}
-          <div
-            className="absolute rounded-full opacity-12"
-            style={{
-              width: "70px",
-              height: "70px",
-              bottom: "12%",
-              right: "10%",
-              background: `
-                radial-gradient(circle,
-                  rgba(0, 200, 255, 0.4) 0%,
-                  rgba(100, 150, 255, 0.2) 60%,
-                  transparent 85%
-                )
-              `,
-              filter: "blur(10px)",
-              animation: "float-pulse-4 9s ease-in-out infinite",
-            }}
-          />
-
-          {/* Orb 5 - Center Subtle */}
-          <div
-            className="absolute rounded-full opacity-8"
-            style={{
-              width: "120px",
-              height: "120px",
-              top: "40%",
-              left: "50%",
-              transform: "translateX(-50%)",
-              background: `
-                radial-gradient(circle,
-                  rgba(255, 255, 255, 0.1) 0%,
-                  rgba(255, 255, 255, 0.05) 30%,
-                  transparent 60%
-                )
-              `,
-              filter: "blur(20px)",
-              animation: "float-pulse-5 12s ease-in-out infinite",
-            }}
-          />
-        </div>
-
-        <style jsx>{`
-          @keyframes float-pulse-1 {
-            0%,
-            100% {
-              transform: translateY(0px) scale(1);
-              opacity: 0.2;
-            }
-            50% {
-              transform: translateY(-8px) scale(1.1);
-              opacity: 0.35;
-            }
-          }
-
-          @keyframes float-pulse-2 {
-            0%,
-            100% {
-              transform: translateY(0px) scale(1);
-              opacity: 0.15;
-            }
-            50% {
-              transform: translateY(-12px) scale(1.2);
-              opacity: 0.25;
-            }
-          }
-
-          @keyframes float-pulse-3 {
-            0%,
-            100% {
-              transform: translateY(0px) scale(1);
-              opacity: 0.18;
-            }
-            50% {
-              transform: translateY(-6px) scale(1.15);
-              opacity: 0.3;
-            }
-          }
-
-          @keyframes float-pulse-4 {
-            0%,
-            100% {
-              transform: translateY(0px) scale(1);
-              opacity: 0.12;
-            }
-            50% {
-              transform: translateY(-10px) scale(1.25);
-              opacity: 0.2;
-            }
-          }
-
-          @keyframes float-pulse-5 {
-            0%,
-            100% {
-              transform: translateX(-50%) translateY(0px) scale(1);
-              opacity: 0.08;
-            }
-            50% {
-              transform: translateX(-50%) translateY(-5px) scale(1.05);
-              opacity: 0.15;
-            }
-          }
-        `}</style>
-        {/* Middle Frame Layer */}
-        <div
-          className="w-full h-full rounded-3xl relative"
-          style={{
-            background: `
-              linear-gradient(45deg,
-                rgba(255, 255, 255, 0.08) 0%,
-                transparent 25%,
-                rgba(255, 255, 255, 0.03) 50%,
-                transparent 75%,
-                rgba(255, 255, 255, 0.08) 100%
-              )
-            `,
-            padding: "2px",
-            borderRadius: "21px",
-          }}
-        >
-          {/* Inner Glow Ring */}
-          <div
-            className="w-full h-full rounded-3xl relative"
-            style={{
-              background: `
-                linear-gradient(225deg,
-                  rgba(0, 255, 200, 0.12) 0%,
-                  rgba(100, 0, 255, 0.08) 30%,
-                  transparent 60%,
-                  rgba(255, 100, 200, 0.08) 100%
-                )
-              `,
-              padding: "1px",
-              borderRadius: "18px",
-              boxShadow: `
-                inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-                0 0 30px rgba(0, 255, 200, 0.1),
-                0 0 60px rgba(100, 0, 255, 0.05)
-              `,
-            }}
-          >
+        {/* Simplified Floating Orbs */}
+        <FloatingOrbGroup />
+        {/* Inner Glass Container */}
+        <div className="w-full h-full rounded-3xl relative overflow-hidden">
             <div
-              className="w-full h-full px-6 py-4 flex flex-col rounded-2xl relative overflow-hidden "
+              className="w-full h-full px-6 py-4 flex flex-col rounded-2xl relative overflow-visible"
               style={{
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
+                ...glassStyles.dark,
                 background: `
                   linear-gradient(135deg,
                     rgba(8, 8, 15, 0.98) 0%,
@@ -403,32 +184,23 @@ export default function ProspectCard({
                     rgba(12, 8, 20, 0.98) 50%,
                     rgba(18, 15, 30, 0.96) 75%,
                     rgba(10, 8, 18, 0.98) 100%
-                  ),
-                  radial-gradient(ellipse at top right,
-                    rgba(0, 200, 255, 0.03) 0%,
-                    transparent 50%
-                  ),
-                  radial-gradient(ellipse at bottom left,
-                    rgba(255, 0, 128, 0.03) 0%,
-                    transparent 50%
                   )
-                `,
-                backdropFilter: "blur(40px) saturate(180%)",
-
-                boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                  inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-                  0 8px 32px rgba(0, 0, 0, 0.3),
-                  0 2px 8px rgba(0, 0, 0, 0.2)
                 `,
               }}
             >
               {/* Header - Fixed */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h3 className="text-white font-heading text-lg font-bold mb-2 line-clamp-2">
-                    {post.title}
-                  </h3>
+                  <Link
+                    href={`https://reddit.com${post.permalink}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group"
+                  >
+                    <h3 className="text-white font-heading text-lg font-bold mb-2 line-clamp-2 transition-colors duration-200 group-hover:text-blue-400 cursor-pointer">
+                      {post.title}
+                    </h3>
+                  </Link>
                   <div className="flex items-center gap-3 text-sm">
                     {/* Subreddit Badge */}
                     <LiquidBadge variant="orange" size="md">
@@ -436,7 +208,14 @@ export default function ProspectCard({
                     </LiquidBadge>
 
                     {/* Author */}
-                    <span className="text-white/60">by u/{post.author}</span>
+                    <Link
+                      href={`https://reddit.com/user/${post.author}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white/60 hover:text-white/80 transition-colors duration-200"
+                    >
+                      by u/{post.author}
+                    </Link>
 
                     {/* Time */}
                     <span className="text-white/40">{timeAgo}</span>
@@ -535,9 +314,9 @@ export default function ProspectCard({
                 onGenerateWithAgent={handleGenerateWithAgent}
                 customReply={customReply}
                 setCustomReply={setCustomReply}
-                submitPostAction={submitPostAction}
+                onReplySubmit={handleReplySubmit}
                 replySent={replySent}
-                isSubmittingAction={isSubmittingAction}
+                isSubmittingAction={replyMutation.isPending}
                 post={
                   {
                     id: post.thing_id,
@@ -601,7 +380,6 @@ export default function ProspectCard({
                 </GlassCard>
               )}
             </div>
-          </div>
         </div>
       </div>
     </div>

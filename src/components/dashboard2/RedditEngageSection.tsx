@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Prospect, SubredditPost } from "@/types/brand";
+import { Prospect, RedditPost } from "@/types/brand";
 import RedditPostListItem from "./RedditPostListItem";
 // import TagFiltersDropdown from "./TagFiltersDropdown"; // TODO: Re-enable when tags are implemented
 import { useFetchNewPosts } from "@/hooks/api/useBrandQuery";
@@ -55,7 +55,7 @@ export default function RedditEngageSection({
     );
   }
 
-  const allPosts = selectedProblem.sourced_reddit_posts || [];
+  const allPosts: RedditPost[] = selectedProblem.sourced_reddit_posts || [];
 
   // TODO: Update filtering logic when tags are implemented in new API
   // For now, show all posts as filtering isn't available yet
@@ -66,28 +66,9 @@ export default function RedditEngageSection({
   const startIndex = (page - 1) * pageSize;
   const visiblePosts = filteredPosts.slice(startIndex, startIndex + pageSize);
 
-  const handleTagToggle = (tagName: string) => {
-    setSelectedTags((prev) => {
-      const newTags = new Set(prev);
-      if (newTags.has(tagName)) {
-        newTags.delete(tagName);
-      } else {
-        newTags.add(tagName);
-      }
-      localStorage.setItem(
-        "engageTagFilters",
-        JSON.stringify(Array.from(newTags))
-      );
-      return newTags;
-    });
-    setPage(1);
-  };
+  // Tag filtering temporarily disabled
 
-  const handleClearAllTags = () => {
-    setSelectedTags(new Set());
-    localStorage.removeItem("engageTagFilters");
-    setPage(1);
-  };
+  // const handleClearAllTags = () => {};
 
   const handleFetchNewPosts = async () => {
     if (!selectedProblem || !brandId) return;
@@ -198,44 +179,13 @@ export default function RedditEngageSection({
             </p>
           </div>
         ) : (
-          visiblePosts.map((redditPost) => {
-            // Temporary adapter to convert RedditPost to SubredditPost structure
-            const adaptedPost = {
-              id: redditPost.thing_id,
-              post_id: redditPost.thing_id,
-              subreddit: redditPost.subreddit,
-              title: redditPost.title,
-              author: redditPost.author,
-              content: redditPost.content,
-              created_at: new Date(redditPost.created_utc * 1000).toISOString(),
-              updated_at: null,
-              link: `https://reddit.com${redditPost.permalink}`,
-              image: null,
-              up_votes: redditPost.upvotes,
-              down_votes: redditPost.downvotes,
-              num_comments: redditPost.reply_count,
-              llm_explanation: "",
-              llm_response: { index: 0, model: "" },
-              status: redditPost.status,
-              tags: {
-                potential_customer: false,
-                competitor_mention: false,
-                own_mention: false,
-                positive_sentiment: false,
-                negative_sentiment: false,
-                neutral_sentiment: true,
-              },
-              problem_id: "",
-              brand_id: brandId || "",
-            };
-            return (
-              <RedditPostListItem
-                key={redditPost.thing_id}
-                post={adaptedPost}
-                brandId={brandId}
-              />
-            );
-          })
+          visiblePosts.map((redditPost) => (
+            <RedditPostListItem
+              key={redditPost.thing_id}
+              post={redditPost}
+              brandId={brandId}
+            />
+          ))
         )}
       </div>
 

@@ -5,20 +5,21 @@ export interface BrandOffering {
 
 export interface RedditPost {
   thing_id: string;
-  title: string;
+  title?: string;
   content: string;
   author: string;
   subreddit: string;
   permalink: string;
   created_utc: number;
   score: number;
-  upvotes: number;
-  downvotes: number;
-  reply_count: number;
-  thumbnail: string;
-  link_flair: string;
-  suggested_agent_reply: string | null;
-  status: string;
+  upvotes?: number;
+  downvotes?: number;
+  reply_count?: number;
+  thumbnail?: string;
+  link_flair?: string;
+  suggested_agent_reply?: string;
+  insert_timestamp?: string;
+  status: "IGNORE" | "REPLY" | "PENDING" | "SUGGESTED_REPLY" | string;
 }
 
 export interface Prospect {
@@ -51,42 +52,16 @@ export interface Brand {
   };
 }
 
-
 export interface UseCaseInsights {
   general_summary: string;
   identified_solutions: string[];
   willingness_to_pay: string;
-  demographic_breakdown: string[];
+  demographic_breakdown: string[];X
   top_competitors: string[];
   tag_counts: {
     potential_customer: number;
     competitor_mention: number;
   };
-}
-
-export interface SubredditPost {
-  id: string;
-  post_id: string;
-  subreddit: string;
-  title: string;
-  author: string;
-  content: string;
-  created_at: string;
-  updated_at: string | null;
-  link: string;
-  image: string | null;
-  up_votes: number;
-  down_votes: number;
-  num_comments: number;
-  llm_explanation: string;
-  llm_response: {
-    index: number;
-    model: string;
-  };
-  status: string | null;
-  tags: PostTags;
-  problem_id: string;
-  brand_id: string;
 }
 
 export interface PostTags {

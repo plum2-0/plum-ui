@@ -1,9 +1,9 @@
-import { SubredditPost } from "@/types/brand";
+import { RedditPost } from "@/types/brand";
 
 export interface KeywordCountOptions {
   caseSensitive?: boolean;
   matchWholeWords?: boolean;
-  fields?: Array<keyof Pick<SubredditPost, "title" | "content">>;
+  fields?: Array<keyof Pick<RedditPost, "title" | "content">>;
 }
 
 const DEFAULT_OPTIONS: Required<KeywordCountOptions> = {
@@ -28,7 +28,7 @@ function buildKeywordRegex(
 }
 
 export function countKeywordsByPost(
-  posts: SubredditPost[],
+  posts: RedditPost[],
   keywords: string[],
   options?: KeywordCountOptions
 ): Record<string, number> {
@@ -56,7 +56,9 @@ export function countKeywordsByPost(
   );
 
   for (const post of posts) {
-    const haystack = opts.fields.map((f) => post[f] || "").join(" \n ");
+    const haystack = opts.fields
+      .map((f) => (post[f] as string) || "")
+      .join(" \n ");
     const haystackToSearch = opts.caseSensitive
       ? haystack
       : haystack.toLowerCase();
@@ -74,7 +76,7 @@ export function countKeywordsByPost(
 }
 
 export function getTopKeywordCounts(
-  posts: SubredditPost[],
+  posts: RedditPost[],
   keywords: string[],
   limit = 10,
   options?: KeywordCountOptions

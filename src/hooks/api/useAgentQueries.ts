@@ -30,11 +30,11 @@ export const AGENT_QUERY_KEYS = {
 // Queries
 export const useAgents = (brandId?: string) =>
   useQuery<AgentListResponse>({
-    queryKey: brandId ? [...AGENT_QUERY_KEYS.lists(), brandId] : AGENT_QUERY_KEYS.lists(),
+    queryKey: brandId
+      ? [...AGENT_QUERY_KEYS.lists(), brandId]
+      : AGENT_QUERY_KEYS.lists(),
     queryFn: async () => {
-      console.log("🚀 Fetching agents from /api/agents");
       const response = await fetch("/api/agents");
-      console.log("📡 Response status:", response.status);
       if (!response.ok) {
         if (response.status === 404) {
           // User needs onboarding
@@ -45,7 +45,6 @@ export const useAgents = (brandId?: string) =>
         throw new Error("Failed to fetch agents");
       }
       const data = await response.json();
-      console.log("✅ Agents data received:", data);
       return data;
     },
     staleTime: 30 * 1000, // 30 seconds

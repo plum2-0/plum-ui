@@ -6,17 +6,18 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import { SubredditPost } from "@/types/brand";
-import TagBadge from "./TagBadge";
+import type { RedditPost } from "@/types/brand";
 import { useAgentReply } from "@/hooks/useAgentReply";
+import { useProspectReplyAction } from "@/hooks/api/useProspectReplyAction";
 import AgentReplyBox from "./AgentReplyBox";
 
 interface RedditPostListItemProps {
-  post: SubredditPost;
+  post: RedditPost;
   brandId?: string;
-  onGenerate?: (post: SubredditPost) => Promise<void>;
-  onIgnore?: (post: SubredditPost) => Promise<void>;
-  onSend?: (post: SubredditPost, message: string) => Promise<void>;
+  prospectId?: string;
+  onGenerate?: (post: RedditPost) => Promise<void>;
+  onIgnore?: (post: RedditPost) => Promise<void>;
+  onSend?: (post: RedditPost, message: string) => Promise<void>;
 }
 
 // Helper function to format time ago
@@ -33,47 +34,74 @@ function formatTimeAgo(dateString: string): string {
 
 // Agents will be used for reply generation instead of personas
 
-export default function RedditPostListItem({ post, brandId = "" }: RedditPostListItemProps) {
+export default function RedditPostListItem({
+  post,
+  brandId = "",
+  prospectId = "",
+}: RedditPostListItemProps) {
+  // Derived fields
+  const postId = post.thing_id;
+  const postTitle = post.title || "";
+  const postContent = post.content;
+  const postAuthor = post.author;
+  const postSubreddit = post.subreddit;
+  const postLink = `https://reddit.com${post.permalink}`;
+  const postCreatedAt = new Date(post.created_utc * 1000).toISOString();
+  const postUpVotes = post.upvotes || post.score || 0;
+  const postNumComments = post.reply_count || 0;
+  const llmExplanation = post.suggested_agent_reply || "";
+
+  // Check if this is a RedditPost with suggested_agent_reply
+  const hasSuggestedReply = !!post.suggested_agent_reply;
+
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
-  const [customReply, setCustomReply] = useState<string>("");
-  const [showReplyBox, setShowReplyBox] = useState(false);
+  const [customReply, setCustomReply] = useState<string>(
+    post.suggested_agent_reply ?? ""
+  );
+  const [showReplyBox, setShowReplyBox] = useState(!!hasSuggestedReply);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [lastUsedAgentId, setLastUsedAgentId] = useState<string | null>(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [replySent, setReplySent] = useState(false);
   const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
     useAgentReply(brandId);
+  const replyMutation = useProspectReplyAction();
 
   // Check if we're returning from Reddit auth for this specific post
   useEffect(() => {
     // Check URL hash for post ID
     const hash = window.location.hash;
-    if (hash === `#post-${post.id}`) {
+    if (hash === `#post-${postId}`) {
       // This is the post user was working on before redirect
       // Check for saved draft
-      const draftKey = `reddit-reply-draft-${post.id}`;
+      const draftKey: string = `reddit-reply-draft-${postId}`;
       const draftData = sessionStorage.getItem(draftKey);
-      
+
       if (draftData) {
         // Open reply box automatically
         setShowReplyBox(true);
-        
+
         // Scroll to this post after a brief delay to ensure DOM is ready
         setTimeout(() => {
-          const element = document.getElementById(`post-${post.id}`);
+          const element = document.getElementById(`post-${postId}`);
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         }, 100);
-        
+
         // Clear the hash after handling
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search
+        );
       }
     }
-  }, [post.id]);
+  }, [postId]);
+  // const postStatus = post.status;
 
   // Extract mentioned brand from llm_explanation
-  const mentionedBrand = post.llm_explanation
+  const mentionedBrand = llmExplanation
     ?.match(
       /(?:mentions?|discusses?|talks? about)\s+([A-Za-z0-9\s]+?)(?:\s+(?:in|as|for|with|to|and|or|but|because|since|although|while|if|when|where|why|how|that|which|who|whom|whose)|\.|,|;|:|\?|!|$)/i
     )?.[1]
@@ -147,6 +175,26 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
     h3: (props) => <h3 {...props} className="text-base font-semibold mb-2" />,
   };
 
+  const handleReplySubmit = async (content: string) => {
+    try {
+      await replyMutation.mutateAsync({
+        brandId,
+        prospectId: prospectId || post.thing_id,
+        postId: post.thing_id,
+        content,
+        agentId: agents.length > 0 ? agents[0].id : undefined,
+      });
+      
+      setReplySent(true);
+      setTimeout(() => {
+        setReplySent(false);
+      }, 2500);
+    } catch (error) {
+      console.error("Error submitting reply:", error);
+      alert("Failed to submit reply. Please try again.");
+    }
+  };
+
   async function submitPostAction(action: "reply" | "ignore", text?: string) {
     setIsSubmittingAction(true);
     try {
@@ -154,14 +202,34 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brand_id: post.brand_id,
-          problem_id: post.problem_id,
-          subreddit_post_id: post.id,
-          post_id: post.post_id,
-          user_content_action: action,
-          content: action === "reply" ? text || "" : undefined,
+          user_content_action: action === "reply" ? "reply" : "ignore",
+          brand_name: undefined,
+          brand_detail: undefined,
+          problem: undefined,
+          reddit_post: {
+            thing_id: post.thing_id,
+            title: post.title,
+            content: post.content,
+            author: post.author,
+            subreddit: post.subreddit,
+            permalink: post.permalink,
+            created_utc: post.created_utc,
+            score: post.score,
+            upvotes: post.upvotes,
+            downvotes: post.downvotes,
+            reply_count: post.reply_count || 0,
+            thumbnail: post.thumbnail,
+            link_flair: post.link_flair,
+            suggested_agent_reply: post.suggested_agent_reply || null,
+            status: typeof post.status === "string" ? post.status : "PENDING",
+          },
+          reply_content: action === "reply" ? text || "" : undefined,
           agent_id:
-            action === "reply" ? lastUsedAgentId || selectedAgentId : undefined,
+            action === "reply"
+              ? lastUsedAgentId || selectedAgentId || undefined
+              : undefined,
+          brand_id: brandId || "",
+          prospect_id: prospectId || "",
         }),
       });
 
@@ -185,11 +253,11 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
   }
 
   // Get truncated content for preview
-  const contentToShow = post.content || "";
+  const contentToShow = postContent || "";
   const shouldShowExpandButton = contentToShow.length > 200;
 
   return (
-    <div id={`post-${post.id}`} className="group">
+    <div id={`post-${postId}`} className="group">
       <div className="rounded-lg border border-[#343536] bg-[#1a1a1b] p-5 transition-colors duration-200 hover:border-[#4f5355]">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -212,11 +280,11 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
                     {mentionedBrand}
                   </span>
                 )}{" "}
-                in r/{post.subreddit}
+                in r/{postSubreddit}
               </span>
               <span className="text-white/40">•</span>
               <span className="font-body">
-                {formatTimeAgo(post.created_at)} by {post.author}
+                {formatTimeAgo(postCreatedAt)} by {postAuthor}
               </span>
             </div>
 
@@ -224,45 +292,20 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
             <h3
               className="text-white font-heading text-xl md:text-2xl font-semibold leading-tight mb-3 hover:text-white/90 transition-colors cursor-pointer"
               onClick={() =>
-                window.open(post.link, "_blank", "noopener,noreferrer")
+                window.open(postLink, "_blank", "noopener,noreferrer")
               }
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  window.open(post.link, "_blank", "noopener,noreferrer");
+                  window.open(postLink, "_blank", "noopener,noreferrer");
                 }
               }}
               tabIndex={0}
               role="link"
               title="Open Reddit post in new tab"
             >
-              {post.title}
+              {postTitle}
             </h3>
-
-            {/* LLM Explanation */}
-            {post.llm_explanation && (
-              <div className="mb-3">
-                <div className="flex items-center gap-2 mb-1 text-white/50 text-[11px] uppercase tracking-wide">
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                    />
-                  </svg>
-                  <span className="font-body">PlumSprout Idea</span>
-                </div>
-                <p className="text-white/60 font-body text-[13px] leading-relaxed">
-                  {post.llm_explanation}
-                </p>
-              </div>
-            )}
 
             {/* Post Content - Collapsible */}
             {contentToShow && (
@@ -343,24 +386,7 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
               </div>
             )}
 
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {post.tags.potential_customer && (
-                <TagBadge label="Potential Customer" variant="customer" />
-              )}
-              {post.tags.competitor_mention && (
-                <TagBadge label="Competitor" variant="competitor" />
-              )}
-              {post.tags.own_mention && (
-                <TagBadge label="Own Mention" variant="default" />
-              )}
-              {post.tags.positive_sentiment && (
-                <TagBadge label="Positive" variant="positive" />
-              )}
-              {post.tags.negative_sentiment && (
-                <TagBadge label="Negative" variant="negative" />
-              )}
-            </div>
+            {/* Tags removed with SubredditPost deprecation */}
 
             {/* Action bar with counters on the left */}
             <div
@@ -387,7 +413,7 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
                       d="M7 11l5-5m0 0l5 5m-5-5v12"
                     />
                   </svg>
-                  <span className="font-medium">{post.up_votes}</span>
+                  <span className="font-medium">{postUpVotes}</span>
                 </span>
                 <span
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#343536] bg-[#272729]"
@@ -407,7 +433,7 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
                       d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                   </svg>
-                  <span className="font-medium">{post.num_comments}</span>
+                  <span className="font-medium">{postNumComments}</span>
                 </span>
               </div>
 
@@ -459,9 +485,9 @@ export default function RedditPostListItem({ post, brandId = "" }: RedditPostLis
                 onRegenerate={handleRegenerate}
                 customReply={customReply}
                 setCustomReply={setCustomReply}
-                submitPostAction={submitPostAction}
+                onReplySubmit={handleReplySubmit}
                 replySent={replySent}
-                isSubmittingAction={isSubmittingAction}
+                isSubmittingAction={replyMutation.isPending}
                 post={post}
               />
             )}

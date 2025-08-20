@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 type BadgeVariant =
   | "default"
+  | "primary"
   | "success"
   | "warning"
   | "danger"
@@ -29,6 +30,12 @@ const variants = {
       "linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))",
     border: "1px solid rgba(255, 255, 255, 0.15)",
     color: "rgba(255, 255, 255, 0.85)",
+  },
+  primary: {
+    background:
+      "linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15))",
+    border: "1px solid rgba(59, 130, 246, 0.25)",
+    color: "rgb(147, 197, 253)",
   },
   success: {
     background:

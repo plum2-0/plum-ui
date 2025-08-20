@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useRouter } from "next/navigation";
 import type { Agent } from "@/types/agent";
-import type { SubredditPost } from "@/types/brand";
+import type { RedditPost } from "@/types/brand";
 import { useGenerateAgent } from "@/hooks/api/useAgentQueries";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import { ensureRedditConnectedOrRedirect } from "@/lib/verify-reddit";
@@ -22,13 +22,10 @@ type AgentReplyBoxProps = {
   onRegenerate: () => Promise<void>;
   customReply: string;
   setCustomReply: (value: string) => void;
-  submitPostAction: (
-    action: "reply" | "ignore",
-    text?: string
-  ) => Promise<void>;
+  onReplySubmit: (content: string) => Promise<void>;
   replySent: boolean;
   isSubmittingAction: boolean;
-  post: SubredditPost;
+  post: RedditPost;
 };
 
 export default function AgentReplyBox({
@@ -42,7 +39,7 @@ export default function AgentReplyBox({
   onRegenerate,
   customReply,
   setCustomReply,
-  submitPostAction,
+  onReplySubmit,
   replySent,
   isSubmittingAction,
   post,
@@ -55,7 +52,7 @@ export default function AgentReplyBox({
   const [isCheckingReddit, setIsCheckingReddit] = useState(false);
 
   // Storage key for draft state
-  const draftKey = `reddit-reply-draft-${post.id}`;
+  const draftKey = `reddit-reply-draft-${post.thing_id}`;
 
   const handleGenerateAgent = async () => {
     if (!brandData?.brand?.id) {
@@ -91,14 +88,14 @@ export default function AgentReplyBox({
       );
 
       // Add post ID to URL hash so we can scroll back to it after redirect
-      window.location.hash = `post-${post.id}`;
+      window.location.hash = `post-${post.thing_id}`;
 
       // Check Reddit connection - will redirect if not connected
       const isConnected = await ensureRedditConnectedOrRedirect();
 
       if (isConnected) {
         // Reddit is connected, proceed with submission
-        await submitPostAction("reply", customReply);
+        await onReplySubmit(customReply);
       }
     } catch (error) {
       console.error("Error during reply submission:", error);
