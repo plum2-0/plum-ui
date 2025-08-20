@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { RedditPost } from "@/types/brand";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_PLUM_API_BASE_URL || "http://localhost:8000";
@@ -9,14 +10,15 @@ interface ProspectReplyActionParams {
   postId: string;
   content: string;
   agentId?: string;
+  post: RedditPost;
 }
 
 interface ProspectReplyActionRequest {
   brand_id: string;
   prospect_id: string;
-  post_id: string;
   user_content_action: "reply";
-  content: string;
+  reply_content: string;
+  reddit_post: RedditPost;
   agent_id?: string;
 }
 
@@ -30,13 +32,14 @@ export function useProspectReplyAction() {
       postId,
       content,
       agentId,
+      post,
     }) => {
       const payload: ProspectReplyActionRequest = {
         brand_id: brandId,
         prospect_id: prospectId,
-        post_id: postId,
         user_content_action: "reply",
-        content,
+        reply_content: content,
+        reddit_post: post,
         agent_id: agentId,
       };
 

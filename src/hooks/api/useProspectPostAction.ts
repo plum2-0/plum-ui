@@ -45,8 +45,6 @@ interface ProspectPostActionRequest {
 }
 
 export function useProspectPostAction() {
-  const queryClient = useQueryClient();
-
   return useMutation<boolean, Error, ProspectPostActionParams>({
     mutationFn: async ({
       post,

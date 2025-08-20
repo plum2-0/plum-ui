@@ -344,6 +344,7 @@ export default function SwipeableProspectModal({
                       post={post}
                       brandId={brandId}
                       className="h-full"
+                      onReply={() => handleSwipe("right")}
                     />
                   </motion.div>
                 );
@@ -391,6 +392,7 @@ export default function SwipeableProspectModal({
                       post={currentPost}
                       brandId={brandId}
                       className="h-full"
+                      onReply={() => handleSwipe("right")}
                     />
 
                     {/* Like Indicator */}
@@ -524,6 +526,7 @@ export default function SwipeableProspectModal({
                       post={exitingPost}
                       brandId={brandId}
                       className="h-full"
+                      onReply={() => handleSwipe("right")}
                     />
 
                     {/* Exit indicators - show on exiting card */}
