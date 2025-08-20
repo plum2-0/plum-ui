@@ -3,19 +3,21 @@
 import { useState, useEffect } from "react";
 import { Prospect } from "@/types/brand";
 import GlassPills from "./GlassPills";
-import HeroMetric from "./ProspectTargetsStat";
+import HeroMetric, { ProspectFunnelData } from "./ProspectTargetsStat";
 import SolutionsOpportunities from "./SolutionsOpportunities";
 
 interface OverviewInsightsProps {
   prospects: Prospect[];
   brandId: string;
   isLoading?: boolean;
+  prospectFunnelData: ProspectFunnelData;
 }
 
 export default function OverviewInsights({
   prospects,
   brandId,
   isLoading = false,
+  prospectFunnelData,
 }: OverviewInsightsProps) {
   console.log(JSON.stringify(prospects, null, 2));
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -69,18 +71,7 @@ export default function OverviewInsights({
     );
   }
 
-  // Calculate overview statistics
-  const allPosts = prospects.flatMap(
-    (prospect) => prospect.sourced_reddit_posts || []
-  );
-  const totalPosts = allPosts.length;
-  // TODO: Update tag logic when tags are implemented in new API
-  const tagTotals = {
-    potential_customer: 0,
-    competitor_mention: 0,
-    own_mention: 0,
-  };
-
+  // Funnel data is now passed as a flattened prop from useBrandQuery
   // Collect all solutions and opportunities across all use cases
   const allSolutionsAndOpportunities = prospects.flatMap((prospect) => [
     ...(prospect.insights?.identified_solutions || []),
@@ -154,13 +145,12 @@ export default function OverviewInsights({
           <div className="p-6 space-y-6">
             {/* Hero Metric - Total Potential Customers */}
             <HeroMetric
-              value={totalPosts}
-              posts={allPosts}
               brandId={brandId}
+              posts={prospects.flatMap(
+                (prospect) => prospect.sourced_reddit_posts || []
+              )}
               prospectId={prospects[0]?.id || "overview"} // Use first prospect or overview as fallback
               problemToSolve="Overview - All Use Cases"
-              label="Total Potential Customers Identified"
-              subtext="Click To View"
               onStackCompleted={() => {
                 console.log("All prospects reviewed!");
                 // TODO: Show completion message or refresh data

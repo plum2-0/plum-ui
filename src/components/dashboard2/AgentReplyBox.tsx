@@ -8,7 +8,7 @@ import type { Agent } from "@/types/agent";
 import type { RedditPost } from "@/types/brand";
 import { useGenerateAgent } from "@/hooks/api/useAgentQueries";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
-import { ensureRedditConnectedOrRedirect } from "@/lib/verify-reddit";
+import { useProspectConvoReply } from "@/hooks/api/useProspectConvoReply";
 import GenerateFirstAgent from "@/components/dashboard2/GenerateFirstAgent";
 
 type AgentReplyBoxProps = {
@@ -22,10 +22,12 @@ type AgentReplyBoxProps = {
   onRegenerate: () => Promise<void>;
   customReply: string;
   setCustomReply: (value: string) => void;
-  onReplySubmit: (content: string) => Promise<void>;
   replySent: boolean;
-  isSubmittingAction: boolean;
   post: RedditPost;
+  // Props for prospect conversation reply (optional for backward compatibility)
+  prospectProfileId?: string;
+  activeConvoId?: string;
+  brandId?: string; // Optional because we can get it from useBrandQuery
 };
 
 export default function AgentReplyBox({
@@ -39,15 +41,17 @@ export default function AgentReplyBox({
   onRegenerate,
   customReply,
   setCustomReply,
-  onReplySubmit,
   replySent,
-  isSubmittingAction,
   post,
+  prospectProfileId,
+  activeConvoId,
+  brandId,
 }: AgentReplyBoxProps) {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: brandData } = useBrandQuery();
   const generateAgent = useGenerateAgent();
+  const prospectConvoReplyMutation = useProspectConvoReply();
   const [isGeneratingAgent, setIsGeneratingAgent] = useState(false);
   const [isCheckingReddit, setIsCheckingReddit] = useState(false);
 
@@ -71,6 +75,9 @@ export default function AgentReplyBox({
     }
   };
 
+  // Check if submission is in progress
+  const isSubmittingAction = prospectConvoReplyMutation.isPending;
+
   // Handle reply submission with Reddit auth check
   const handleSendReply = async () => {
     if (!customReply.trim() || isSubmittingAction || replySent) return;
@@ -90,17 +97,27 @@ export default function AgentReplyBox({
       // Add post ID to URL hash so we can scroll back to it after redirect
       window.location.hash = `post-${post.thing_id}`;
 
-      // Check Reddit connection - will redirect if not connected
-      const isConnected = await ensureRedditConnectedOrRedirect();
-
-      if (isConnected) {
-        // Reddit is connected, proceed with submission
-        await onReplySubmit(customReply);
+      const resolvedBrandId = brandId || brandData?.brand?.id;
+      if (!resolvedBrandId) {
+        throw new Error("Brand ID is required for prospect conversation reply");
       }
+
+      if (!prospectProfileId || !activeConvoId) {
+        throw new Error(
+          "Prospect profile ID and active conversation ID are required for replies"
+        );
+      }
+
+      // Use the prospect conversation reply endpoint
+      await prospectConvoReplyMutation.mutateAsync({
+        brandId: resolvedBrandId,
+        prospectProfileId,
+        activeConvoId,
+        parentPostThingId: post.thing_id,
+        replyText: customReply,
+      });
     } catch (error) {
       console.error("Error during reply submission:", error);
-      // If ensureRedditConnectedOrRedirect throws due to redirect, this won't execute
-      // Otherwise, show error
       alert("Failed to submit reply. Please try again.");
     } finally {
       setIsCheckingReddit(false);
@@ -508,7 +525,7 @@ export default function AgentReplyBox({
           whileTap={{ scale: 0.98 }}
         >
           {isCheckingReddit
-            ? "Checking Reddit..."
+            ? "Connecting to Reddit..."
             : isSubmittingAction
             ? "Submitting..."
             : replySent

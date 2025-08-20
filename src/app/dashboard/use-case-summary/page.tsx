@@ -27,6 +27,7 @@ export default function UseCaseSummaryPage() {
   const { data: agent } = useAgent(firstAgent?.id || "");
 
   const brandData = brandResponse?.brand || null;
+  const prospectFunnelData = brandResponse?.prospectFunnelData || {};
 
   const handleUseCaseSelect = (useCase: Prospect | null) => {
     if (useCase) {
@@ -155,6 +156,7 @@ export default function UseCaseSummaryPage() {
             <OverviewInsights
               prospects={brandData?.prospects || []}
               brandId={brandData?.id || ""}
+              prospectFunnelData={prospectFunnelData}
               isLoading={false}
             />
 

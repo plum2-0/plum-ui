@@ -5,7 +5,7 @@ import { Prospect } from "@/types/brand";
 import UseCaseInsightsComponent from "./UseCaseInsights";
 // import CompetitorSummary from "./CompetitorSummary"; // TODO: Re-enable when API supports it
 import GlassPills from "./GlassPills";
-import HeroMetric from "./ProspectTargetsStat";
+import HeroMetric, { ProspectFunnelData } from "./ProspectTargetsStat";
 // import { getTopKeywordCounts } from "@/lib/keyword-utils"; // TODO: Update for new RedditPost structure
 
 interface UseCaseInsightsProps {
@@ -14,6 +14,7 @@ interface UseCaseInsightsProps {
   brandName?: string;
   brandDetail?: string;
   isLoading?: boolean;
+  prospectFunnelData?: ProspectFunnelData;
 }
 
 export default function UseCaseInsightsPage({
@@ -22,6 +23,7 @@ export default function UseCaseInsightsPage({
   brandName,
   brandDetail,
   isLoading = false,
+  prospectFunnelData,
 }: UseCaseInsightsProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -161,15 +163,22 @@ export default function UseCaseInsightsPage({
           <div className="p-6 space-y-6">
             {/* Hero Metric - Potential Customers Only */}
             <HeroMetric
-              value={ucPosts.length}
-              posts={ucPosts}
+              funnelData={prospectFunnelData || {
+                total: ucPosts.filter(p => p.status !== 'IGNORE').length,
+                pending: {
+                  count: ucPosts.filter(p => p.status === 'PENDING').length,
+                  posts: ucPosts.filter(p => p.status === 'PENDING')
+                },
+                reply: {
+                  count: ucPosts.filter(p => p.status === 'REPLY' || p.status === 'SUGGESTED_REPLY').length,
+                  posts: ucPosts.filter(p => p.status === 'REPLY' || p.status === 'SUGGESTED_REPLY')
+                }
+              }}
               brandId={brandId}
               brandName={brandName}
               brandDetail={brandDetail}
               prospectId={selectedUseCase.id}
               problemToSolve={selectedUseCase.problem_to_solve}
-              label="Potential Customers Identified"
-              subtext="Click To View"
               onStackCompleted={() => {
                 console.log("All prospects for this use case reviewed!");
                 // TODO: Show completion message or refresh data

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createPortal, flushSync } from "react-dom";
+import { useRouter } from "next/navigation";
 import {
   motion,
   AnimatePresence,
@@ -27,6 +28,7 @@ interface SwipeableProspectModalProps {
   problemToSolve?: string;
   onClose: () => void;
   onStackCompleted?: () => void;
+  standalone?: boolean;
 }
 
 const SWIPE_THRESHOLD = 100;
@@ -44,7 +46,9 @@ export default function SwipeableProspectModal({
   problemToSolve,
   onClose,
   onStackCompleted,
+  standalone = false,
 }: SwipeableProspectModalProps) {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [exitX, setExitX] = useState<number | "left" | "right" | null>(null);
@@ -211,23 +215,29 @@ export default function SwipeableProspectModal({
 
   if (!isOpen || posts.length === 0) return null;
 
-  return createPortal(
+  const content = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          onClick={onClose}
+          className={
+            standalone
+              ? "flex items-center justify-center min-h-screen p-4"
+              : "fixed inset-0 z-50 flex items-center justify-center p-4"
+          }
+          onClick={() => router.push("/dashboard")}
         >
-          {/* Backdrop with enhanced liquid blur */}
-          <div
-            className="absolute inset-0"
-            style={{
-              ...glassStyles.dark,
-            }}
-          />
+          {/* Backdrop with enhanced liquid blur - only show if not standalone */}
+          {!standalone && (
+            <div
+              className="absolute inset-0"
+              style={{
+                ...glassStyles.dark,
+              }}
+            />
+          )}
 
           {/* Modal Content */}
           <motion.div
@@ -235,8 +245,10 @@ export default function SwipeableProspectModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative z-10 w-full max-w-lg"
-            onClick={(e) => e.stopPropagation()}
+            className={
+              standalone ? "w-full max-w-lg" : "relative z-10 w-full max-w-lg"
+            }
+            onClick={(e) => !standalone && e.stopPropagation()}
           >
             {/* Progress Bar */}
             <div className="mb-4">
@@ -638,11 +650,12 @@ export default function SwipeableProspectModal({
                 </svg>
               </LiquidButton>
             </div>
-
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body
+    </AnimatePresence>
   );
+
+  // If standalone, render directly. Otherwise, use portal for modal behavior
+  return standalone ? content : createPortal(content, document.body);
 }

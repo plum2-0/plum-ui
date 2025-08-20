@@ -238,24 +238,30 @@ export function ProspectProfileDetail({
           <div className="border-t border-white/10"></div>
 
           {/* Best Reply Windows */}
-          {detailedProfile?.best_reply_windows && detailedProfile.best_reply_windows.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
-                High Activity At:
-              </span>
-              <div className="flex items-center gap-3 text-sm">
-                <Clock className="w-3 h-3 text-white/40" />
-                {detailedProfile.best_reply_windows.slice(0, 1).map((window, index) => (
-                  <span key={index} className="text-white/80">
-                    <span className="font-medium">{window.weekday}s</span> {window.start_hour_utc}:00-{window.end_hour_utc}:00 UTC
-                    {index === 0 && (
-                      <span className="text-green-400/80 ml-2 text-xs">(best time)</span>
-                    )}
-                  </span>
-                ))}
+          {detailedProfile?.best_reply_windows &&
+            detailedProfile.best_reply_windows.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
+                  High Activity At:
+                </span>
+                <div className="flex items-center gap-3 text-sm">
+                  <Clock className="w-3 h-3 text-white/40" />
+                  {detailedProfile.best_reply_windows
+                    .slice(0, 1)
+                    .map((window, index) => (
+                      <span key={index} className="text-white/80">
+                        <span className="font-medium">{window.weekday}s</span>{" "}
+                        {window.start_hour_utc}:00-{window.end_hour_utc}:00 UTC
+                        {index === 0 && (
+                          <span className="text-green-400/80 ml-2 text-xs">
+                            (best time)
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </GlassCard>
 
@@ -282,6 +288,8 @@ export function ProspectProfileDetail({
                 post={post}
                 brandId={currentProfile.id}
                 prospectId={currentProfile.id || ""}
+                prospectProfileId={currentProfile.id || ""}
+                activeConvoId={currentProfile.active_convo?.id || ""}
               />
             </motion.div>
           ))

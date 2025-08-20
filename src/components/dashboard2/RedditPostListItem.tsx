@@ -8,13 +8,14 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import type { RedditPost } from "@/types/brand";
 import { useAgentReply } from "@/hooks/useAgentReply";
-import { useProspectReplyAction } from "@/hooks/api/useProspectReplyAction";
 import AgentReplyBox from "./AgentReplyBox";
 
 interface RedditPostListItemProps {
   post: RedditPost;
   brandId?: string;
   prospectId?: string;
+  prospectProfileId?: string;
+  activeConvoId?: string;
   onGenerate?: (post: RedditPost) => Promise<void>;
   onIgnore?: (post: RedditPost) => Promise<void>;
   onSend?: (post: RedditPost, message: string) => Promise<void>;
@@ -38,6 +39,8 @@ export default function RedditPostListItem({
   post,
   brandId = "",
   prospectId = "",
+  prospectProfileId,
+  activeConvoId,
 }: RedditPostListItemProps) {
   // Derived fields
   const postId = post.thing_id;
@@ -65,7 +68,6 @@ export default function RedditPostListItem({
   const [replySent, setReplySent] = useState(false);
   const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
     useAgentReply(brandId);
-  const replyMutation = useProspectReplyAction();
 
   // Check if we're returning from Reddit auth for this specific post
   useEffect(() => {
@@ -173,26 +175,6 @@ export default function RedditPostListItem({
     h1: (props) => <h1 {...props} className="text-xl font-semibold mb-2" />,
     h2: (props) => <h2 {...props} className="text-lg font-semibold mb-2" />,
     h3: (props) => <h3 {...props} className="text-base font-semibold mb-2" />,
-  };
-
-  const handleReplySubmit = async (content: string) => {
-    try {
-      await replyMutation.mutateAsync({
-        brandId,
-        prospectId: prospectId || post.thing_id,
-        postId: post.thing_id,
-        content,
-        agentId: agents.length > 0 ? agents[0].id : undefined,
-      });
-      
-      setReplySent(true);
-      setTimeout(() => {
-        setReplySent(false);
-      }, 2500);
-    } catch (error) {
-      console.error("Error submitting reply:", error);
-      alert("Failed to submit reply. Please try again.");
-    }
   };
 
   async function submitPostAction(action: "reply" | "ignore", text?: string) {
@@ -472,8 +454,8 @@ export default function RedditPostListItem({
               </div>
             </div>
 
-            {/* Reply box */}
-            {showReplyBox && (
+            {/* Reply box - only show if we have the required context */}
+            {showReplyBox && prospectProfileId && activeConvoId && (
               <AgentReplyBox
                 agents={agents}
                 isLoadingAgents={isLoadingAgents}
@@ -485,10 +467,11 @@ export default function RedditPostListItem({
                 onRegenerate={handleRegenerate}
                 customReply={customReply}
                 setCustomReply={setCustomReply}
-                onReplySubmit={handleReplySubmit}
                 replySent={replySent}
-                isSubmittingAction={replyMutation.isPending}
                 post={post}
+                prospectProfileId={prospectProfileId}
+                activeConvoId={activeConvoId}
+                brandId={brandId}
               />
             )}
           </div>

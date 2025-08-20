@@ -27,7 +27,7 @@ export default function ProspectTargetStat({
   problemToSolve,
   onStackCompleted,
   label = "Potential Customers Identified",
-  subtext = "Click To View"
+  subtext = "Click To View",
 }: ProspectTargetsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -44,7 +44,10 @@ export default function ProspectTargetStat({
 
   return (
     <>
-      <div className="flex justify-center cursor-pointer" onClick={handleCardClick}>
+      <div
+        className="flex justify-center cursor-pointer"
+        onClick={handleCardClick}
+      >
         <div
           className="cursor-pointer relative group w-full max-w-md px-8 py-6 rounded-2xl transition-all duration-300 hover:scale-[1.02]"
           style={{
@@ -64,11 +67,9 @@ export default function ProspectTargetStat({
             }}
           />
           <div className="relative text-center bold ">
-            <div className="text-lg text-white font-body mb-2">
-              {label}
-            </div>
+            <div className="text-lg text-white font-body mb-2">{label}</div>
             <div className="text-emerald-300 text-5xl font-heading font-bold">
-              {value}
+              {posts.length }
             </div>
             {posts.length > 0 && (
               <div className="text-white/60 text-xs font-body mt-2">

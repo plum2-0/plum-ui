@@ -1,15 +1,46 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Brand } from "@/types/brand";
+import { Brand, Prospect } from "@/types/brand";
+import { ProspectFunnelData } from "@/components/dashboard2/ProspectTargetsStat";
 
 export const BRAND_QUERY_KEY = ["brand"] as const;
+
+function processProspectData(prospects: Prospect[]): ProspectFunnelData {
+  // Flatten all posts from all prospects into a single array
+  const allPosts = prospects.flatMap(
+    (prospect) => prospect.sourced_reddit_posts || []
+  );
+
+  // Filter out ignored posts from the beginning
+  const nonIgnoredPosts = allPosts.filter((p) => p.status !== "IGNORE");
+
+  const pendingPosts = nonIgnoredPosts.filter((p) => p.status === "PENDING");
+  const replyPosts = nonIgnoredPosts.filter(
+    (p) => p.status === "REPLY" || p.status === "SUGGESTED_REPLY"
+  );
+
+  return {
+    total: nonIgnoredPosts.length,
+    pending: {
+      count: pendingPosts.length,
+      posts: pendingPosts,
+    },
+    reply: {
+      count: replyPosts.length,
+      posts: replyPosts,
+    },
+  };
+}
 
 export function useBrandQuery() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  return useQuery<{ brand: Brand }>({
+  return useQuery<{
+    brand: Brand;
+    prospectFunnelData: ProspectFunnelData;
+  }>({
     queryKey: BRAND_QUERY_KEY,
     queryFn: async () => {
       // Check if user is authenticated
@@ -51,9 +82,15 @@ export function useBrandQuery() {
 
       const brandData = await response.json();
 
+      // Process prospect data to create funnel statistics
+      const prospectFunnelData = processProspectData(brandData.prospects || []);
+      console.log("📌 prospectFunnelData");
+      console.log(JSON.stringify(prospectFunnelData, null, 2));
+
       // The Python API now returns the brand data directly, not wrapped in a response object
       return {
         brand: brandData,
+        prospectFunnelData,
       };
     },
     // Only run query when session is loaded and user is authenticated

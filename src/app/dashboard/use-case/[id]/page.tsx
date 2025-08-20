@@ -163,6 +163,31 @@ export default function UseCasePage() {
               brandId={brandData?.id || ""}
               brandName={brandData?.name}
               brandDetail={brandData?.detail || undefined}
+              prospectFunnelData={(() => {
+                // Calculate funnel data for this specific prospect
+                const posts = selectedUseCase.sourced_reddit_posts || [];
+                const nonIgnoredPosts = posts.filter(
+                  (p) => p.status !== "IGNORE"
+                );
+                const pendingPosts = nonIgnoredPosts.filter(
+                  (p) => p.status === "PENDING"
+                );
+                const replyPosts = nonIgnoredPosts.filter(
+                  (p) => p.status === "REPLY" || p.status === "SUGGESTED_REPLY"
+                );
+
+                return {
+                  total: nonIgnoredPosts.length,
+                  pending: {
+                    count: pendingPosts.length,
+                    posts: pendingPosts,
+                  },
+                  reply: {
+                    count: replyPosts.length,
+                    posts: replyPosts,
+                  },
+                };
+              })()}
               isLoading={isSelectedUseCaseLoading}
             />
 
