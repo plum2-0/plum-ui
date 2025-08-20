@@ -56,7 +56,8 @@ export interface UseCaseInsights {
   general_summary: string;
   identified_solutions: string[];
   willingness_to_pay: string;
-  demographic_breakdown: string[];X
+  demographic_breakdown: string[];
+  X;
   top_competitors: string[];
   tag_counts: {
     potential_customer: number;

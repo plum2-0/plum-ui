@@ -16,7 +16,7 @@ import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import { useProspectProfilesQuery } from "@/hooks/api/useProspectProfilesQuery";
 
 export default function DashboardPage() {
-  useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
   const generateInsight = useGenerateUseCaseInsight();
@@ -71,7 +71,8 @@ export default function DashboardPage() {
     return Promise.resolve();
   };
 
-  if (isLoading) {
+  // Show loading state while session or brand data is loading
+  if (status === "loading" || isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-white text-xl font-body">

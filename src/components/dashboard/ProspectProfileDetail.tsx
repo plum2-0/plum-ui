@@ -1,13 +1,21 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Clock, Star, HelpCircle } from "lucide-react";
+import {
+  X,
+  Clock,
+  Star,
+  HelpCircle,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { LiquidBadge } from "@/components/ui/LiquidBadge";
-import RedditPostListItem from "@/components/dashboard2/RedditPostListItem";
+import { RedditConvo } from "./RedditConvo";
 import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
 import type { Agent } from "@/types/agent";
@@ -24,6 +32,7 @@ export function ProspectProfileDetail({
   onClose,
 }: ProspectProfileDetailProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [showAllSubreddits, setShowAllSubreddits] = useState(false);
 
   // Fetch detailed profile data with active conversation
   const { data: detailedProfile, isLoading } = useProspectProfileDetailQuery({
@@ -38,32 +47,8 @@ export function ProspectProfileDetail({
   // Use detailed profile if available, otherwise fall back to basic profile
   const currentProfile = detailedProfile || profile;
 
-  // Get all posts from the conversation
-  const posts = currentProfile.active_convo?.reddit_conversations || [];
-
-  // Format timestamp
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    } else if (days === 1) {
-      return "Yesterday";
-    } else if (days < 7) {
-      return date.toLocaleDateString("en-US", { weekday: "short" });
-    } else {
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    }
-  };
+  // Get the active conversation
+  const activeConversation = currentProfile.active_convos?.[0]; // Assuming first conversation is the active one
 
   // Mock engagement analytics (would come from real data in production)
   const engagementData = {
@@ -108,7 +93,15 @@ export function ProspectProfileDetail({
               </div>
               <div>
                 <h2 className="text-2xl font-heading font-bold text-white flex items-center gap-2">
-                  {currentProfile.name}
+                  <a
+                    href={`https://www.reddit.com/user/${currentProfile.name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 hover:text-purple-400 transition-colors group"
+                  >
+                    {currentProfile.name}
+                    <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
                   {currentProfile.sentiment && (
                     <span
                       className={cn(
@@ -196,31 +189,71 @@ export function ProspectProfileDetail({
           {/* Active Communities */}
           {detailedProfile?.subreddit_affinities?.top_by_volume &&
             detailedProfile.subreddit_affinities.top_by_volume.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
-                  Active Communities:
-                </span>
-                {detailedProfile.subreddit_affinities.top_by_volume
-                  .slice(0, 3)
-                  .map((subreddit) => (
-                    <LiquidBadge
-                      key={subreddit.subreddit}
-                      variant="default"
-                      size="sm"
-                      className="text-xs"
-                    >
-                      r/{subreddit.subreddit} ({subreddit.count})
-                    </LiquidBadge>
-                  ))}
-                {detailedProfile.subreddit_affinities.top_by_volume.length >
-                  3 && (
-                  <span className="text-xs text-white/40">
-                    +
-                    {detailedProfile.subreddit_affinities.top_by_volume.length -
-                      3}{" "}
-                    more
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
+                    Active Communities:
                   </span>
-                )}
+                  {detailedProfile.subreddit_affinities.top_by_volume
+                    .slice(0, showAllSubreddits ? undefined : 3)
+                    .map((subreddit, index) => (
+                      <motion.div
+                        key={subreddit.subreddit}
+                        initial={index >= 3 ? { opacity: 0, scale: 0.8 } : {}}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                          delay: index >= 3 ? (index - 3) * 0.05 : 0,
+                          duration: 0.3,
+                          ease: "easeOut",
+                        }}
+                      >
+                        <LiquidBadge
+                          variant="default"
+                          size="sm"
+                          className="text-xs cursor-pointer hover:scale-105 transition-transform"
+                          onClick={() =>
+                            window.open(
+                              `https://www.reddit.com/r/${subreddit.subreddit}`,
+                              "_blank"
+                            )
+                          }
+                        >
+                          r/{subreddit.subreddit} ({subreddit.count})
+                        </LiquidBadge>
+                      </motion.div>
+                    ))}
+                  {detailedProfile.subreddit_affinities.top_by_volume.length >
+                    3 &&
+                    !showAllSubreddits && (
+                      <motion.button
+                        onClick={() => setShowAllSubreddits(true)}
+                        className="inline-flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span>
+                          +
+                          {detailedProfile.subreddit_affinities.top_by_volume
+                            .length - 3}{" "}
+                          more
+                        </span>
+                        <ChevronDown className="w-3 h-3 group-hover:translate-y-0.5 transition-transform" />
+                      </motion.button>
+                    )}
+                  {showAllSubreddits &&
+                    detailedProfile.subreddit_affinities.top_by_volume.length >
+                      3 && (
+                      <motion.button
+                        onClick={() => setShowAllSubreddits(false)}
+                        className="inline-flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span>Show less</span>
+                        <ChevronUp className="w-3 h-3 group-hover:-translate-y-0.5 transition-transform" />
+                      </motion.button>
+                    )}
+                </div>
               </div>
             )}
 
@@ -266,33 +299,15 @@ export function ProspectProfileDetail({
       </GlassCard>
 
       {/* Conversation Thread */}
-      <div
-        ref={scrollAreaRef}
-        className="flex-1 overflow-y-auto px-4 pb-4 space-y-4"
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <GlassCard blur="ultra" className="p-6 text-center">
-              <p className="text-white/60">Loading conversation...</p>
-            </GlassCard>
-          </div>
-        ) : posts.length > 0 ? (
-          posts.map((post, index) => (
-            <motion.div
-              key={post.thing_id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <RedditPostListItem
-                post={post}
-                brandId={currentProfile.id}
-                prospectId={currentProfile.id || ""}
-                prospectProfileId={currentProfile.id || ""}
-                activeConvoId={currentProfile.active_convo?.id || ""}
-              />
-            </motion.div>
-          ))
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto px-4 pb-4">
+        {activeConversation ? (
+          <RedditConvo
+            conversation={activeConversation}
+            brandId={currentProfile.id || ""}
+            prospectId={currentProfile.id || ""}
+            prospectProfileId={currentProfile.id || ""}
+            isLoading={isLoading}
+          />
         ) : (
           <div className="flex items-center justify-center h-full">
             <GlassCard blur="ultra" className="p-6 text-center">

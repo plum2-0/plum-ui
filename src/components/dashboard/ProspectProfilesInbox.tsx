@@ -213,7 +213,7 @@ export function ProspectProfileCard({
   isSelected,
   onProfileSelect,
 }: ProspectProfileCardProps) {
-  const latestPost = profile.active_convo?.reddit_conversations[0];
+  // const latestPost = profile.active_convos?.reddit_conversations[0];
   const isPending = profile.status === "PENDING";
   const hasSuggested = profile.status === "SUGGESTED_REPLY";
 

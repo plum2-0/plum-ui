@@ -66,30 +66,6 @@ function OnboardingContent() {
     }
   }, [isSubmitting, isGenerating]);
 
-  useEffect(() => {
-    if (status === "loading") return;
-
-    // Load existing data from localStorage
-    const savedData = localStorage.getItem("onboardingData");
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        if (parsedData.websiteUrl) {
-          setWebsiteUrl(parsedData.websiteUrl);
-        }
-        if (parsedData.brandName || parsedData.brandDescription) {
-          setFormData((prev) => ({
-            ...prev,
-            ...parsedData,
-          }));
-          setPhase("details");
-        }
-      } catch (error) {
-        console.error("Failed to parse saved onboarding data:", error);
-      }
-    }
-  }, [status]);
-
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
@@ -305,11 +281,8 @@ function OnboardingContent() {
         }`; // 30 days
       }
 
-      // Clear onboarding data from localStorage since we're done
-      localStorage.removeItem("onboardingData");
-
-      // Redirect to dashboard after successful onboarding
-      router.push("/dashboard");
+      // Force a hard redirect to dashboard which will refresh the session
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Failed to submit onboarding data:", error);
       alert(

@@ -13,14 +13,14 @@ import {
 import { RedditPost } from "@/types/brand";
 import ProspectCard from "./ProspectCard";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { AttractiveText } from "@/components/ui/AttractiveText";
 import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
 import { glassStyles } from "@/lib/styles/glassMorphism";
 import { liquidGradients } from "@/lib/styles/gradients";
+import { RedditPostWithProspect } from "@/app/swipe/page";
 
 interface SwipeableProspectModalProps {
   isOpen: boolean;
-  posts: RedditPost[];
+  posts: RedditPostWithProspect[];
   brandId: string;
   brandName?: string;
   brandDetail?: string;
@@ -56,7 +56,9 @@ export default function SwipeableProspectModal({
     x: number;
     y: number;
   }>({ x: 0, y: 0 });
-  const [exitingPost, setExitingPost] = useState<RedditPost | null>(null);
+  const [exitingPost, setExitingPost] = useState<RedditPostWithProspect | null>(
+    null
+  );
   // Derive background card behavior from exit state instead of a separate flag
 
   // Use the mutation hook
@@ -161,7 +163,7 @@ export default function SwipeableProspectModal({
           brandId: brandId,
           brandName: brandName,
           brandDetail: brandDetail,
-          prospectId: prospectId,
+          prospectId: currentPost.prospect_id,
           problem: problemToSolve,
         },
         {

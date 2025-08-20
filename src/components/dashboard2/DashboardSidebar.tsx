@@ -96,9 +96,14 @@ export default function DashboardSidebar({
         <div className="px-4 py-4 space-y-2 flex-1 overflow-y-auto">
           {/* Prospect Summary */}
           <div className="space-y-2">
-            <button
-              onClick={() => router.push("/dashboard/use-case-summary")}
-              className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+            <div
+              onClick={(e) => {
+                // Only navigate if not clicking the expand button
+                if (!(e.target as HTMLElement).closest('.expand-button')) {
+                  router.push("/dashboard/use-case-summary");
+                }
+              }}
+              className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 cursor-pointer ${
                 pathname === "/dashboard/use-case-summary"
                   ? "text-white"
                   : "text-white/70 hover:text-white"
@@ -153,7 +158,7 @@ export default function DashboardSidebar({
                   e.stopPropagation();
                   setIsUseCasesExpanded(!isUseCasesExpanded);
                 }}
-                className="p-1 hover:bg-white/10 rounded-md transition-colors duration-200"
+                className="expand-button p-1 hover:bg-white/10 rounded-md transition-colors duration-200"
               >
                 <svg
                   className={`w-4 h-4 transition-transform duration-200 ${
@@ -171,7 +176,7 @@ export default function DashboardSidebar({
                   />
                 </svg>
               </button>
-            </button>
+            </div>
 
             {/* Use Cases List (indented with connector) - Collapsible */}
             {isUseCasesExpanded && (

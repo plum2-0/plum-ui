@@ -48,11 +48,21 @@ export function useBrandQuery() {
         throw new Error("User not authenticated");
       }
 
-      // Get brandId from session, fallback to checking if user needs onboarding
-      const brandId = session.user.brandId;
+      // Try to get brandId from cookie first (most immediate after onboarding)
+      let brandId: string | null = null;
+      const cookies = document.cookie.split('; ');
+      const brandIdCookie = cookies.find(cookie => cookie.startsWith('brand_id='));
+      if (brandIdCookie) {
+        brandId = brandIdCookie.split('=')[1];
+      }
+
+      // Fallback to session brandId if cookie not found
+      if (!brandId) {
+        brandId = session.user.brandId || null;
+      }
 
       if (!brandId) {
-        // If no brandId in session, user likely needs onboarding
+        // If no brandId in cookies or session, user likely needs onboarding
         router.push("/onboarding");
         throw new Error("User needs onboarding");
       }

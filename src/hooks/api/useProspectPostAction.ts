@@ -45,6 +45,8 @@ interface ProspectPostActionRequest {
 }
 
 export function useProspectPostAction() {
+  const queryClient = useQueryClient();
+
   return useMutation<boolean, Error, ProspectPostActionParams>({
     mutationFn: async ({
       post,
@@ -104,11 +106,11 @@ export function useProspectPostAction() {
     },
     onSuccess: (data, variables) => {
       // Invalidate relevant queries to refresh data
-      // queryClient.invalidateQueries({ queryKey: ["brand"] });
-      // queryClient.invalidateQueries({ queryKey: ["prospects"] });
-      // queryClient.invalidateQueries({
-      //   queryKey: ["prospect-profiles", variables.brandId],
-      // });
+      queryClient.invalidateQueries({ queryKey: ["brand"] });
+      queryClient.invalidateQueries({ queryKey: ["prospects"] });
+      queryClient.invalidateQueries({
+        queryKey: ["prospect-profiles", variables.brandId],
+      });
     },
     onError: (error) => {
       console.error("Error performing prospect post action:", error);

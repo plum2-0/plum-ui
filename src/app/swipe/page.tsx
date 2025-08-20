@@ -7,27 +7,32 @@ import SwipeableProspectModal from "@/components/dashboard2/SwipeableProspectMod
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import { RedditPost } from "@/types/brand";
 
+// Union type combining RedditPost with prospect_id
+export type RedditPostWithProspect = RedditPost & {
+  prospect_id: string;
+};
+
 export default function SwipePage() {
   useSession();
   const router = useRouter();
   const { data: brandResponse, isLoading, error } = useBrandQuery();
-  const [posts, setPosts] = useState<RedditPost[]>([]);
+  const [posts, setPosts] = useState<RedditPostWithProspect[]>([]);
 
   const brandData = brandResponse?.brand || null;
 
   useEffect(() => {
     if (brandData?.prospects) {
-      // Aggregate all non-ignored posts from all prospects
-      const allPosts = brandData.prospects.flatMap(
-        (prospect) => prospect.sourced_reddit_posts || []
+      // Flatten all posts and attach prospect_id to each post
+      const allPosts: RedditPostWithProspect[] = brandData.prospects.flatMap(
+        (prospect) =>
+          prospect.sourced_reddit_posts
+            .filter((post) => post.status === "PENDING")
+            .map((post) => ({
+              ...post,
+              prospect_id: prospect.id,
+            }))
       );
-      
-      // Filter out ignored posts and only keep pending ones
-      const pendingPosts = allPosts.filter(
-        (post) => post.status === "PENDING"
-      );
-      
-      setPosts(pendingPosts);
+      setPosts(allPosts);
     }
   }, [brandData]);
 
