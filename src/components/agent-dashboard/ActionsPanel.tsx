@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import GlassPanel from "@/components/ui/GlassPanel";
 
 interface CommentSuggestion {
   action_id: string;
@@ -86,7 +87,8 @@ export default function ActionsPanel({
             AI Suggested Replies
           </h2>
           {onRefresh && (
-            <button
+            <GlassPanel
+              as="button"
               onClick={onRefresh}
               disabled={isRefreshing || isFetching}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm text-white transition-all duration-300 ${
@@ -94,11 +96,7 @@ export default function ActionsPanel({
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:scale-105"
               }`}
-              style={{
-                background: "rgba(255, 255, 255, 0.1)",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-              }}
+              variant="light"
             >
               <svg
                 className={`w-4 h-4 ${
@@ -116,7 +114,7 @@ export default function ActionsPanel({
                 />
               </svg>
               {isRefreshing || isFetching ? "Loading..." : "Refresh"}
-            </button>
+            </GlassPanel>
           )}
         </div>
       </div>

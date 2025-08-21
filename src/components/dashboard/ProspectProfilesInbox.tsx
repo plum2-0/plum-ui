@@ -2,10 +2,10 @@
 
 import React, { useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { ProspectProfileCard } from "./ProspectProfileCard";
+
 import {
   useProspectProfilesQuery,
   type ProspectProfile,
@@ -13,7 +13,7 @@ import {
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { MessageCircle, TrendingUp, Archive, CheckCircle } from "lucide-react";
+
 import { LiquidBadge } from "@/components/ui/LiquidBadge";
 
 interface ProspectProfilesInboxProps {
@@ -31,7 +31,7 @@ export function ProspectProfilesInbox({
   const { data: profiles, isLoading, error } = useProspectProfilesQuery();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
-  const [sortType, setSortType] = useState<SortType>("recent");
+  const [sortType] = useState<SortType>("recent");
 
   // Filter and sort profiles
   const filteredProfiles = useMemo(() => {
@@ -100,9 +100,20 @@ export function ProspectProfilesInbox({
   if (error) {
     return (
       <div className="h-full flex items-center justify-center p-8">
-        <GlassCard blur="ultra" className="p-6 text-center">
+        <div
+          className="p-6 text-center rounded-2xl"
+          style={{
+            background:
+              "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
+            boxShadow:
+              "0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+            backdropFilter: "blur(20px) saturate(1.2)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+          }}
+        >
           <p className="text-red-400">Failed to load prospect profiles</p>
-        </GlassCard>
+        </div>
       </div>
     );
   }
@@ -111,7 +122,18 @@ export function ProspectProfilesInbox({
     <div className="h-full flex flex-col bg-gradient-to-b from-black/40 via-black/20 to-transparent overflow-hidden">
       {/* Header Section */}
       <div className="flex-shrink-0 p-4 border-b border-white/10">
-        <GlassCard blur="ultra" className="p-4">
+        <div
+          className="p-4 rounded-2xl"
+          style={{
+            background:
+              "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
+            boxShadow:
+              "0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+            backdropFilter: "blur(20px) saturate(1.2)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+          }}
+        >
           <h2 className="text-xl font-heading font-bold text-white mb-4">
             Prospect Conversations
           </h2>
@@ -136,18 +158,54 @@ export function ProspectProfilesInbox({
                   key={filter}
                   onClick={() => setFilterType(filter)}
                   className={cn(
-                    "px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap",
+                    "px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 transform-gpu whitespace-nowrap",
                     filterType === filter
-                      ? "bg-purple-500/30 text-purple-300 border border-purple-400/50"
-                      : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
+                      ? "text-purple-300"
+                      : "text-white/60 hover:text-white/80"
                   )}
+                  style={{
+                    background:
+                      filterType === filter
+                        ? "linear-gradient(145deg, rgba(168, 85, 247, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%)"
+                        : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+                    border:
+                      filterType === filter
+                        ? "1px solid rgba(168, 85, 247, 0.3)"
+                        : "1px solid rgba(255, 255, 255, 0.12)",
+                    boxShadow:
+                      filterType === filter
+                        ? "0 4px 12px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)"
+                        : "0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+                    transform:
+                      filterType === filter
+                        ? "translateY(-1px)"
+                        : "translateY(0)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (filterType !== filter) {
+                      e.currentTarget.style.background =
+                        "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (filterType !== filter) {
+                      e.currentTarget.style.background =
+                        "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow =
+                        "0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
+                    }
+                  }}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
                 </button>
               )
             )}
           </div>
-        </GlassCard>
+        </div>
       </div>
 
       {/* Profile List */}
@@ -187,11 +245,22 @@ export function ProspectProfilesInbox({
         )}
 
         {!isLoading && filteredProfiles.length === 0 && (
-          <GlassCard blur="ultra" className="p-8 text-center">
+          <div
+            className="p-8 text-center rounded-2xl"
+            style={{
+              background:
+                "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
+              boxShadow:
+                "0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+              backdropFilter: "blur(20px) saturate(1.2)",
+              WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+            }}
+          >
             <p className="text-white/60">
               No prospects found matching your criteria
             </p>
-          </GlassCard>
+          </div>
         )}
       </div>
     </div>

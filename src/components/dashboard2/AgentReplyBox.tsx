@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import GlassPanel from "@/components/ui/GlassPanel";
 import { useRouter } from "next/navigation";
 import type { Agent } from "@/types/agent";
 import type { RedditPost } from "@/types/brand";
@@ -174,15 +175,7 @@ export default function AgentReplyBox({
     : [];
 
   return (
-    <motion.div
-      className="mt-4 p-4 rounded-xl relative"
-      style={{
-        background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(10px)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-      }}
-      layout
-    >
+    <GlassPanel className="mt-4 p-4 rounded-xl relative" variant="light">
       <div className="mb-4">
         {isLoadingAgents ? (
           <div className="flex items-center justify-center py-8">
@@ -533,6 +526,6 @@ export default function AgentReplyBox({
             : "Send Reply"}
         </motion.button>
       </div>
-    </motion.div>
+    </GlassPanel>
   );
 }

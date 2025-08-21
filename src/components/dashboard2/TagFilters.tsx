@@ -1,5 +1,6 @@
 // Tag filtering temporarily disabled until tags are reintroduced
 import FilterTag from "./FilterTag";
+import GlassPanel from "@/components/ui/GlassPanel";
 
 interface TagFiltersProps {
   posts: any[];
@@ -24,12 +25,10 @@ export default function TagFilters({
   const hasActiveFilters = selectedTags.size > 0;
 
   return (
-    <div
+    <GlassPanel
       className="rounded-2xl p-4 mb-6"
+      variant="medium"
       style={{
-        background: "rgba(255, 255, 255, 0.08)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
         boxShadow:
           "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
       }}
@@ -77,6 +76,6 @@ export default function TagFilters({
           Showing posts with any of the selected tags
         </div>
       )}
-    </div>
+    </GlassPanel>
   );
 }

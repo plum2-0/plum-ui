@@ -38,12 +38,12 @@ export default function SwipePage() {
 
   const handleStackCompleted = () => {
     // Navigate back to dashboard when all posts are reviewed
-    router.push("/dashboard");
+    router.push("/dashboard/engage");
   };
 
   const handleClose = () => {
     // Navigate back to dashboard when user closes
-    router.push("/dashboard");
+    router.push("/dashboard/engage");
   };
 
   if (isLoading) {
@@ -82,7 +82,7 @@ export default function SwipePage() {
             No pending posts to review
           </div>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/dashboard/engage")}
             className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
           >
             Back to Dashboard

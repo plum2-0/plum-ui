@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import GlassPanel from "@/components/ui/GlassPanel";
 import { Prospect } from "@/types/brand";
 import GlassPills from "./GlassPills";
 import HeroMetric, { ProspectFunnelData } from "./ProspectTargetsStat";
@@ -17,7 +18,6 @@ export default function OverviewInsights({
   prospects,
   brandId,
   isLoading = false,
-  prospectFunnelData,
 }: OverviewInsightsProps) {
   console.log(JSON.stringify(prospects, null, 2));
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -78,12 +78,10 @@ export default function OverviewInsights({
   ]);
 
   return (
-    <div
+    <GlassPanel
       className="rounded-2xl overflow-hidden"
+      variant="medium"
       style={{
-        background: "rgba(255, 255, 255, 0.08)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
         boxShadow:
           "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
       }}
@@ -322,6 +320,6 @@ export default function OverviewInsights({
           </div>
         </div>
       )}
-    </div>
+    </GlassPanel>
   );
 }

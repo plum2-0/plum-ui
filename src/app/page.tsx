@@ -11,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
-    if (session?.user) redirect("/dashboard");
+    if (session?.user) redirect("/dashboard/engage");
   }, [session, status]);
 
   if (status === "loading") {

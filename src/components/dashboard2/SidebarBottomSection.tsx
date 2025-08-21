@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import GlassPanel from "@/components/ui/GlassPanel";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import InviteTeammateModal from "./InviteTeammateModal";
@@ -35,11 +36,11 @@ export default function SidebarBottomSection() {
     };
 
     if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
 
@@ -50,17 +51,22 @@ export default function SidebarBottomSection() {
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group"
       >
-        <div 
+        <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
           style={{
-            background: "linear-gradient(135deg, rgba(168, 85, 247, 0.6), rgba(34, 197, 94, 0.6))",
+            background:
+              "linear-gradient(135deg, rgba(168, 85, 247, 0.6), rgba(34, 197, 94, 0.6))",
           }}
         >
-          {session?.user?.name?.charAt(0)?.toUpperCase() || session?.user?.email?.charAt(0)?.toUpperCase() || "U"}
+          {session?.user?.name?.charAt(0)?.toUpperCase() ||
+            session?.user?.email?.charAt(0)?.toUpperCase() ||
+            "U"}
         </div>
         <div className="flex-1 min-w-0 text-left">
           <p className="text-white/80 font-body text-sm truncate">
-            {session?.user?.name || session?.user?.email?.split('@')[0] || "User"}
+            {session?.user?.name ||
+              session?.user?.email?.split("@")[0] ||
+              "User"}
           </p>
           <p className="text-white/50 font-body text-xs truncate">
             {session?.user?.email}
@@ -68,7 +74,9 @@ export default function SidebarBottomSection() {
         </div>
         {/* Dropdown Indicator */}
         <svg
-          className={`w-4 h-4 text-white/50 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-white/50 transition-transform duration-200 ${
+            isMenuOpen ? "rotate-180" : ""
+          }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -84,13 +92,13 @@ export default function SidebarBottomSection() {
 
       {/* Popover Menu */}
       {isMenuOpen && (
-        <div 
+        <GlassPanel
           className="absolute bottom-full left-4 right-4 mb-2 rounded-xl overflow-hidden shadow-2xl"
+          variant="medium"
           style={{
             background: "rgba(30, 30, 40, 0.95)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            boxShadow: "0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+            boxShadow:
+              "0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
           }}
         >
           <div className="py-1">
@@ -166,7 +174,7 @@ export default function SidebarBottomSection() {
               <span>Sign Out</span>
             </button>
           </div>
-        </div>
+        </GlassPanel>
       )}
 
       {/* Invite Modal */}

@@ -57,7 +57,7 @@ export default function InviteClient({ token }: { token: string }) {
           } catch {}
           await new Promise((r) => setTimeout(r, 200));
         }
-        router.replace("/dashboard");
+        router.replace("/dashboard/engage");
       } catch (e: any) {
         if (retries > 0) {
           // Small backoff to allow auth session/id to settle
@@ -101,7 +101,7 @@ export default function InviteClient({ token }: { token: string }) {
           <div className="text-red-300 mb-2">{error}</div>
           <button
             className="mt-2 px-4 py-2 rounded bg-purple-600 hover:bg-purple-700"
-            onClick={() => router.replace("/dashboard")}
+            onClick={() => router.replace("/dashboard/engage")}
           >
             Go to Dashboard
           </button>

@@ -29,11 +29,7 @@ export default function SummaryStatsCard({
         background: "rgba(255, 255, 255, 0.04)",
         border: "1px solid rgba(255, 255, 255, 0.08)",
       }
-    : {
-        background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(10px)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-      };
+    : undefined;
 
   const titleSpacing = isSmall ? "mb-1" : "mb-3";
   const chipPadding = isSmall ? "px-2 py-0.5" : "px-3 py-1";

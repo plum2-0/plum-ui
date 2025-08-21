@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import GlassPanel from "@/components/ui/GlassPanel";
 // Tag filtering temporarily disabled until tags are reintroduced
 import FilterTag from "./FilterTag";
 
@@ -47,14 +48,14 @@ export default function TagFiltersDropdown({
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Dropdown Trigger */}
-      <button
+      <GlassPanel
+        as="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
         style={{
           background: hasActiveFilters
             ? "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(147, 51, 234, 0.8))"
             : "rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(10px)",
           border: "1px solid rgba(255, 255, 255, 0.2)",
           boxShadow: hasActiveFilters
             ? "0 4px 12px rgba(168, 85, 247, 0.3)"
@@ -96,16 +97,14 @@ export default function TagFiltersDropdown({
             d="M19 9l-7 7-7-7"
           />
         </svg>
-      </button>
+      </GlassPanel>
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div
+        <GlassPanel
           className="absolute top-full left-0 mt-2 w-80 rounded-xl p-4 z-50"
+          variant="medium"
           style={{
-            background: "rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
             boxShadow:
               "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
           }}
@@ -158,7 +157,7 @@ export default function TagFiltersDropdown({
               </p>
             </div>
           )}
-        </div>
+        </GlassPanel>
       )}
     </div>
   );

@@ -9,6 +9,7 @@ import rehypeSanitize from "rehype-sanitize";
 import type { RedditPost } from "@/types/brand";
 import { useAgentReply } from "@/hooks/useAgentReply";
 import AgentReplyBox from "./AgentReplyBox";
+import GlassPanel from "@/components/ui/GlassPanel";
 
 interface RedditPostListItemProps {
   post: RedditPost;
@@ -421,7 +422,8 @@ export default function RedditPostListItem({
 
               {/* Spacer to push actions to the right */}
               <div className="ml-auto flex items-center gap-3">
-                <button
+                <GlassPanel
+                  as="button"
                   onClick={() => setShowReplyBox(!showReplyBox)}
                   disabled={isSubmittingAction}
                   className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
@@ -429,28 +431,26 @@ export default function RedditPostListItem({
                     background:
                       "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))",
                     color: "white",
-                    backdropFilter: "blur(10px)",
                     border: "1px solid rgba(34, 197, 94, 0.3)",
                     boxShadow: "0 4px 12px rgba(34, 197, 94, 0.2)",
                   }}
                 >
                   {showReplyBox ? "Cancel" : "Reply"}
-                </button>
+                </GlassPanel>
 
-                <button
+                <GlassPanel
+                  as="button"
                   onClick={() => submitPostAction("ignore")}
                   disabled={isSubmittingAction}
                   className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
+                  variant="light"
                   style={{
-                    background: "rgba(255, 255, 255, 0.1)",
                     color: "white",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
                     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                   }}
                 >
                   {isSubmittingAction ? "Processing..." : "Ignore"}
-                </button>
+                </GlassPanel>
               </div>
             </div>
 

@@ -48,7 +48,7 @@ export default function AgentDetailPage() {
     setIsDeleting(true);
     try {
       await deleteAgent.mutateAsync(agentId);
-      router.push("/dashboard");
+      router.push("/dashboard/engage");
     } catch (error) {
       console.error("Failed to delete agent:", error);
       alert("Failed to delete agent. Please try again.");

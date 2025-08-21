@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import GlassPanel from "@/components/ui/GlassPanel";
 import { Prospect, RedditPost } from "@/types/brand";
 import RedditPostListItem from "./RedditPostListItem";
 // import TagFiltersDropdown from "./TagFiltersDropdown"; // TODO: Re-enable when tags are implemented
@@ -39,19 +40,12 @@ export default function RedditEngageSection({
 
   if (!selectedProblem) {
     return (
-      <div
-        className="rounded-2xl p-8 text-center"
-        style={{
-          background: "rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(20px)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-        }}
-      >
+      <GlassPanel className="rounded-2xl p-8 text-center" variant="medium">
         <p className="text-white/80 font-body">
           Select a use case from the sidebar to view Reddit posts and engagement
           options.
         </p>
-      </div>
+      </GlassPanel>
     );
   }
 
@@ -162,12 +156,10 @@ export default function RedditEngageSection({
       {/* Posts List */}
       <div className="space-y-4">
         {visiblePosts.length === 0 ? (
-          <div
+          <GlassPanel
             className="rounded-2xl p-8 text-center"
+            variant="medium"
             style={{
-              background: "rgba(255, 255, 255, 0.08)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
               boxShadow:
                 "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
             }}
@@ -177,7 +169,7 @@ export default function RedditEngageSection({
                 ? "No posts found matching the selected filters."
                 : "No posts found for this use case."}
             </p>
-          </div>
+          </GlassPanel>
         ) : (
           visiblePosts.map((redditPost) => (
             <RedditPostListItem

@@ -7,7 +7,8 @@ import { Prospect } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import UseCaseInsightsPage from "@/components/dashboard2/UseCaseInsightsPage";
 import RedditEngageSection from "@/components/dashboard2/RedditEngageSection";
-import { useAgent, useAgents } from "@/hooks/api/useAgentQueries";
+import CenterDotsDivider from "@/components/ui/CenterDotsDivider";
+
 import {
   useBrandQuery,
   useGenerateUseCaseInsight,
@@ -23,25 +24,17 @@ export default function UseCasePage() {
   const generateInsight = useGenerateUseCaseInsight();
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [loadingUseCaseId, setLoadingUseCaseId] = useState<string | null>(null);
-  const [conversationView, setConversationView] = useState<"all" | "active">(
-    "all"
-  );
-
-  const { data: agentsList, isLoading: isAgentsLoading } = useAgents();
-  const agents = agentsList?.agents || [];
-  const firstAgent = agents?.[0];
-  const { data: agent } = useAgent(firstAgent?.id || "");
 
   const brandData = brandResponse?.brand || null;
 
   // Find the selected use case based on URL parameter
-  const selectedUseCase =
+  const selectedProspectUsecase =
     brandData?.prospects.find((prospect) => prospect.id === useCaseId) || null;
 
   const handleUseCaseSelect = (useCase: Prospect | null) => {
     if (!useCase) {
       // Navigate to summary view
-      router.push("/dashboard");
+      router.push("/dashboard/engage");
     } else {
       // Navigate to specific use case
       router.push(`/dashboard/use-case/${useCase.id}`);
@@ -113,12 +106,13 @@ export default function UseCasePage() {
   }
 
   // If use case not found, redirect to dashboard
-  if (!selectedUseCase) {
+  if (!selectedProspectUsecase) {
     router.push("/dashboard");
     return null;
   }
 
-  const isSelectedUseCaseLoading = loadingUseCaseId === selectedUseCase.id;
+  const isSelectedUseCaseLoading =
+    loadingUseCaseId === selectedProspectUsecase.id;
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -126,7 +120,7 @@ export default function UseCasePage() {
       <DashboardSidebar
         brandName={brandData.name}
         prospects={brandData.prospects}
-        selectedUseCase={selectedUseCase}
+        selectedUseCase={selectedProspectUsecase}
         onUseCaseSelect={handleUseCaseSelect}
         onlyUnread={onlyUnread}
         setOnlyUnread={setOnlyUnread}
@@ -145,10 +139,10 @@ export default function UseCasePage() {
                     Problem
                   </p>
                   <h2 className="text-white/80 font-heading text-2xl font-bold mb-2 tracking-tight">
-                    {selectedUseCase.problem_to_solve}
+                    {selectedProspectUsecase.problem_to_solve}
                   </h2>
                   <p className="text-white/80 font-body text-base leading-relaxed">
-                    {selectedUseCase.insights?.general_summary ||
+                    {selectedProspectUsecase.insights?.general_summary ||
                       `Research insights and Reddit engagement opportunities`}
                   </p>
                 </div>
@@ -159,64 +153,12 @@ export default function UseCasePage() {
 
             {/* Use Case Insights Section (Collapsible) */}
             <UseCaseInsightsPage
-              selectedUseCase={selectedUseCase}
-              brandId={brandData?.id || ""}
-              brandName={brandData?.name}
-              brandDetail={brandData?.detail || undefined}
-              prospectFunnelData={(() => {
-                // Calculate funnel data for this specific prospect
-                const posts = selectedUseCase.sourced_reddit_posts || [];
-                const nonIgnoredPosts = posts.filter(
-                  (p) => p.status !== "IGNORE"
-                );
-                const pendingPosts = nonIgnoredPosts.filter(
-                  (p) => p.status === "PENDING"
-                );
-                const replyPosts = nonIgnoredPosts.filter(
-                  (p) => p.status === "REPLY" || p.status === "SUGGESTED_REPLY"
-                );
-
-                return {
-                  total: nonIgnoredPosts.length,
-                  pending: {
-                    count: pendingPosts.length,
-                    posts: pendingPosts,
-                  },
-                  reply: {
-                    count: replyPosts.length,
-                    posts: replyPosts,
-                  },
-                };
-              })()}
+              selectedUseCase={selectedProspectUsecase}
               isLoading={isSelectedUseCaseLoading}
             />
 
             {/* Visual Separator */}
-            <div className="relative py-4">
-              <div
-                className="h-px"
-                style={{
-                  background:
-                    "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div
-                  className="px-4 py-1 rounded-full"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.05)",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-purple-400/50"></div>
-                    <div className="w-1 h-1 rounded-full bg-emerald-400/50"></div>
-                    <div className="w-1 h-1 rounded-full bg-indigo-400/50"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <CenterDotsDivider />
 
             {/* Reddit Engagement / Active Conversations - Enhanced Container */}
             <div
@@ -231,7 +173,7 @@ export default function UseCasePage() {
             >
               <div className="p-6 h-full overflow-y-auto">
                 <RedditEngageSection
-                  selectedProblem={selectedUseCase}
+                  selectedProblem={selectedProspectUsecase}
                   brandId={brandData?.id}
                 />
               </div>

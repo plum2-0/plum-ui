@@ -229,7 +229,7 @@ export default function SwipeableProspectModal({
               ? "flex items-center justify-center min-h-screen p-4"
               : "fixed inset-0 z-50 flex items-center justify-center p-4"
           }
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/dashboard/engage")}
         >
           {/* Backdrop with enhanced liquid blur - only show if not standalone */}
           {!standalone && (

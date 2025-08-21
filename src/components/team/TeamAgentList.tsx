@@ -11,6 +11,7 @@ import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import { useRouter } from "next/navigation";
 import AgentModal from "./AgentModal";
 import Image from "next/image";
+import GlassPanel from "@/components/ui/GlassPanel";
 
 interface TeamAgentListProps {
   onAgentSelect?: (agentId: string) => void;
@@ -136,14 +137,10 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
       {/* Scroll Buttons */}
       {agents.length > 3 && (
         <>
-          <button
+          <GlassPanel
             onClick={() => handleScroll("left")}
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
-            style={{
-              background: "rgba(255, 255, 255, 0.1)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-            }}
+            variant="light"
           >
             <svg
               className="w-5 h-5 text-white"
@@ -158,15 +155,11 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-          </button>
-          <button
+          </GlassPanel>
+          <GlassPanel
             onClick={() => handleScroll("right")}
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
-            style={{
-              background: "rgba(255, 255, 255, 0.1)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-            }}
+            variant="light"
           >
             <svg
               className="w-5 h-5 text-white"
@@ -181,7 +174,7 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </button>
+          </GlassPanel>
         </>
       )}
 
@@ -225,15 +218,14 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               )}
               {hoveredAgent === agent.id && (
-                <button
+                <GlassPanel
+                  as="button"
                   className="delete-button p-1 rounded-full transition-all duration-200 hover:scale-110"
-                  onClick={(e) => handleDeleteAgent(agent.id, agent.name, e)}
+                  onClick={(e: any) =>
+                    handleDeleteAgent(agent.id, agent.name, e)
+                  }
                   disabled={deletingAgentId === agent.id}
-                  style={{
-                    background: "rgba(239, 68, 68, 0.2)",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(239, 68, 68, 0.3)",
-                  }}
+                  variant="light"
                 >
                   {deletingAgentId === agent.id ? (
                     <svg
@@ -270,7 +262,7 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
                       />
                     </svg>
                   )}
-                </button>
+                </GlassPanel>
               )}
             </div>
 

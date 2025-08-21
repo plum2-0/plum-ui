@@ -7,6 +7,7 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { RedditConvo, RedditThreadNode, RedditAction } from "@/types/agent";
+import GlassPanel from "@/components/ui/GlassPanel";
 import { getBrandIdFromCookie } from "@/lib/cookies";
 
 interface RedditAgentThreadProps {
@@ -710,7 +711,8 @@ export default function RedditAgentThread({
 
                             {/* Actions */}
                             <div className="mt-3 flex items-center justify-end gap-2">
-                              <button
+                              <GlassPanel
+                                as="button"
                                 disabled={!!isUpdatingAction}
                                 onClick={() =>
                                   a.actionId &&
@@ -721,34 +723,35 @@ export default function RedditAgentThread({
                                   background:
                                     "linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.8))",
                                   color: "white",
-                                  backdropFilter: "blur(10px)",
                                   border: "1px solid rgba(34, 197, 94, 0.3)",
-                                  boxShadow: "0 4px 12px rgba(34, 197, 94, 0.2)",
+                                  boxShadow:
+                                    "0 4px 12px rgba(34, 197, 94, 0.2)",
                                 }}
                               >
                                 {isUpdatingAction === a.actionId
                                   ? "..."
                                   : "Accept"}
-                              </button>
-                              <button
+                              </GlassPanel>
+                              <GlassPanel
+                                as="button"
                                 disabled={!!isUpdatingAction}
                                 onClick={() =>
                                   a.actionId &&
                                   updateActionStatus(a.actionId, "dismissed")
                                 }
                                 className="px-3 py-1 rounded-xl text-xs font-body font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                                background="white-10"
+                                blur={10}
+                                border="thin-20"
                                 style={{
-                                  background: "rgba(255, 255, 255, 0.1)",
                                   color: "white",
-                                  backdropFilter: "blur(10px)",
-                                  border: "1px solid rgba(255, 255, 255, 0.2)",
                                   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                                 }}
                               >
                                 {isUpdatingAction === a.actionId
                                   ? "..."
                                   : "Cancel"}
-                              </button>
+                              </GlassPanel>
                             </div>
                           </div>
                         ))}

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import GlassPanel from "@/components/ui/GlassPanel";
 import { Prospect } from "@/types/brand";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import SidebarBottomSection from "./SidebarBottomSection";
@@ -13,6 +14,7 @@ interface DashboardSidebarProps {
   onlyUnread?: boolean;
   setOnlyUnread?: (value: boolean) => void;
   onAddUseCase?: (title: string) => Promise<void> | void;
+  inlineSelection?: boolean; // New prop to disable navigation
 }
 
 export default function DashboardSidebar({
@@ -23,11 +25,11 @@ export default function DashboardSidebar({
   onlyUnread = false,
   setOnlyUnread,
   onAddUseCase,
+  inlineSelection = false,
 }: DashboardSidebarProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUseCasesExpanded, setIsUseCasesExpanded] = useState(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -64,12 +66,16 @@ export default function DashboardSidebar({
   };
 
   const sidebarContent = (
-    <aside
+    <GlassPanel
+      as="aside"
       className="h-full flex flex-col w-full md:w-64"
+      variant="light"
       style={{
-        background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(20px)",
-        borderRight: "1px solid rgba(255, 255, 255, 0.1)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.15)",
+        background:
+          "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
+        boxShadow:
+          "0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
       }}
     >
       <div className="flex flex-col h-full">
@@ -79,9 +85,12 @@ export default function DashboardSidebar({
             <div
               className="p-2 rounded-xl"
               style={{
-                background: "rgba(255, 255, 255, 0.08)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
+                background:
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.06) 100%)",
+                backdropFilter: "blur(20px) saturate(1.2)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                boxShadow:
+                  "0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
               }}
             >
               <PlumSproutLogo className="w-5 h-5" />
@@ -96,44 +105,63 @@ export default function DashboardSidebar({
         <div className="px-4 py-4 space-y-2 flex-1 overflow-y-auto">
           {/* Prospect Summary */}
           <div className="space-y-2">
-            <div
-              onClick={(e) => {
-                // Only navigate if not clicking the expand button
-                if (!(e.target as HTMLElement).closest('.expand-button')) {
-                  router.push("/dashboard/use-case-summary");
-                }
-              }}
-              className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                pathname === "/dashboard/use-case-summary"
+            <button
+              onClick={() => router.push("/dashboard/discover")}
+              className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 transform-gpu ${
+                pathname === "/dashboard/discover"
                   ? "text-white"
                   : "text-white/70 hover:text-white"
-              } ${
-                pathname === "/dashboard/use-case-summary" ? "shadow-lg" : ""
               }`}
               style={{
                 background:
-                  pathname === "/dashboard/use-case-summary"
-                    ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%)"
-                    : "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(20px)",
+                  pathname === "/dashboard/discover"
+                    ? "linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(34, 197, 94, 0.12) 50%, rgba(168, 85, 247, 0.08) 100%)"
+                    : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+                backdropFilter: "blur(20px) saturate(1.2)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.2)",
                 border:
-                  pathname === "/dashboard/use-case-summary"
-                    ? "1px solid rgba(168, 85, 247, 0.3)"
-                    : "1px solid rgba(255, 255, 255, 0.1)",
+                  pathname === "/dashboard/discover"
+                    ? "1px solid rgba(168, 85, 247, 0.2)"
+                    : "1px solid rgba(255, 255, 255, 0.12)",
                 boxShadow:
-                  pathname === "/dashboard/use-case-summary"
-                    ? "0 8px 32px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
-                    : "none",
+                  pathname === "/dashboard/discover"
+                    ? "0 8px 32px rgba(168, 85, 247, 0.15), 0 4px 16px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.1)"
+                    : "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+                transform:
+                  pathname === "/dashboard/discover"
+                    ? "translateY(-1px)"
+                    : "translateY(0)",
               }}
               onMouseEnter={(e) => {
-                if (pathname !== "/dashboard/use-case-summary") {
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                if (pathname !== "/dashboard/discover") {
+                  e.currentTarget.style.background =
+                    "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
                 }
               }}
               onMouseLeave={(e) => {
-                if (pathname !== "/dashboard/use-case-summary") {
+                if (pathname !== "/dashboard/discover") {
                   e.currentTarget.style.background =
-                    "rgba(255, 255, 255, 0.05)";
+                    "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
+                }
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = "translateY(1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
+              }}
+              onMouseUp={(e) => {
+                if (pathname !== "/dashboard/discover") {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
+                } else {
+                  e.currentTarget.style.transform = "translateY(-1px)";
                 }
               }}
             >
@@ -153,196 +181,69 @@ export default function DashboardSidebar({
               <span className="flex-1 text-left font-heading font-bold tracking-wide">
                 Discover
               </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsUseCasesExpanded(!isUseCasesExpanded);
-                }}
-                className="expand-button p-1 hover:bg-white/10 rounded-md transition-colors duration-200"
-              >
-                <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${
-                    isUseCasesExpanded ? "rotate-90" : "rotate-0"
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
+            </button>
+
+            {/* Use Cases List (indented with connector) */}
+            <div className="space-y-1 ml-2 pl-3 border-l border-white/10">
+              {/* Add Use Case Button */}
             </div>
-
-            {/* Use Cases List (indented with connector) - Collapsible */}
-            {isUseCasesExpanded && (
-              <div
-                className="space-y-1 ml-2 pl-3 border-l border-white/10 transition-all duration-300 ease-in-out"
-                style={{
-                  animation: isUseCasesExpanded
-                    ? "slideDown 0.3s ease-out"
-                    : "slideUp 0.3s ease-out",
-                }}
-              >
-                {prospects.map((prospect) => (
-                  <div key={prospect.id} className="relative">
-                    <button
-                      onClick={() => onUseCaseSelect?.(prospect)}
-                      className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
-                        selectedUseCase?.id === prospect.id
-                          ? "text-white"
-                          : "text-white/70 hover:text-white"
-                      }`}
-                      style={{
-                        background:
-                          selectedUseCase?.id === prospect.id
-                            ? "rgba(168, 85, 247, 0.15)"
-                            : "rgba(255, 255, 255, 0.05)",
-                        backdropFilter: "blur(10px)",
-                        border: `1px solid ${
-                          selectedUseCase?.id === prospect.id
-                            ? "rgba(168, 85, 247, 0.3)"
-                            : "rgba(255, 255, 255, 0.1)"
-                        }`,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (selectedUseCase?.id !== prospect.id) {
-                          e.currentTarget.style.background =
-                            "rgba(255, 255, 255, 0.1)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (selectedUseCase?.id !== prospect.id) {
-                          e.currentTarget.style.background =
-                            "rgba(255, 255, 255, 0.05)";
-                        }
-                      }}
-                    >
-                      <span className="flex-1 text-left font-body text-xs">
-                        {prospect?.problem_to_solve}
-                      </span>
-                    </button>
-                  </div>
-                ))}
-
-                {/* Add Use Case Button */}
-                {!isAdding ? (
-                  <button
-                    className="w-full flex items-center gap-2 p-2 text-white/60 hover:text-white rounded-lg transition-all duration-300"
-                    style={{
-                      background: "rgba(61, 49, 49, 0.05)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255, 255, 255, 0.1)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255, 255, 255, 0.05)";
-                    }}
-                    onClick={() => setIsAdding(true)}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    <span className="font-body text-xs">
-                      Add Research Topic
-                    </span>
-                  </button>
-                ) : (
-                  <div
-                    className="w-full flex items-center gap-2 p-2 rounded-lg transition-all duration-300"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.06)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(255, 255, 255, 0.15)",
-                    }}
-                  >
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      onBlur={() => void submitNewUseCase()}
-                      disabled={isSubmitting}
-                      placeholder="Describe a problem you want to validate"
-                      className="flex-1 bg-transparent outline-none text-white placeholder-white/40 font-body text-xs"
-                    />
-                    {isSubmitting && (
-                      <svg
-                        className="w-4 h-4 animate-spin text-white/70"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                        ></path>
-                      </svg>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Select Section - Between Discover and Engaged */}
           <button
             onClick={() => router.push("/swipe")}
-            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 transform-gpu ${
               pathname === "/swipe"
                 ? "text-white"
                 : "text-white/70 hover:text-white"
-            } ${pathname === "/swipe" ? "shadow-lg" : ""}`}
+            }`}
             style={{
               background:
                 pathname === "/swipe"
-                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%)"
-                  : "rgba(255, 255, 255, 0.05)",
-              backdropFilter: "blur(20px)",
+                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(34, 197, 94, 0.12) 50%, rgba(168, 85, 247, 0.08) 100%)"
+                  : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+              backdropFilter: "blur(20px) saturate(1.2)",
+              WebkitBackdropFilter: "blur(20px) saturate(1.2)",
               border:
                 pathname === "/swipe"
-                  ? "1px solid rgba(168, 85, 247, 0.3)"
-                  : "1px solid rgba(255, 255, 255, 0.1)",
+                  ? "1px solid rgba(168, 85, 247, 0.2)"
+                  : "1px solid rgba(255, 255, 255, 0.12)",
               boxShadow:
                 pathname === "/swipe"
-                  ? "0 8px 32px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
-                  : "none",
+                  ? "0 8px 32px rgba(168, 85, 247, 0.15), 0 4px 16px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.1)"
+                  : "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+              transform:
+                pathname === "/swipe" ? "translateY(-1px)" : "translateY(0)",
             }}
             onMouseEnter={(e) => {
               if (pathname !== "/swipe") {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
               }
             }}
             onMouseLeave={(e) => {
               if (pathname !== "/swipe") {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
+              }
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = "translateY(1px)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
+            }}
+            onMouseUp={(e) => {
+              if (pathname !== "/swipe") {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
+              } else {
+                e.currentTarget.style.transform = "translateY(-1px)";
               }
             }}
           >
@@ -366,35 +267,62 @@ export default function DashboardSidebar({
 
           {/* Engaged Section - Right underneath Select */}
           <button
-            onClick={() => router.push("/dashboard")}
-            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
-              pathname === "/dashboard"
+            onClick={() => router.push("/dashboard/engage")}
+            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 transform-gpu ${
+              pathname === "/dashboard/engage"
                 ? "text-white"
                 : "text-white/70 hover:text-white"
-            } ${pathname === "/dashboard" ? "shadow-lg" : ""}`}
+            }`}
             style={{
               background:
-                pathname === "/dashboard"
-                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(34, 197, 94, 0.15) 100%)"
-                  : "rgba(255, 255, 255, 0.05)",
-              backdropFilter: "blur(20px)",
+                pathname === "/dashboard/engage"
+                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(34, 197, 94, 0.12) 50%, rgba(168, 85, 247, 0.08) 100%)"
+                  : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+              backdropFilter: "blur(20px) saturate(1.2)",
+              WebkitBackdropFilter: "blur(20px) saturate(1.2)",
               border:
-                pathname === "/dashboard"
-                  ? "1px solid rgba(168, 85, 247, 0.3)"
-                  : "1px solid rgba(255, 255, 255, 0.1)",
+                pathname === "/dashboard/engage"
+                  ? "1px solid rgba(168, 85, 247, 0.2)"
+                  : "1px solid rgba(255, 255, 255, 0.12)",
               boxShadow:
-                pathname === "/dashboard"
-                  ? "0 8px 32px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
-                  : "none",
+                pathname === "/dashboard/engage"
+                  ? "0 8px 32px rgba(168, 85, 247, 0.15), 0 4px 16px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.1)"
+                  : "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+              transform:
+                pathname === "/dashboard/engage"
+                  ? "translateY(-1px)"
+                  : "translateY(0)",
             }}
             onMouseEnter={(e) => {
-              if (pathname !== "/dashboard") {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+              if (pathname !== "/dashboard/engage") {
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
               }
             }}
             onMouseLeave={(e) => {
-              if (pathname !== "/dashboard") {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              if (pathname !== "/dashboard/engage") {
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
+              }
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = "translateY(1px)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
+            }}
+            onMouseUp={(e) => {
+              if (pathname !== "/dashboard/engage") {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
+              } else {
+                e.currentTarget.style.transform = "translateY(-1px)";
               }
             }}
           >
@@ -422,7 +350,7 @@ export default function DashboardSidebar({
 
         <SidebarBottomSection />
       </div>
-    </aside>
+    </GlassPanel>
   );
 
   return <MobileSidebarWrapper>{sidebarContent}</MobileSidebarWrapper>;

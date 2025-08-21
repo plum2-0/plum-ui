@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import GlassPanel from "@/components/ui/GlassPanel";
 import { useRouter } from "next/navigation";
 import { AgentDetails, RedditConvo } from "@/types/agent";
 import RedditAgentThread from "@/components/team/RedditAgentThread";
@@ -108,13 +109,12 @@ export default function AgentConversationDetail({
 
       {/* Agent Header */}
       <h2 className="text-xl font-heading font-bold text-white">My Agent</h2>
-      <div
+      <GlassPanel
         className="rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:bg-white/5 hover:border-purple-300/30 hover:scale-[1.02]"
+        variant="medium"
         style={{
           background:
             "linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(34, 197, 94, 0.1))",
-          backdropFilter: "blur(20px)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
         }}
         onClick={() => {
@@ -177,7 +177,7 @@ export default function AgentConversationDetail({
             </div>
           </div>
         </div>
-      </div>
+      </GlassPanel>
 
       {/* Metrics Dashboard */}
       {metrics && (
@@ -263,12 +263,7 @@ export default function AgentConversationDetail({
           {/* Filters and Sort */}
           <div className="flex items-center gap-3">
             {/* Filter Tabs */}
-            <div
-              className="flex items-center gap-1 p-1 rounded-lg"
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-              }}
-            >
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5">
               {(
                 ["all", "engaged", "monitoring", "archived"] as FilterType[]
               ).map((filter) => (
@@ -307,18 +302,14 @@ export default function AgentConversationDetail({
         {/* Conversations List */}
         <div className="space-y-4">
           {sortedConversations.length === 0 ? (
-            <div
+            <GlassPanel
               className="rounded-2xl p-8 text-center"
-              style={{
-                background: "rgba(255, 255, 255, 0.08)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-              }}
+              variant="medium"
             >
               <p className="text-white/60 font-body">
                 No conversations found for this agent yet.
               </p>
-            </div>
+            </GlassPanel>
           ) : (
             sortedConversations.map((convo: RedditConvo, idx: number) => (
               <RedditAgentThread
