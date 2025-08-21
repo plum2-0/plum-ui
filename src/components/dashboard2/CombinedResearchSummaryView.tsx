@@ -5,6 +5,7 @@ import { Prospect, Brand } from "@/types/brand";
 import OverviewInsights from "./OverviewInsights";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { RedditPostCard } from "../reddit/RedditPostCard";
+import RedditPostListItem from "./RedditProspectConvoItem";
 
 interface CombinedResearchSummaryViewProps {
   prospects: Prospect[];
@@ -21,7 +22,6 @@ export default function CombinedResearchSummaryView({
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "prospect">("date");
 
-
   // Aggregate all posts from all prospects
   const allPosts = useMemo(() => {
     const posts = prospects.flatMap((prospect) =>
@@ -32,17 +32,29 @@ export default function CombinedResearchSummaryView({
       }))
     );
 
+    // Deduplicate based on thing_id
+    const seenThingIds = new Set();
+    const deduplicatedPosts = posts.filter((post) => {
+      if (seenThingIds.has(post.thing_id)) {
+        return false;
+      }
+      seenThingIds.add(post.thing_id);
+      return true;
+    });
+
     // Sort posts
     if (sortBy === "date") {
-      posts.sort(
+      deduplicatedPosts.sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     } else {
-      posts.sort((a, b) => a.prospectName.localeCompare(b.prospectName));
+      deduplicatedPosts.sort((a, b) =>
+        a.prospectName.localeCompare(b.prospectName)
+      );
     }
 
-    return posts;
+    return deduplicatedPosts;
   }, [prospects, sortBy]);
 
   // Filter posts
@@ -59,6 +71,8 @@ export default function CombinedResearchSummaryView({
 
     return posts;
   }, [allPosts, filterProspect, filterStatus]);
+
+  console.log("📌 filteredPosts", filteredPosts);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -93,10 +107,7 @@ export default function CombinedResearchSummaryView({
         <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
         {/* Overview Insights Component */}
-        <OverviewInsights
-          prospects={prospects}
-          brandId={brandId}
-        />
+        <OverviewInsights prospects={prospects} brandId={brandId} />
       </div>
 
       {/* Large Divider Between Sections */}
@@ -189,6 +200,20 @@ export default function CombinedResearchSummaryView({
 
         <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
+        {/* Posts List */}
+        <div className="space-y-4">
+          {filteredPosts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-white/50 font-body text-base">
+                No posts found matching your filters.
+              </p>
+            </div>
+          ) : (
+            filteredPosts.map((post) => (
+              <RedditPostListItem key={post.thing_id} post={post} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
