@@ -1,168 +1,277 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Brand, Prospect } from "@/types/brand";
+import { Brand } from "@/types/brand";
 
-export const BRAND_QUERY_KEY = ["brand"] as const;
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Error types for better error handling
+class BrandQueryError extends Error {
+  constructor(
+    message: string,
+    public statusCode?: number,
+    public needsOnboarding?: boolean
+  ) {
+    super(message);
+    this.name = "BrandQueryError";
+  }
+}
 
+// Modern query keys pattern with proper typing
+export const BRAND_QUERY_KEYS = {
+  all: ["brand"] as const,
+  details: () => [...BRAND_QUERY_KEYS.all, "detail"] as const,
+  detail: (brandId: string) =>
+    [...BRAND_QUERY_KEYS.details(), brandId] as const,
+} as const;
+
+// Utility function to extract brand ID from multiple sources
+function getBrandId(session: any): string | null {
+  // Try to get brandId from cookie first (most immediate after onboarding)
+  if (typeof window !== "undefined") {
+    const cookies = document.cookie.split("; ");
+    const brandIdCookie = cookies.find((cookie) =>
+      cookie.startsWith("brand_id=")
+    );
+    if (brandIdCookie) {
+      return brandIdCookie.split("=")[1];
+    }
+  }
+
+  // Fallback to session brandId if cookie not found
+  return session?.user?.brandId || null;
+}
+
+// API function for fetching brand data
+async function fetchBrandData(brandId: string): Promise<Brand> {
+  const response = await fetch(`${API_BASE_URL}/api/brand/${brandId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Plum-UI/1.0",
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Backend API error:", errorText);
+
+    if (response.status === 404) {
+      throw new BrandQueryError("User needs onboarding", 404, true);
+    }
+
+    throw new BrandQueryError(
+      `Failed to fetch brand data: ${errorText}`,
+      response.status
+    );
+  }
+
+  const brandData = await response.json();
+  return brandData;
+}
+
+// Main hook with modern TanStack Query patterns
 export function useBrandQuery() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const brandId = getBrandId(session);
 
-  return useQuery<{
-    brand: Brand;
-  }>({
-    queryKey: BRAND_QUERY_KEY,
-    queryFn: async () => {
+  return useQuery({
+    // Include brandId in query key for better cache isolation
+    queryKey: brandId ? BRAND_QUERY_KEYS.detail(brandId) : BRAND_QUERY_KEYS.all,
+    queryFn: async (): Promise<{ brand: Brand }> => {
       // Check if user is authenticated
       if (!session?.user?.id) {
-        throw new Error("User not authenticated");
-      }
-
-      // Try to get brandId from cookie first (most immediate after onboarding)
-      let brandId: string | null = null;
-      const cookies = document.cookie.split('; ');
-      const brandIdCookie = cookies.find(cookie => cookie.startsWith('brand_id='));
-      if (brandIdCookie) {
-        brandId = brandIdCookie.split('=')[1];
-      }
-
-      // Fallback to session brandId if cookie not found
-      if (!brandId) {
-        brandId = session.user.brandId || null;
+        throw new BrandQueryError("User not authenticated");
       }
 
       if (!brandId) {
         // If no brandId in cookies or session, user likely needs onboarding
         router.push("/onboarding");
-        throw new Error("User needs onboarding");
+        throw new BrandQueryError("User needs onboarding", undefined, true);
       }
 
-      // Call Python API directly
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${backendUrl}/api/brand/${brandId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "Plum-UI/1.0",
-        },
-      });
+      const brandData = await fetchBrandData(brandId);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Backend API error:", errorText);
-
-        if (response.status === 404) {
-          router.push("/onboarding");
-          throw new Error("User needs onboarding");
-        }
-
-        throw new Error(`Failed to fetch brand data: ${errorText}`);
-      }
-
-      const brandData = await response.json();
-
-      // The Python API now returns the brand data directly, not wrapped in a response object
       return {
         brand: brandData,
       };
     },
-    // Only run query when session is loaded and user is authenticated
-    enabled: status !== "loading" && !!session?.user?.id,
-    // Cache persists indefinitely - only mutations will invalidate
+    // Only run query when session is loaded, user is authenticated, and brandId exists
+    enabled: status !== "loading" && !!session?.user?.id && !!brandId,
+    // Modern cache settings
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (replaces cacheTime in v5)
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchOnMount: true,
     retry: (failureCount, error) => {
       // Don't retry if user needs onboarding or is not authenticated
+      if (error instanceof BrandQueryError && error.needsOnboarding) {
+        return false;
+      }
       if (
-        error.message === "User needs onboarding" ||
+        error instanceof BrandQueryError &&
         error.message === "User not authenticated"
       ) {
         return false;
       }
       return failureCount < 3;
     },
+    // Modern error handling
+    throwOnError: false, // Let the component handle errors gracefully
+    // Add network mode for better offline handling
+    networkMode: "online",
   });
+}
+
+// Types for mutation parameters
+interface GenerateUseCaseInsightParams {
+  brandId: string;
+  title: string;
+}
+
+// API function for generating use case insights
+async function generateUseCaseInsight({
+  brandId,
+  title,
+}: GenerateUseCaseInsightParams) {
+  const query = encodeURIComponent(title);
+  const url = `${API_BASE_URL}/api/brand/${brandId}/insight?problem=${query}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "User-Agent": "plum-ui",
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new BrandQueryError(
+      `Failed to generate insight: ${text}`,
+      response.status
+    );
+  }
+
+  return response.json();
 }
 
 export function useGenerateUseCaseInsight() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      brandId,
-      title,
-    }: {
-      brandId: string;
-      title: string;
-    }) => {
-      const query = encodeURIComponent(title);
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/brand/${brandId}/insight?problem=${query}`;
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: { "User-Agent": "plum-ui" },
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(
-          `Failed to generate insight: ${response.status} ${text}`
-        );
-      }
-
-      // After generating insight, refetch brand data to get updated use cases
-      await queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEY });
-
-      return response.json();
-    },
+    mutationFn: generateUseCaseInsight,
     onSuccess: () => {
       // Invalidate and refetch brand data after successful generation
-      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+    },
+    onError: (error) => {
+      console.error("Failed to generate use case insight:", error);
     },
   });
+}
+
+// Types for fetch new posts mutation
+interface FetchNewPostsParams {
+  brandId: string;
+  problemId: string;
+}
+
+interface FetchNewPostsResponse {
+  status: string;
+  [key: string]: any;
+}
+
+// API function for fetching new posts
+async function fetchNewPosts({
+  brandId,
+  problemId,
+}: FetchNewPostsParams): Promise<FetchNewPostsResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/brand/${brandId}/new/posts?problem_id=${problemId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Plum-UI/1.0",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new BrandQueryError(
+      `Failed to fetch new posts: ${response.statusText}`,
+      response.status
+    );
+  }
+
+  const result = await response.json();
+
+  if (result.status !== "completed") {
+    throw new BrandQueryError("Failed to complete new posts fetch");
+  }
+
+  return result;
 }
 
 export function useFetchNewPosts() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      brandId,
-      problemId,
-    }: {
-      brandId: string;
-      problemId: string;
-    }) => {
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(
-        `${backendUrl}/api/brand/${brandId}/new/posts?problem_id=${problemId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": "Plum-UI/1.0",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch new posts: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      if (result.status !== "completed") {
-        throw new Error("Failed to complete new posts fetch");
-      }
-
-      return result;
+    mutationFn: fetchNewPosts,
+    onSuccess: () => {
+      // Invalidate relevant queries after successful fetch
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
     },
     onError: (error) => {
       console.error("Error fetching new posts:", error);
-      alert(`Failed to fetch new posts: ${error.message}`);
+      // Better user experience - don't use alert, let the component handle the error
     },
   });
+}
+
+// Additional helper hooks for better developer experience
+
+/**
+ * Hook to invalidate brand queries manually
+ */
+export function useInvalidateBrandQuery() {
+  const queryClient = useQueryClient();
+
+  return () => {
+    queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+  };
+}
+
+/**
+ * Hook to get cached brand data without triggering a fetch
+ */
+export function useCachedBrandData() {
+  const queryClient = useQueryClient();
+
+  return queryClient.getQueryData(BRAND_QUERY_KEYS.all) as
+    | { brand: Brand }
+    | undefined;
+}
+
+/**
+ * Hook to prefetch brand data
+ */
+export function usePrefetchBrandData() {
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+
+  return (brandId?: string) => {
+    const id = brandId || getBrandId(session);
+    if (!id) return;
+
+    queryClient.prefetchQuery({
+      queryKey: BRAND_QUERY_KEYS.detail(id),
+      queryFn: () => fetchBrandData(id).then((brand) => ({ brand })),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
 }
