@@ -2,82 +2,87 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion } from "framer-motion";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { useRouter } from "next/navigation";
-import type { Agent } from "@/types/agent";
 import type { RedditPost } from "@/types/brand";
-import { useGenerateAgent } from "@/hooks/api/useAgentQueries";
-import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import { useProspectConvoReply } from "@/hooks/api/useProspectConvoReply";
+import { useAgentReply } from "@/hooks/useAgentReply";
 import GenerateFirstAgent from "@/components/dashboard2/GenerateFirstAgent";
+import { useBrand } from "@/contexts/BrandContext";
+import { useProfile } from "@/contexts/ProfileContext";
 
 type AgentReplyBoxProps = {
-  agents: Agent[];
-  isLoadingAgents: boolean;
-  isGenerating: boolean;
-  selectedAgentId: string | null;
-  setSelectedAgentId: (id: string | null) => void;
-  lastUsedAgentId: string | null;
-  onGenerateWithAgent: (agentId?: string) => Promise<void>;
-  onRegenerate: () => Promise<void>;
   customReply: string;
   setCustomReply: (value: string) => void;
   replySent: boolean;
   post: RedditPost;
-  // Props for prospect conversation reply (optional for backward compatibility)
-  prospectProfileId?: string;
-  activeConvoId?: string;
-  brandId?: string; // Optional because we can get it from useBrandQuery
 };
 
 export default function AgentReplyBox({
-  agents,
-  isLoadingAgents,
-  isGenerating,
-  selectedAgentId,
-  setSelectedAgentId,
-  lastUsedAgentId,
-  onGenerateWithAgent,
-  onRegenerate,
   customReply,
   setCustomReply,
   replySent,
   post,
-  prospectProfileId,
-  activeConvoId,
-  brandId,
 }: AgentReplyBoxProps) {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { data: brandData } = useBrandQuery();
-  const generateAgent = useGenerateAgent();
-  const prospectConvoReplyMutation = useProspectConvoReply();
-  const [isGeneratingAgent, setIsGeneratingAgent] = useState(false);
+  const { brand: brandData } = useBrand();
+  const { activeConvoId, prospectProfileId } = useProfile();
+  const replyConvo = useProspectConvoReply();
   const [isCheckingReddit, setIsCheckingReddit] = useState(false);
+  console.log("activeConvoId", activeConvoId);
+  console.log("prospectProfileId", prospectProfileId);
+
+  // Use the agent reply hook
+  const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
+    useAgentReply(brandData?.id || "");
+
+  // Get the single agent (first one)
+  const agent = agents[0] || null;
 
   // Storage key for draft state
   const draftKey = `reddit-reply-draft-${post.thing_id}`;
 
-  const handleGenerateAgent = async () => {
-    if (!brandData?.brand?.id) {
-      alert("Brand ID not found. Please refresh and try again.");
-      return;
-    }
-
-    setIsGeneratingAgent(true);
+  const handleGenerateWithAgent = async () => {
+    if (!agent) return;
     try {
-      await generateAgent.mutateAsync(brandData.brand.id);
+      const result = await generateWithAgent(agent.id, post, {
+        autoReply: true,
+      });
+      if (result.content) {
+        setCustomReply(result.content);
+      }
     } catch (error) {
-      console.error("Failed to generate agent:", error);
-      alert("Failed to generate agent. Please try again.");
-    } finally {
-      setIsGeneratingAgent(false);
+      console.error("Error generating reply with agent:", error);
+      alert("Failed to generate reply. Please try again.");
+    }
+  };
+
+  // Auto-generate reply when component renders and we have an agent
+  useEffect(() => {
+    if (agent && !customReply) {
+      handleGenerateWithAgent();
+    }
+  }, [agent]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRegenerate = async () => {
+    if (!agent) return;
+    try {
+      const result = await generateWithAgent(agent.id, post, {
+        autoReply: true,
+      });
+      if (result.content) {
+        setCustomReply(result.content);
+      }
+    } catch (error) {
+      console.error("Error regenerating reply with agent:", error);
+      alert("Failed to regenerate reply.");
     }
   };
 
   // Check if submission is in progress
-  const isSubmittingAction = prospectConvoReplyMutation.isPending;
+  const isSubmittingAction = replyConvo.isPending;
 
   // Handle reply submission with Reddit auth check
   const handleSendReply = async () => {
@@ -90,7 +95,6 @@ export default function AgentReplyBox({
         draftKey,
         JSON.stringify({
           reply: customReply,
-          agentId: selectedAgentId,
           timestamp: Date.now(),
         })
       );
@@ -98,7 +102,7 @@ export default function AgentReplyBox({
       // Add post ID to URL hash so we can scroll back to it after redirect
       window.location.hash = `post-${post.thing_id}`;
 
-      const resolvedBrandId = brandId || brandData?.brand?.id;
+      const resolvedBrandId = brandData?.id;
       if (!resolvedBrandId) {
         throw new Error("Brand ID is required for prospect conversation reply");
       }
@@ -110,7 +114,7 @@ export default function AgentReplyBox({
       }
 
       // Use the prospect conversation reply endpoint
-      await prospectConvoReplyMutation.mutateAsync({
+      await replyConvo.mutateAsync({
         brandId: resolvedBrandId,
         prospectProfileId,
         activeConvoId,
@@ -130,13 +134,10 @@ export default function AgentReplyBox({
     const draftData = sessionStorage.getItem(draftKey);
     if (draftData) {
       try {
-        const { reply, agentId, timestamp } = JSON.parse(draftData);
+        const { reply, timestamp } = JSON.parse(draftData);
         // Only restore if draft is less than 10 minutes old
         if (Date.now() - timestamp < 10 * 60 * 1000) {
           setCustomReply(reply);
-          if (agentId) {
-            setSelectedAgentId(agentId);
-          }
         }
         // Clear the draft after restoring
         sessionStorage.removeItem(draftKey);
@@ -145,7 +146,7 @@ export default function AgentReplyBox({
         sessionStorage.removeItem(draftKey);
       }
     }
-  }, [draftKey, setCustomReply, setSelectedAgentId]);
+  }, [draftKey, setCustomReply]);
 
   // Clear reply and draft when successfully sent
   useEffect(() => {
@@ -167,278 +168,81 @@ export default function AgentReplyBox({
     }
   }, [customReply]);
 
-  const selected = selectedAgentId
-    ? agents.find((a) => a.id === selectedAgentId) || null
-    : null;
-  const bench = selectedAgentId
-    ? agents.filter((a) => a.id !== selectedAgentId)
-    : [];
-
   return (
     <GlassPanel className="mt-4 p-4 rounded-xl relative" variant="light">
       <div className="mb-4">
         {isLoadingAgents ? (
           <div className="flex items-center justify-center py-8">
-            <div className="text-white/50 text-sm">Loading agents...</div>
+            <div className="text-white/50 text-sm">Loading agent...</div>
           </div>
-        ) : agents.length === 0 ? (
+        ) : !agent ? (
           <GenerateFirstAgent />
         ) : (
-          <LayoutGroup id="agent-chooser">
-            <AnimatePresence initial={false} mode="wait">
-              {selected ? (
-                <motion.div
-                  key="selected-panel"
-                  className="relative"
-                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -12, scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  layout
-                >
-                  <motion.div
-                    className="relative flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10"
-                    layout
-                  >
-                    <motion.div
-                      className="relative w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-green-400 flex items-center justify-center text-2xl font-bold text-white shadow-lg"
-                      layoutId={`agent-avatar-${selected.id}`}
-                    >
-                      {selected.avatar && selected.avatar.startsWith("http") ? (
-                        <Image
-                          src={selected.avatar}
-                          alt={selected.name}
-                          width={56}
-                          height={56}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : selected.avatar &&
-                        !selected.avatar.startsWith("http") ? (
-                        <span>{selected.avatar}</span>
-                      ) : (
-                        <span>{selected.name.charAt(0).toUpperCase()}</span>
-                      )}
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                    </motion.div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-medium truncate">
-                        {selected.name}
-                      </div>
-                      <div className="text-white/60 text-xs mt-0.5">
-                        This reply will be assigned to {selected.name}'s queue
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setSelectedAgentId(null)}
-                        className="text-white/60 hover:text-white text-xs underline decoration-dotted"
-                        disabled={isGenerating}
-                        aria-label="Change agent"
-                      >
-                        Change
-                      </button>
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `http://localhost:3001/dashboard/team/${brandData?.brand?.id}`
-                          )
-                        }
-                        className="text-white/60 hover:text-white p-1 rounded transition-colors"
-                        disabled={isGenerating}
-                        aria-label="Edit agent"
-                        title="Edit agent"
-                      >
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                    {isGenerating && (
-                      <div className="absolute inset-0 rounded-xl bg-black/40 flex items-center justify-center">
-                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </motion.div>
-
-                  {bench.length > 0 && (
-                    <motion.div
-                      className="absolute -top-1 right-0 flex -space-x-2"
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      {bench.slice(0, 5).map((a) => (
-                        <motion.button
-                          key={a.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedAgentId(a.id);
-                            onGenerateWithAgent(a.id);
-                          }}
-                          className="w-6 h-6 rounded-full overflow-hidden border border-white/20 bg-white/10 flex items-center justify-center text-[10px] text-white/80 hover:scale-105 transition"
-                          title={a.name}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {a.avatar && a.avatar.startsWith("http") ? (
-                            <Image
-                              src={a.avatar}
-                              alt={a.name}
-                              width={24}
-                              height={24}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : a.avatar && !a.avatar.startsWith("http") ? (
-                            <span>{a.avatar}</span>
-                          ) : (
-                            <span>{a.name.charAt(0).toUpperCase()}</span>
-                          )}
-                        </motion.button>
-                      ))}
-                      {bench.length > 5 && (
-                        <div className="w-6 h-6 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-[10px] text-white/70">
-                          +{bench.length - 5}
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </motion.div>
+          <div className="relative flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/10">
+            <div className="relative w-14 h-14 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-green-400 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+              {agent.avatar && agent.avatar.startsWith("http") ? (
+                <Image
+                  src={agent.avatar}
+                  alt={agent.name}
+                  width={56}
+                  height={56}
+                  className="w-full h-full object-cover"
+                />
+              ) : agent.avatar && !agent.avatar.startsWith("http") ? (
+                <span>{agent.avatar}</span>
               ) : (
-                <motion.div
-                  key="grid"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.25 }}
-                  layout
-                >
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                    {agents.map((agent) => (
-                      <motion.button
-                        key={agent.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedAgentId(agent.id);
-                          onGenerateWithAgent(agent.id);
-                        }}
-                        disabled={isGenerating}
-                        className={`
-                        relative group flex flex-col items-center p-3 rounded-xl
-                        transition-all duration-200 hover:scale-105
-                        ${
-                          selectedAgentId === agent.id
-                            ? "bg-gradient-to-br from-purple-500/20 to-green-500/20 border-2 border-purple-400/50"
-                            : "bg-white/5 border border-white/10 hover:bg-white/10"
-                        }
-                        ${
-                          isGenerating
-                            ? "opacity-50 cursor-not-allowed"
-                            : "cursor-pointer"
-                        }
-                      `}
-                        whileTap={{ scale: 0.98 }}
-                        layoutId={`agent-card-${agent.id}`}
-                      >
-                        <motion.div
-                          className="relative w-12 h-12 mb-2 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-green-400 flex items-center justify-center text-2xl font-bold text-white shadow-lg"
-                          layoutId={`agent-avatar-${agent.id}`}
-                        >
-                          {agent.avatar && agent.avatar.startsWith("http") ? (
-                            <Image
-                              src={agent.avatar}
-                              alt={agent.name}
-                              width={48}
-                              height={48}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : agent.avatar &&
-                            !agent.avatar.startsWith("http") ? (
-                            <span>{agent.avatar}</span>
-                          ) : (
-                            <span>{agent.name.charAt(0).toUpperCase()}</span>
-                          )}
-                          {selectedAgentId === agent.id && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                          )}
-                        </motion.div>
-                        <span className="text-white/80 text-xs font-medium text-center line-clamp-2">
-                          {agent.name}
-                        </span>
-                        {isGenerating && selectedAgentId === agent.id && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
-                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          </div>
-                        )}
-                      </motion.button>
-                    ))}
-                    {/* Generate AI Agent Button in Grid */}
-                    <motion.button
-                      type="button"
-                      onClick={handleGenerateAgent}
-                      disabled={isGeneratingAgent}
-                      className="relative group flex flex-col items-center p-3 rounded-xl
-                        bg-white/5 border-2 border-dashed border-purple-400/30 hover:border-purple-400/50
-                        transition-all duration-200 hover:scale-105 hover:bg-white/10
-                        cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="w-12 h-12 mb-2 rounded-full overflow-hidden bg-gradient-to-br from-purple-400/40 to-purple-600/40 flex items-center justify-center text-2xl font-bold text-white/80 shadow-lg">
-                        {isGeneratingAgent ? (
-                          <svg
-                            className="w-6 h-6 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <span className="text-white/60 text-xs font-medium text-center">
-                        {isGeneratingAgent
-                          ? "Generating..."
-                          : "Create New Agent"}
-                      </span>
-                    </motion.button>
-                  </div>
-                </motion.div>
+                <span>{agent.name.charAt(0).toUpperCase()}</span>
               )}
-            </AnimatePresence>
-          </LayoutGroup>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-white font-medium truncate">
+                {agent.name}
+              </div>
+              <div className="text-white/60 text-xs mt-0.5">
+                Ready to generate replies for you
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleGenerateWithAgent}
+                disabled={isGenerating}
+                className="px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-400/30 text-purple-200 hover:bg-purple-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                {isGenerating ? "Generating..." : "Generate Reply"}
+              </button>
+              <button
+                onClick={() =>
+                  router.push(
+                    `http://localhost:3001/dashboard/team/${brandData?.id}`
+                  )
+                }
+                className="text-white/60 hover:text-white p-1 rounded transition-colors"
+                disabled={isGenerating}
+                aria-label="Edit agent"
+                title="Edit agent"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
+            </div>
+            {isGenerating && (
+              <div className="absolute inset-0 rounded-xl bg-black/40 flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -464,12 +268,12 @@ export default function AgentReplyBox({
           }}
           rows={4}
         />
-        {lastUsedAgentId && (
+        {agent && customReply && (
           <button
-            onClick={onRegenerate}
+            onClick={handleRegenerate}
             disabled={isGenerating}
             className="ml-3 text-white/70 hover:text-white hover:scale-110 transition-all duration-200 disabled:opacity-50"
-            title="Regenerate with same agent"
+            title="Regenerate reply"
           >
             {isGenerating ? (
               <div className="w-4 h-4 border border-white/30 border-t-white rounded-full animate-spin"></div>

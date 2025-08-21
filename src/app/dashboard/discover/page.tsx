@@ -11,79 +11,56 @@ import AgentConversationDetail from "@/components/dashboard2/AgentConversationDe
 import GenerateFirstAgent from "@/components/dashboard2/GenerateFirstAgent";
 import BrandSummary from "@/components/dashboard2/BrandSummary";
 import ProspectView from "@/components/dashboard2/ProspectView";
+import { ProspectProvider, useProspect } from "@/contexts/ProspectContext";
+import { KeywordQueueProvider } from "@/contexts/KeywordQueueContext";
+import { BrandProvider, useBrand } from "@/contexts/BrandContext";
 import { useAgent, useAgents } from "@/hooks/api/useAgentQueries";
-import {
-  useBrandQuery,
-  useGenerateUseCaseInsight,
-} from "@/hooks/api/useBrandQuery";
+import { useGenerateUseCaseInsight } from "@/hooks/api/useBrandQuery";
 
-export default function UseCaseSummaryPage() {
-  useSession();
+function UseCaseSummaryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
+  const { brand: brandData, isLoading, error, refetch } = useBrand();
   const generateInsight = useGenerateUseCaseInsight();
+  const { selectedProspect, setSelectedProspect } = useProspect();
   const [onlyUnread, setOnlyUnread] = useState(false);
-  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(
-    null
-  );
 
-  const brandData = brandResponse?.brand || null;
 
-  // Calculate aggregated metrics across all prospects
-  const metricState = brandData
-    ? {
-        totalPotentialCustomers:
-          brandData.prospects?.reduce(
-            (sum, p) => sum + (p.insights?.tag_counts?.potential_customer || 0),
-            0
-          ) || 0,
-        totalCompetitorMentions:
-          brandData.prospects?.reduce(
-            (sum, p) => sum + (p.insights?.tag_counts?.competitor_mention || 0),
-            0
-          ) || 0,
-        totalPosts:
-          brandData.prospects?.reduce(
-            (sum, p) => sum + (p.sourced_reddit_posts?.length || 0),
-            0
-          ) || 0,
-      }
-    : undefined;
-
-  // Auto-select first prospect on mount if none selected
+  // Handle prospect selection from URL params
   useEffect(() => {
-    if (brandData?.prospects?.length > 0 && !selectedProspect) {
+    if (brandData?.prospects && brandData.prospects.length > 0) {
       // Check if there's a prospect ID in URL params
       const prospectId = searchParams.get("prospect");
       if (prospectId) {
         const prospect = brandData.prospects.find((p) => p.id === prospectId);
         if (prospect) {
           setSelectedProspect(prospect);
-          return;
+        } else {
+          // Invalid prospect ID, clear selection for summary view
+          setSelectedProspect(null);
         }
+      } else {
+        // No prospect in URL means summary view
+        setSelectedProspect(null);
       }
-      // Otherwise select the first prospect
-      setSelectedProspect(brandData.prospects[0]);
     }
-  }, [brandData?.prospects, selectedProspect, searchParams]);
+  }, [brandData?.prospects, searchParams]);
 
   // Update URL when prospect changes
   useEffect(() => {
+    const url = new URL(window.location.href);
     if (selectedProspect) {
-      const url = new URL(window.location.href);
       url.searchParams.set("prospect", selectedProspect.id);
-      window.history.replaceState({}, "", url.toString());
+    } else {
+      // Remove prospect param for summary view
+      url.searchParams.delete("prospect");
     }
+    window.history.replaceState({}, "", url.toString());
   }, [selectedProspect]);
 
   const handleUseCaseSelect = (useCase: Prospect | null) => {
     // Update local state instead of navigating
     setSelectedProspect(useCase);
-  };
-
-  const handleProspectSelect = (prospect: Prospect | null) => {
-    setSelectedProspect(prospect);
   };
 
   const handleAddUseCase = async (title: string) => {
@@ -143,8 +120,6 @@ export default function UseCaseSummaryPage() {
   return (
     <div className="h-full flex overflow-hidden">
       <DashboardSidebar
-        brandName={brandData.name}
-        prospects={brandData.prospects}
         selectedUseCase={selectedProspect}
         onUseCaseSelect={handleUseCaseSelect}
         onlyUnread={onlyUnread}
@@ -156,7 +131,7 @@ export default function UseCaseSummaryPage() {
       <main className="flex-1 min-h-0 overflow-y-auto w-full">
         <div className="p-6">
           <div className="max-w-5xl mx-auto space-y-8">
-            <BrandSummary brandData={brandData} metricState={metricState} />
+            <BrandSummary />
 
             {/* HOLD FOR LATER */}
 
@@ -167,15 +142,24 @@ export default function UseCaseSummaryPage() {
               isLoading={false}
             />
              */}
-            <ProspectView
-              prospects={brandData?.prospects || []}
-              brandId={brandData?.id || ""}
-              selectedProspect={selectedProspect}
-              onProspectSelect={handleProspectSelect}
-            />
+            <ProspectView />
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+export default function UseCaseSummaryPage() {
+  useSession();
+
+  return (
+    <BrandProvider>
+      <ProspectProvider>
+        <KeywordQueueProvider>
+          <UseCaseSummaryContent />
+        </KeywordQueueProvider>
+      </ProspectProvider>
+    </BrandProvider>
   );
 }

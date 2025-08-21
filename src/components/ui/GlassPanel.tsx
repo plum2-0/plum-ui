@@ -23,7 +23,7 @@ export default function GlassPanel({
 
   return (
     <Component
-      className={cn("[transform-gpu]", className)}
+      className={cn("", className)}
       style={{
         ...baseStyle,
         ...style,

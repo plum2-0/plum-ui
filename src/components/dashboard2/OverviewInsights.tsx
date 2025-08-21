@@ -4,14 +4,13 @@ import { useState, useEffect } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { Prospect } from "@/types/brand";
 import GlassPills from "./GlassPills";
-import HeroMetric, { ProspectFunnelData } from "./ProspectTargetsStat";
+import ProspectTargetStat from "./ProspectTargetsStat";
 import SolutionsOpportunities from "./SolutionsOpportunities";
 
 interface OverviewInsightsProps {
   prospects: Prospect[];
   brandId: string;
   isLoading?: boolean;
-  prospectFunnelData: ProspectFunnelData;
 }
 
 export default function OverviewInsights({
@@ -142,7 +141,7 @@ export default function OverviewInsights({
           {/* Research Summary - Simplified with Hero Metric */}
           <div className="p-6 space-y-6">
             {/* Hero Metric - Total Potential Customers */}
-            <HeroMetric
+            <ProspectTargetStat
               brandId={brandId}
               posts={prospects.flatMap(
                 (prospect) => prospect.sourced_reddit_posts || []

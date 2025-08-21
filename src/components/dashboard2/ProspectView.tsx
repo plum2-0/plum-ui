@@ -1,95 +1,76 @@
 "use client";
 
 import { useState } from "react";
-import { Prospect } from "@/types/brand";
 import GlassPanel from "@/components/ui/GlassPanel";
-import ProspectSelector from "./ProspectSelector";
 import ViewToggle from "./ViewToggle";
-import ResearchView from "./ResearchView";
-import PostsView from "./PostsView";
+import CombinedResearchView from "./CombinedResearchView";
+import VizView from "./VizView";
+import CombinedResearchSummaryView from "./CombinedResearchSummaryView";
+import VizSummaryView from "./VizSummaryView";
+import { useProspect } from "@/contexts/ProspectContext";
+import { useBrand } from "@/contexts/BrandContext";
 
-interface ProspectViewProps {
-  prospects: Prospect[];
-  brandId: string;
-  selectedProspect: Prospect | null;
-  onProspectSelect: (prospect: Prospect | null) => void;
-}
-
-export default function ProspectView({
-  prospects,
-  brandId,
-  selectedProspect,
-  onProspectSelect,
-}: ProspectViewProps) {
-  const [currentView, setCurrentView] = useState<"research" | "posts">(
+export default function ProspectView() {
+  const { brand: brandData } = useBrand();
+  const { selectedProspect } = useProspect();
+  
+  if (!brandData) return null;
+  
+  const prospects = brandData.prospects || [];
+  const brandId = brandData.id;
+  const [currentView, setCurrentView] = useState<"research" | "viz">(
     "research"
   );
 
   return (
-    <div className="space-y-6">
-      {/* Future Data Analysis Placeholder */}
-      <GlassPanel
-        className="rounded-2xl p-8 min-h-[40vh] flex flex-col items-center justify-center"
-        variant="medium"
-        style={{
-          background:
-            "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
-          boxShadow:
-            "0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
-          backdropFilter: "blur(20px) saturate(1.2)",
-          WebkitBackdropFilter: "blur(20px) saturate(1.2)",
-          border: "1px solid rgba(255, 255, 255, 0.15)",
-        }}
-      >
-        <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-            <svg
-              className="w-10 h-10 text-white/60"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-2xl font-heading font-bold text-white/80 mb-2">
-            FUTURE DATA ANALYSIS
-          </h3>
-          <p className="text-white/50 font-body max-w-md mx-auto">
-            Time series analytics and trend visualization coming soon
-          </p>
-        </div>
-      </GlassPanel>
-
-      {/* Prospect Controls */}
-      {prospects.length > 0 && (
-        <div className="flex items-center justify-between gap-4">
-          <ProspectSelector
-            prospects={prospects}
-            selectedProspect={selectedProspect}
-            onSelect={onProspectSelect}
-            placeholder="Select a prospect to view details"
-          />
-          {selectedProspect && (
-            <ViewToggle
-              value={currentView}
-              onChange={setCurrentView}
-              options={[
-                { key: "research", label: "Research" },
-                { key: "posts", label: "Posts" },
-              ]}
-            />
-          )}
-        </div>
-      )}
+    <div className="space-y-2">
+      {/* View Toggle - Show for both individual prospect and summary view */}
 
       {/* Dynamic Content Area */}
       {selectedProspect && (
+        <GlassPanel
+          className="my-4 rounded-2xl overflow-hidden"
+          variant="medium"
+          style={{
+            background:
+              "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
+            boxShadow:
+              "0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+            backdropFilter: "blur(20px) saturate(1.2)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+          }}
+        >
+          {/* ViewToggle with proper spacing */}
+          <div className="px-6 pt-4 pb-2">
+            <div className="flex mb-4">
+              <ViewToggle
+                value={currentView}
+                onChange={setCurrentView}
+                options={[
+                  { key: "research", label: "Research" },
+                  { key: "viz", label: "Viz" },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div className="px-6 pb-6">
+            {currentView === "research" ? (
+              <CombinedResearchView 
+                prospect={selectedProspect} 
+                brandId={brandId}
+                brandData={brandData}
+              />
+            ) : (
+              <VizView prospect={selectedProspect} />
+            )}
+          </div>
+        </GlassPanel>
+      )}
+
+      {/* Summary View - when no prospect selected */}
+      {!selectedProspect && prospects.length > 0 && (
         <GlassPanel
           className="rounded-2xl overflow-hidden"
           variant="medium"
@@ -103,11 +84,29 @@ export default function ProspectView({
             border: "1px solid rgba(255, 255, 255, 0.15)",
           }}
         >
-          <div className="p-6">
+          {/* ViewToggle with proper spacing */}
+          <div className="px-6 pt-6 pb-2">
+            <div className="flex justify-center">
+              <ViewToggle
+                value={currentView}
+                onChange={setCurrentView}
+                options={[
+                  { key: "research", label: "Research" },
+                  { key: "viz", label: "Viz" },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div className="px-6 pb-6">
             {currentView === "research" ? (
-              <ResearchView prospect={selectedProspect} />
+              <CombinedResearchSummaryView 
+                prospects={prospects} 
+                brandId={brandId}
+                brandData={brandData}
+              />
             ) : (
-              <PostsView prospect={selectedProspect} brandId={brandId} />
+              <VizSummaryView prospects={prospects} brandId={brandId} />
             )}
           </div>
         </GlassPanel>

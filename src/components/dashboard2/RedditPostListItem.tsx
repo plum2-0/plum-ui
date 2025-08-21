@@ -7,19 +7,14 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import type { RedditPost } from "@/types/brand";
-import { useAgentReply } from "@/hooks/useAgentReply";
 import AgentReplyBox from "./AgentReplyBox";
 import GlassPanel from "@/components/ui/GlassPanel";
+import { useBrand } from "@/contexts/BrandContext";
+import { useProfile } from "@/contexts/ProfileContext";
 
 interface RedditPostListItemProps {
   post: RedditPost;
-  brandId?: string;
-  prospectId?: string;
-  prospectProfileId?: string;
-  activeConvoId?: string;
-  onGenerate?: (post: RedditPost) => Promise<void>;
   onIgnore?: (post: RedditPost) => Promise<void>;
-  onSend?: (post: RedditPost, message: string) => Promise<void>;
 }
 
 // Helper function to format time ago
@@ -38,11 +33,13 @@ function formatTimeAgo(dateString: string): string {
 
 export default function RedditPostListItem({
   post,
-  brandId = "",
-  prospectId = "",
-  prospectProfileId,
-  activeConvoId,
+  onIgnore,
 }: RedditPostListItemProps) {
+  // Get brand data from context
+  const { brand } = useBrand();
+  // Get profile data from context
+  const { activeConvoId, prospectProfileId } = useProfile();
+
   // Derived fields
   const postId = post.thing_id;
   const postTitle = post.title || "";
@@ -63,12 +60,8 @@ export default function RedditPostListItem({
     post.suggested_agent_reply ?? ""
   );
   const [showReplyBox, setShowReplyBox] = useState(!!hasSuggestedReply);
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [lastUsedAgentId, setLastUsedAgentId] = useState<string | null>(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [replySent, setReplySent] = useState(false);
-  const { agents, isLoadingAgents, isGenerating, generateWithAgent } =
-    useAgentReply(brandId);
 
   // Check if we're returning from Reddit auth for this specific post
   useEffect(() => {
@@ -110,38 +103,6 @@ export default function RedditPostListItem({
     )?.[1]
     ?.trim();
 
-  const handleGenerateWithAgent = async (agentId?: string) => {
-    const targetAgentId = agentId || selectedAgentId;
-    if (!targetAgentId) return;
-    try {
-      const result = await generateWithAgent(targetAgentId, post, {
-        autoReply: true,
-      });
-      if (result.content) {
-        setCustomReply(result.content);
-      }
-      setLastUsedAgentId(targetAgentId);
-    } catch (error) {
-      console.error("Error generating reply with agent:", error);
-      alert("Failed to generate reply. Please try again.");
-    }
-  };
-
-  const handleRegenerate = async () => {
-    if (!lastUsedAgentId) return;
-    try {
-      const result = await generateWithAgent(lastUsedAgentId, post, {
-        autoReply: true,
-      });
-      if (result.content) {
-        setCustomReply(result.content);
-      }
-    } catch (error) {
-      console.error("Error regenerating reply with agent:", error);
-      alert("Failed to regenerate reply.");
-    }
-  };
-
   // Markdown renderers for Reddit-like dark theme
   const markdownComponents: Components = {
     a: (props) => <a {...props} className="text-blue-400 hover:underline" />,
@@ -178,58 +139,15 @@ export default function RedditPostListItem({
     h3: (props) => <h3 {...props} className="text-base font-semibold mb-2" />,
   };
 
-  async function submitPostAction(action: "reply" | "ignore", text?: string) {
+  async function handleIgnore() {
     setIsSubmittingAction(true);
     try {
-      const response = await fetch(`/api/brand/post/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_content_action: action === "reply" ? "reply" : "ignore",
-          brand_name: undefined,
-          brand_detail: undefined,
-          problem: undefined,
-          reddit_post: {
-            thing_id: post.thing_id,
-            title: post.title,
-            content: post.content,
-            author: post.author,
-            subreddit: post.subreddit,
-            permalink: post.permalink,
-            created_utc: post.created_utc,
-            score: post.score,
-            upvotes: post.upvotes,
-            downvotes: post.downvotes,
-            reply_count: post.reply_count || 0,
-            thumbnail: post.thumbnail,
-            link_flair: post.link_flair,
-            suggested_agent_reply: post.suggested_agent_reply || null,
-            status: typeof post.status === "string" ? post.status : "PENDING",
-          },
-          reply_content: action === "reply" ? text || "" : undefined,
-          agent_id:
-            action === "reply"
-              ? lastUsedAgentId || selectedAgentId || undefined
-              : undefined,
-          brand_id: brandId || "",
-          prospect_id: prospectId || "",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit action");
-      }
-
-      if (action === "reply") {
-        setReplySent(true);
-        // Optionally reset confirmation after a short delay
-        setTimeout(() => {
-          setReplySent(false);
-        }, 2500);
+      if (onIgnore) {
+        await onIgnore(post);
       }
     } catch (error) {
-      console.error("Error submitting action:", error);
-      alert("Failed to submit action. Please try again.");
+      console.error("Error ignoring post:", error);
+      alert("Failed to ignore post. Please try again.");
     } finally {
       setIsSubmittingAction(false);
     }
@@ -424,7 +342,9 @@ export default function RedditPostListItem({
               <div className="ml-auto flex items-center gap-3">
                 <GlassPanel
                   as="button"
-                  onClick={() => setShowReplyBox(!showReplyBox)}
+                  onClick={() => {
+                    setShowReplyBox(!showReplyBox);
+                  }}
                   disabled={isSubmittingAction}
                   className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
                   style={{
@@ -440,7 +360,7 @@ export default function RedditPostListItem({
 
                 <GlassPanel
                   as="button"
-                  onClick={() => submitPostAction("ignore")}
+                  onClick={handleIgnore}
                   disabled={isSubmittingAction}
                   className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
                   variant="light"
@@ -455,23 +375,12 @@ export default function RedditPostListItem({
             </div>
 
             {/* Reply box - only show if we have the required context */}
-            {showReplyBox && prospectProfileId && activeConvoId && (
+            {showReplyBox && (
               <AgentReplyBox
-                agents={agents}
-                isLoadingAgents={isLoadingAgents}
-                isGenerating={isGenerating}
-                selectedAgentId={selectedAgentId}
-                setSelectedAgentId={setSelectedAgentId}
-                lastUsedAgentId={lastUsedAgentId}
-                onGenerateWithAgent={handleGenerateWithAgent}
-                onRegenerate={handleRegenerate}
                 customReply={customReply}
                 setCustomReply={setCustomReply}
                 replySent={replySent}
                 post={post}
-                prospectProfileId={prospectProfileId}
-                activeConvoId={activeConvoId}
-                brandId={brandId}
               />
             )}
           </div>

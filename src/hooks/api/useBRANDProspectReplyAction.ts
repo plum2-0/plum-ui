@@ -22,7 +22,7 @@ interface ProspectReplyActionRequest {
   agent_id?: string;
 }
 
-export function useProspectReplyAction() {
+export function useBRANDProspectReplyAction() {
   const queryClient = useQueryClient();
 
   return useMutation<any, Error, ProspectReplyActionParams>({

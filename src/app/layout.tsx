@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 import { QueryProvider } from "@/components/QueryProvider";
+import { ToastProvider } from "@/components/ui/Toast";
+import { BrandProvider } from "@/contexts/BrandContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,14 +18,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "PlumSprout - Amplify your Brand's Presence",
-  description: "Multiply your marketing team with PlumSprout AI to listen and sprout your Brand's Community",
+  description:
+    "Multiply your marketing team with PlumSprout AI to listen and sprout your Brand's Community",
   icons: {
     icon: [
-      { url: '/plum-favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: '32x32' }
+      { url: "/plum-favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
     ],
-    shortcut: '/plum-favicon.svg',
-    apple: '/plum-favicon.svg',
+    shortcut: "/plum-favicon.svg",
+    apple: "/plum-favicon.svg",
   },
 };
 
@@ -42,7 +45,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <BrandProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </BrandProvider>
+          </QueryProvider>
         </SessionProvider>
       </body>
     </html>

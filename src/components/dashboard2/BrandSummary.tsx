@@ -1,6 +1,11 @@
-import { useState } from "react";
-import { Brand } from "@/types/brand";
 import GlassPanel from "@/components/ui/GlassPanel";
+import ProspectSelector from "./ProspectSelector";
+import KeywordDisplay from "./KeywordDisplay";
+import SubredditsSection from "./SubredditsSection";
+import FetchNewPostsButton from "./FetchNewPostsButton";
+import { useProspect } from "@/contexts/ProspectContext";
+import { useKeywordQueue } from "@/contexts/KeywordQueueContext";
+import { useBrand } from "@/contexts/BrandContext";
 
 interface MetricStateData {
   totalPotentialCustomers: number;
@@ -8,34 +13,14 @@ interface MetricStateData {
   totalPosts: number;
 }
 
-interface BrandSummaryProps {
-  brandData: Brand;
-  metricState?: MetricStateData;
-}
-
-export default function BrandSummary({ brandData }: BrandSummaryProps) {
-  const [isKeywordsExpanded, setIsKeywordsExpanded] = useState(false);
-
-  // Aggregate all keywords from all prospects
-  const allKeywords = brandData.prospects?.reduce((acc, prospect) => {
-    return [...acc, ...(prospect.keywords || [])];
-  }, [] as string[]);
-
-  // Remove duplicates and count occurrences
-  const keywordCounts = allKeywords?.reduce((acc, keyword) => {
-    acc[keyword] = (acc[keyword] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Sort by count and get top keywords
-  const sortedKeywords = Object.entries(keywordCounts || {})
-    .sort((a, b) => b[1] - a[1])
-    .map(([keyword]) => keyword);
-
-  const visibleKeywords = isKeywordsExpanded
-    ? sortedKeywords
-    : sortedKeywords.slice(0, 5);
-  const remainingCount = sortedKeywords.length - 5;
+export default function BrandSummary() {
+  const { brand: brandData } = useBrand();
+  const { selectedProspect } = useProspect();
+  const { queuedKeywords, hasQueuedKeywords } = useKeywordQueue();
+  
+  if (!brandData) return null;
+  
+  const brandId = brandData.id;
   return (
     <GlassPanel
       className="rounded-2xl p-6"
@@ -81,118 +66,152 @@ export default function BrandSummary({ brandData }: BrandSummaryProps) {
               {brandData.name}
             </h1>
           )}
-          {brandData.detail && (
-            <p className="text-white/80 font-body text-base leading-relaxed">
-              {brandData.detail}
-            </p>
+
+          {/* Prospect Selector */}
+          {brandData.prospects && brandData.prospects.length > 0 && (
+            <div className="mb-4">
+              <p className="text-white/70 font-body text-sm mb-2">
+                Researching Problems
+              </p>
+              <ProspectSelector
+                prospects={brandData.prospects}
+                placeholder="Summary - All Prospects"
+              />
+            </div>
           )}
 
           {/* Keywords Section */}
-          {sortedKeywords.length > 0 && (
-            <div className="mt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <svg
-                  className="w-4 h-4 text-purple-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                  />
-                </svg>
-                <span className="text-white/70 font-body text-sm font-medium">
-                  Top Keywords:
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {visibleKeywords.map((keyword) => (
-                  <span
-                    key={keyword}
-                    className="px-3 py-1 rounded-lg text-white/90 font-body text-sm"
-                    style={{
-                      background:
-                        "linear-gradient(145deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.08) 100%)",
-                      border: "1px solid rgba(168, 85, 247, 0.2)",
-                      boxShadow:
-                        "0 2px 8px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                  >
-                    {keyword}
-                  </span>
-                ))}
-                {!isKeywordsExpanded && remainingCount > 0 && (
-                  <button
-                    onClick={() => setIsKeywordsExpanded(true)}
-                    className="px-3 py-1 rounded-lg text-purple-400 hover:text-purple-300 font-body text-sm transition-all duration-300 transform-gpu hover:scale-105"
-                    style={{
-                      background:
-                        "linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.04) 100%)",
-                      border: "1px solid rgba(168, 85, 247, 0.2)",
-                      boxShadow:
-                        "0 2px 8px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "linear-gradient(145deg, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%)";
-                      e.currentTarget.style.transform =
-                        "scale(1.05) translateY(-1px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.04) 100%)";
-                      e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 8px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
-                    }}
-                  >
-                    +{remainingCount} More
-                  </button>
-                )}
-                {isKeywordsExpanded && sortedKeywords.length > 5 && (
-                  <button
-                    onClick={() => setIsKeywordsExpanded(false)}
-                    className="px-3 py-1 rounded-lg text-purple-400 hover:text-purple-300 font-body text-sm transition-all duration-300 transform-gpu hover:scale-105"
-                    style={{
-                      background:
-                        "linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.04) 100%)",
-                      border: "1px solid rgba(168, 85, 247, 0.2)",
-                      boxShadow:
-                        "0 2px 8px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "linear-gradient(145deg, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%)";
-                      e.currentTarget.style.transform =
-                        "scale(1.05) translateY(-1px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.04) 100%)";
-                      e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 8px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
-                    }}
-                  >
-                    Show Less
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          <KeywordDisplay brandData={brandData} />
+
+          {/* Subreddits Section */}
+          <SubredditsSection brandData={brandData} />
         </div>
       </div>
-      <div className="mt-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+
+      {/* Power Wielding Section */}
+      <div
+        className="mt-6 space-y-4 relative transition-all duration-700 rounded-2xl"
+        style={{
+          background: hasQueuedKeywords
+            ? "linear-gradient(145deg, rgba(34, 197, 94, 0.03) 0%, rgba(168, 85, 247, 0.03) 100%)"
+            : "transparent",
+          padding: hasQueuedKeywords ? "16px" : "0",
+          border: hasQueuedKeywords
+            ? "1px solid rgba(34, 197, 94, 0.2)"
+            : "1px solid transparent",
+          boxShadow: hasQueuedKeywords
+            ? "0 8px 32px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+            : "none",
+          animation: "none",
+        }}
+      >
+        {hasQueuedKeywords && (
+          <style jsx>{`
+            @keyframes shimmer {
+              0% {
+                background-position: -200% center;
+              }
+              100% {
+                background-position: 200% center;
+              }
+            }
+          `}</style>
+        )}
+
+        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-4"></div>
+
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h3
+              className="text-white font-heading text-lg font-bold flex items-center gap-2"
+              style={{
+                textShadow: hasQueuedKeywords
+                  ? "0 0 20px rgba(34, 197, 94, 0.5)"
+                  : "none",
+                transition: "all 0.5s ease",
+              }}
+            >
+              <span
+                className={`transition-all duration-500 ${
+                  hasQueuedKeywords ? "text-emerald-400" : "text-white"
+                }`}
+                style={{
+                  filter: hasQueuedKeywords ? "brightness(1.2)" : "none",
+                }}
+              >
+                ⚡
+              </span>
+              <span
+                className="transition-all duration-500"
+                style={{
+                  background: hasQueuedKeywords
+                    ? "linear-gradient(90deg, #22c55e, #a855f7, #22c55e)"
+                    : "none",
+                  backgroundSize: hasQueuedKeywords ? "200% auto" : "auto",
+                  WebkitBackgroundClip: hasQueuedKeywords ? "text" : "unset",
+                  WebkitTextFillColor: hasQueuedKeywords
+                    ? "transparent"
+                    : "white",
+                  animation: hasQueuedKeywords
+                    ? "shimmer 3s linear infinite"
+                    : "none",
+                }}
+              >
+                Content Discovery Engine
+              </span>
+              {hasQueuedKeywords && (
+                <span
+                  className="ml-2 px-3 py-1 text-xs font-normal rounded-full"
+                  style={{
+                    background:
+                      "linear-gradient(145deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.15) 100%)",
+                    border: "1px solid rgba(34, 197, 94, 0.4)",
+                    color: "#86efac",
+                    boxShadow:
+                      "0 2px 8px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+                  }}
+                >
+                  {queuedKeywords.length} new keyword
+                  {queuedKeywords.length !== 1 ? "s" : ""} ready
+                </span>
+              )}
+            </h3>
+            <p
+              className="text-white/70 font-body text-sm transition-all duration-500"
+              style={{
+                color: hasQueuedKeywords ? "#86efac" : "rgba(255, 255, 255, 0.7)",
+                textShadow: hasQueuedKeywords
+                  ? "0 0 10px rgba(34, 197, 94, 0.3)"
+                  : "none",
+              }}
+            >
+              {hasQueuedKeywords
+                ? `🚀 Ready to discover with ${queuedKeywords.length} new keyword${
+                    queuedKeywords.length !== 1 ? "s" : ""
+                  }`
+                : "Harness AI to discover fresh opportunities in the digital realm"}
+            </p>
+          </div>
+
+          <div
+            className="transition-all duration-500"
+            style={{
+              filter: hasQueuedKeywords
+                ? "drop-shadow(0 0 20px rgba(34, 197, 94, 0.4))"
+                : "none",
+              transform: hasQueuedKeywords ? "scale(1.05)" : "scale(1)",
+            }}
+          >
+            <FetchNewPostsButton
+              selectedProspect={selectedProspect}
+              brandId={brandId}
+              brandData={brandData}
+              size="md"
+              className="ml-4"
+            />
+          </div>
+        </div>
+      </div>
     </GlassPanel>
   );
 }

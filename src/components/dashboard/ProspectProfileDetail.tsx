@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   X,
@@ -25,30 +25,24 @@ interface ProspectProfileDetailProps {
   onClose?: () => void;
   agents: Agent[];
   isLoadingAgents: boolean;
+  setSelectedProfile: (profile: ProspectProfile) => void;
+  isLoadingProfile: boolean;
 }
 
 export function ProspectProfileDetail({
   profile,
   onClose,
+  isLoadingProfile,
 }: ProspectProfileDetailProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [showAllSubreddits, setShowAllSubreddits] = useState(false);
 
-  // Fetch detailed profile data with active conversation
-  const { data: detailedProfile, isLoading } = useProspectProfileDetailQuery({
-    profileId: profile.id,
-    enabled: !!profile.id,
-  });
-
-  console.log("detailedProfile o o o oo");
-
-  console.log(JSON.stringify(detailedProfile, null, 2));
-
   // Use detailed profile if available, otherwise fall back to basic profile
-  const currentProfile = detailedProfile || profile;
+  const currentProfile = profile;
 
   // Get the active conversation
-  const activeConversation = currentProfile.active_convos?.[0]; // Assuming first conversation is the active one
+  const activeConversation = currentProfile.active_convos?.[0];
+  console.log("📌 activeConversation", activeConversation);
 
   // Mock engagement analytics (would come from real data in production)
   const engagementData = {
@@ -114,9 +108,9 @@ export function ProspectProfileDetail({
                   )}
                 </h2>
 
-                {detailedProfile?.inferred_attributes && (
+                {currentProfile?.inferred_attributes && (
                   <div className="flex gap-4 mb-2">
-                    {detailedProfile.inferred_attributes
+                    {currentProfile.inferred_attributes
                       .filter(
                         (attr) =>
                           attr.attribute_key === "age_bracket" ||
@@ -148,21 +142,21 @@ export function ProspectProfileDetail({
                 )}
 
                 {/* Account Stats - Karma and Age */}
-                {detailedProfile?.account_stats && (
+                {currentProfile?.account_stats && (
                   <div className="flex gap-3 mt-1 text-xs text-white/40">
                     <span>
-                      {detailedProfile.account_stats.total_karma.toLocaleString()}{" "}
+                      {currentProfile.account_stats.total_karma.toLocaleString()}{" "}
                       karma
                     </span>
                     <span>•</span>
                     <span>
-                      {detailedProfile.account_stats.account_age_days} days old
+                      {currentProfile.account_stats.account_age_days} days old
                     </span>
                     <span>•</span>
                     <span>
-                      {detailedProfile.account_stats.link_karma.toLocaleString()}{" "}
+                      {currentProfile.account_stats.link_karma.toLocaleString()}{" "}
                       post /{" "}
-                      {detailedProfile.account_stats.comment_karma.toLocaleString()}{" "}
+                      {currentProfile.account_stats.comment_karma.toLocaleString()}{" "}
                       comment
                     </span>
                   </div>
@@ -187,14 +181,14 @@ export function ProspectProfileDetail({
         {/* Profile Tags and Interests */}
         <div className="mt-6 space-y-4">
           {/* Active Communities */}
-          {detailedProfile?.subreddit_affinities?.top_by_volume &&
-            detailedProfile.subreddit_affinities.top_by_volume.length > 0 && (
+          {currentProfile?.subreddit_affinities?.top_by_volume &&
+            currentProfile.subreddit_affinities.top_by_volume.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
                     Active Communities:
                   </span>
-                  {detailedProfile.subreddit_affinities.top_by_volume
+                  {currentProfile.subreddit_affinities.top_by_volume
                     .slice(0, showAllSubreddits ? undefined : 3)
                     .map((subreddit, index) => (
                       <motion.div
@@ -222,7 +216,7 @@ export function ProspectProfileDetail({
                         </LiquidBadge>
                       </motion.div>
                     ))}
-                  {detailedProfile.subreddit_affinities.top_by_volume.length >
+                  {currentProfile.subreddit_affinities.top_by_volume.length >
                     3 &&
                     !showAllSubreddits && (
                       <motion.button
@@ -233,7 +227,7 @@ export function ProspectProfileDetail({
                       >
                         <span>
                           +
-                          {detailedProfile.subreddit_affinities.top_by_volume
+                          {currentProfile.subreddit_affinities.top_by_volume
                             .length - 3}{" "}
                           more
                         </span>
@@ -241,7 +235,7 @@ export function ProspectProfileDetail({
                       </motion.button>
                     )}
                   {showAllSubreddits &&
-                    detailedProfile.subreddit_affinities.top_by_volume.length >
+                    currentProfile.subreddit_affinities.top_by_volume.length >
                       3 && (
                       <motion.button
                         onClick={() => setShowAllSubreddits(false)}
@@ -271,15 +265,15 @@ export function ProspectProfileDetail({
           <div className="border-t border-white/10"></div>
 
           {/* Best Reply Windows */}
-          {detailedProfile?.best_reply_windows &&
-            detailedProfile.best_reply_windows.length > 0 && (
+          {currentProfile?.best_reply_windows &&
+            currentProfile.best_reply_windows.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
                   High Activity At:
                 </span>
                 <div className="flex items-center gap-3 text-sm">
                   <Clock className="w-3 h-3 text-white/40" />
-                  {detailedProfile.best_reply_windows
+                  {currentProfile.best_reply_windows
                     .slice(0, 1)
                     .map((window, index) => (
                       <span key={index} className="text-white/80">
@@ -303,10 +297,7 @@ export function ProspectProfileDetail({
         {activeConversation ? (
           <RedditConvo
             conversation={activeConversation}
-            brandId={currentProfile.id || ""}
-            prospectId={currentProfile.id || ""}
-            prospectProfileId={currentProfile.id || ""}
-            isLoading={isLoading}
+            isLoading={isLoadingProfile}
           />
         ) : (
           <div className="flex items-center justify-center h-full">

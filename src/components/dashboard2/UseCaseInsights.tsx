@@ -5,14 +5,10 @@ import SolutionsOpportunities from "./SolutionsOpportunities";
 
 interface UseCaseInsightsProps {
   insights: any | null; // Allow null insights
-  keywords?: string[];
-  topSubreddits?: Array<[string, number]>;
 }
 
 export default function UseCaseInsightsComponent({
   insights,
-  keywords = [],
-  topSubreddits = [],
 }: UseCaseInsightsProps) {
   // Combine solutions and market opportunities
   const solutionsAndOpportunities = [
@@ -20,8 +16,8 @@ export default function UseCaseInsightsComponent({
     ...(insights?.market_opportunities || []),
   ];
 
-  // If no insights and no keywords/subreddits data, show empty state
-  if (!insights && keywords.length === 0 && topSubreddits.length === 0) {
+  // If no insights, show empty state
+  if (!insights) {
     return (
       <div className="border-t border-white/10">
         <div className="p-6">
@@ -45,8 +41,8 @@ export default function UseCaseInsightsComponent({
               Research In Progress
             </h3>
             <p className="text-white/50 font-body max-w-md mx-auto">
-              We're analyzing this problem space to provide insights, solutions,
-              and opportunities. Check back soon for detailed research findings.
+              We haven't found any insights for this prospect yet. Try adding
+              more keywords to discover more.
             </p>
           </div>
         </div>
@@ -57,71 +53,6 @@ export default function UseCaseInsightsComponent({
   return (
     <div className="border-t border-white/10">
       <div className="p-6 space-y-6">
-        {/* Keywords Section */}
-        {keywords.length > 0 && (
-          <div>
-            <h4 className="text-white/90 font-heading text-lg font-semibold mb-4 flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                />
-              </svg>
-              Trending Keywords
-            </h4>
-            <GlassPills
-              items={keywords.map((kw) => ({
-                label: kw,
-                count: 1, // TODO: Implement keyword counting for new RedditPost structure
-              }))}
-              variant="keywords"
-              size="lg"
-              maxVisible={8}
-              emptyText="No keywords tracked"
-            />
-          </div>
-        )}
-
-        {/* Subreddits Section */}
-        {topSubreddits.length > 0 && (
-          <div>
-            <h4 className="text-white/90 font-heading text-lg font-semibold mb-4 flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-orange-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                />
-              </svg>
-              Active Subreddits
-            </h4>
-            <GlassPills
-              items={topSubreddits.map(([name, count]) => ({
-                label: name as string,
-                count: count as number,
-              }))}
-              variant="subreddits"
-              size="lg"
-              maxVisible={8}
-              prefix="r/"
-              emptyText="No subreddit data"
-            />
-          </div>
-        )}
-
         {/* Solutions & Opportunities - Glass Cards Grid */}
         {solutionsAndOpportunities.length > 0 && (
           <SolutionsOpportunities items={solutionsAndOpportunities} />

@@ -5,10 +5,9 @@ import { Prospect } from "@/types/brand";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import SidebarBottomSection from "./SidebarBottomSection";
 import MobileSidebarWrapper from "@/components/shared/MobileSidebarWrapper";
+import { useBrand } from "@/contexts/BrandContext";
 
 interface DashboardSidebarProps {
-  brandName?: string;
-  prospects?: Prospect[];
   selectedUseCase?: Prospect | null;
   onUseCaseSelect?: (prospect: Prospect | null) => void;
   onlyUnread?: boolean;
@@ -18,8 +17,6 @@ interface DashboardSidebarProps {
 }
 
 export default function DashboardSidebar({
-  brandName = "Total",
-  prospects = [],
   selectedUseCase,
   onUseCaseSelect,
   onlyUnread = false,
@@ -27,6 +24,9 @@ export default function DashboardSidebar({
   onAddUseCase,
   inlineSelection = false,
 }: DashboardSidebarProps) {
+  const { brand } = useBrand();
+  const brandName = brand?.name || "Total";
+  const prospects = brand?.prospects || [];
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

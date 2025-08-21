@@ -10,12 +10,12 @@ interface ResearchViewProps {
 export default function ResearchView({ prospect }: ResearchViewProps) {
   // Calculate prospect-specific statistics
   const posts = prospect.sourced_reddit_posts || [];
-  
+
   const subCounts = posts.reduce<Record<string, number>>((acc, post) => {
     acc[post.subreddit] = (acc[post.subreddit] || 0) + 1;
     return acc;
   }, {});
-  
+
   const topSubs = Object.entries(subCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
@@ -27,18 +27,12 @@ export default function ResearchView({ prospect }: ResearchViewProps) {
         <p className="text-white/50 font-body text-sm mb-1 tracking-wide">
           Problem
         </p>
-        <h2 className="text-white font-heading text-2xl font-bold mb-2 tracking-tight">
-          {prospect.problem_to_solve}
-        </h2>
         {prospect.insights?.general_summary && (
-          <p className="text-white/80 font-body text-base leading-relaxed">
+          <p className="text-white font-bold font-body text-lg leading-relaxed">
             {prospect.insights.general_summary}
           </p>
         )}
       </div>
-
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
       {/* Research Insights */}
       <UseCaseInsightsComponent

@@ -8,19 +8,10 @@ import type { Conversation } from "@/hooks/api/useProspectProfilesQuery";
 
 interface RedditConvoProps {
   conversation: Conversation;
-  brandId: string;
-  prospectId: string;
-  prospectProfileId: string;
   isLoading?: boolean;
 }
 
-export function RedditConvo({
-  conversation,
-  brandId,
-  prospectId,
-  prospectProfileId,
-  isLoading,
-}: RedditConvoProps) {
+export function RedditConvo({ conversation, isLoading }: RedditConvoProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -53,13 +44,7 @@ export function RedditConvo({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <RedditPostListItem
-              post={post}
-              brandId={brandId}
-              prospectId={prospectId}
-              prospectProfileId={prospectProfileId}
-              activeConvoId={conversation.id || ""}
-            />
+            <RedditPostListItem post={post} />
           </motion.div>
         ))}
       </div>

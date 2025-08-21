@@ -14,6 +14,9 @@ import { ProspectProfilesInbox } from "@/components/dashboard/ProspectProfilesIn
 import { ProspectProfileDetail } from "@/components/dashboard/ProspectProfileDetail";
 import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import { useProspectProfilesQuery } from "@/hooks/api/useProspectProfilesQuery";
+import { BrandProvider } from "@/contexts/BrandContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
+import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -24,11 +27,23 @@ export default function DashboardPage() {
   const [selectedProfile, setSelectedProfile] =
     useState<ProspectProfile | null>(null);
 
+
   // Fetch agents for the reply component
   const { data: agentsData, isLoading: isLoadingAgents } = useAgents();
 
   // Fetch prospect profiles
   const { data: prospectProfiles } = useProspectProfilesQuery();
+
+  // Fetch detailed profile data with active conversation
+  const { data: detailedProfile, isLoading: isLoadingProfile } =
+  useProspectProfileDetailQuery({
+    profileId: selectedProfile?.id,
+    enabled: !!selectedProfile?.id,
+  });
+
+  useEffect(() => {
+    setSelectedProfile(prospectProfiles?.[0] || null);
+  }, [prospectProfiles]);
 
   // Auto-select first profile if none is selected
   useEffect(() => {
@@ -101,44 +116,50 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-full flex overflow-hidden">
-      <DashboardSidebar
-        brandName={brandData.name}
-        prospects={brandData.prospects}
-        selectedUseCase={null}
-        onUseCaseSelect={handleUseCaseSelect}
-        onlyUnread={onlyUnread}
-        setOnlyUnread={setOnlyUnread}
-        onAddUseCase={handleAddUseCase}
-      />
-
-      <main className="flex-1 flex min-h-0 h-full">
-        {/* Prospect Profiles Inbox - 30% width */}
-        <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
-          <ProspectProfilesInbox
-            onProfileSelect={setSelectedProfile}
-            selectedProfileId={selectedProfile?.id}
+    <BrandProvider>
+      <ProfileProvider selectedProfile={detailedProfile || null}>
+        <div className="h-full flex overflow-hidden">
+          <DashboardSidebar
+            brandName={brandData.name}
+            prospects={brandData.prospects}
+            selectedUseCase={null}
+            onUseCaseSelect={handleUseCaseSelect}
+            onlyUnread={onlyUnread}
+            setOnlyUnread={setOnlyUnread}
+            onAddUseCase={handleAddUseCase}
           />
-        </div>
 
-        {/* Detail View - 70% width */}
-        <div className="flex-1 h-full">
-          {selectedProfile ? (
-            <ProspectProfileDetail
-              profile={selectedProfile}
-              onClose={() => setSelectedProfile(null)}
-              agents={agentsData?.agents || []}
-              isLoadingAgents={isLoadingAgents}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-white/60 text-xl font-body">
-                No prospect profile selected
-              </div>
+          <main className="flex-1 flex min-h-0 h-full">
+            {/* Prospect Profiles Inbox - 30% width */}
+            <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
+              <ProspectProfilesInbox
+                onProfileSelect={setSelectedProfile}
+                selectedProfileId={selectedProfile?.id}
+              />
             </div>
-          )}
+
+            {/* Detail View - 70% width */}
+            <div className="flex-1 h-full">
+              {detailedProfile ? (
+                <ProspectProfileDetail
+                  profile={detailedProfile}
+                  onClose={() => setSelectedProfile(null)}
+                  agents={agentsData?.agents || []}
+                  isLoadingAgents={isLoadingAgents}
+                  setSelectedProfile={setSelectedProfile}
+                  isLoadingProfile={isLoadingProfile}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-white/60 text-xl font-body">
+                    No prospect profile selected
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
         </div>
-      </main>
-    </div>
+      </ProfileProvider>
+    </BrandProvider>
   );
 }
