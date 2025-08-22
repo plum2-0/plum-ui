@@ -1,21 +1,15 @@
 "use client";
 
 import { Prospect } from "@/types/brand";
-import UseCaseInsightsComponent from "./UseCaseInsights";
+import ProspectsInsights from "./ProspectInsights";
 
-interface CombinedResearchViewProps {
+interface ResearchViewProps {
   prospect: Prospect;
   brandId?: string;
-  brandData?: any;
 }
 
-export default function CombinedResearchView({
-  prospect,
-  brandId,
-  brandData,
-}: CombinedResearchViewProps) {
+export default function ResearchView({ prospect, brandId }: ResearchViewProps) {
   const posts = prospect.sourced_reddit_posts || [];
-  console.log(JSON.stringify(posts[0], null, 2));
 
   return (
     <div className="space-y-6">
@@ -34,12 +28,7 @@ export default function CombinedResearchView({
         </div>
 
         {/* Research Insights */}
-        <UseCaseInsightsComponent
-          insights={prospect.insights}
-          posts={posts}
-          brandId={brandId}
-          prospectId={prospect.id}
-        />
+        <ProspectsInsights brandId={brandId || ""} />
       </div>
 
       {/* Divider */}

@@ -14,74 +14,57 @@ import { useGenerateUseCaseInsight } from "@/hooks/api/useBrandQuery";
 
 function UseCaseSummaryContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { brand: brandData, isLoading, error, refetch } = useBrand();
-  const generateInsight = useGenerateUseCaseInsight();
   const { selectedProspect, setSelectedProspect } = useProspect();
   const [onlyUnread, setOnlyUnread] = useState(false);
 
+  // const searchParams = useSearchParams();
   // Handle prospect selection from URL params
-  useEffect(() => {
-    if (brandData?.prospects && brandData.prospects.length > 0) {
-      // Check if there's a prospect ID in URL params
-      const prospectId = searchParams.get("prospect");
-      if (prospectId) {
-        const prospect = brandData.prospects.find((p) => p.id === prospectId);
-        if (prospect) {
-          setSelectedProspect(prospect);
-        } else {
-          // Invalid prospect ID, clear selection for summary view
-          setSelectedProspect(null);
-        }
-      } else {
-        // No prospect in URL means summary view
-        setSelectedProspect(null);
-      }
-    }
-  }, [brandData?.prospects, searchParams]);
+  // useEffect(() => {
+  //   if (brandData?.prospects && brandData.prospects.length > 0) {
+  //     // Check if there's a prospect ID in URL params
+  //     const prospectId = searchParams.get("prospect");
+  //     if (prospectId) {
+  //       const prospect = brandData.prospects.find((p) => p.id === prospectId);
+  //       if (prospect) {
+  //         setSelectedProspect(prospect);
+  //       } else {
+  //         // Invalid prospect ID, clear selection for summary view
+  //         setSelectedProspect(null);
+  //       }
+  //     } else {
+  //       // No prospect in URL means summary view
+  //       setSelectedProspect(null);
+  //     }
+  //   }
+  // }, [brandData?.prospects, searchParams]);
 
-  // Update URL when prospect changes
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (selectedProspect) {
-      url.searchParams.set("prospect", selectedProspect.id);
-    } else {
-      // Remove prospect param for summary view
-      url.searchParams.delete("prospect");
-    }
-    window.history.replaceState({}, "", url.toString());
-  }, [selectedProspect]);
+  // const generateInsight = useGenerateUseCaseInsight();
+  // const handleAddUseCase = async (title: string) => {
+  //   if (!brandData) return Promise.resolve();
 
-  const handleUseCaseSelect = (useCase: Prospect | null) => {
-    // Update local state instead of navigating
-    setSelectedProspect(useCase);
-  };
+  //   const brandId = brandData.id;
 
-  const handleAddUseCase = async (title: string) => {
-    if (!brandData) return Promise.resolve();
+  //   try {
+  //     await generateInsight.mutateAsync({ brandId, title });
 
-    const brandId = brandData.id;
+  //     const updatedBrand = await refetch();
+  //     if (updatedBrand.data?.brand) {
+  //       const created = updatedBrand.data.brand.prospects?.find(
+  //         (prospect) =>
+  //           prospect.problem_to_solve.trim().toLowerCase() ===
+  //           title.trim().toLowerCase()
+  //       );
+  //       if (created) {
+  //         router.push(`/dashboard/use-case/${created.id}`);
+  //       }
+  //     }
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
 
-    try {
-      await generateInsight.mutateAsync({ brandId, title });
-
-      const updatedBrand = await refetch();
-      if (updatedBrand.data?.brand) {
-        const created = updatedBrand.data.brand.prospects?.find(
-          (prospect) =>
-            prospect.problem_to_solve.trim().toLowerCase() ===
-            title.trim().toLowerCase()
-        );
-        if (created) {
-          router.push(`/dashboard/use-case/${created.id}`);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
-    return Promise.resolve();
-  };
+  //   return Promise.resolve();
+  // };
 
   if (isLoading) {
     return (
@@ -115,10 +98,8 @@ function UseCaseSummaryContent() {
     <div className="h-full flex overflow-hidden">
       <DashboardSidebar
         selectedUseCase={selectedProspect}
-        onUseCaseSelect={handleUseCaseSelect}
         onlyUnread={onlyUnread}
         setOnlyUnread={setOnlyUnread}
-        onAddUseCase={handleAddUseCase}
         inlineSelection={true}
       />
 

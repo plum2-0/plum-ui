@@ -31,8 +31,6 @@ export default function AgentReplyBox({
   const { activeConvoId, prospectProfileId } = useProfile();
   const replyConvo = useProspectConvoReply();
   const [isCheckingReddit, setIsCheckingReddit] = useState(false);
-  console.log("activeConvoId", activeConvoId);
-  console.log("prospectProfileId", prospectProfileId);
 
   // Use the agent reply hook
   const { agents, isLoadingAgents, isGenerating, generateWithAgent } =

@@ -15,14 +15,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("requests", request);
 
     const body = (await request
       .json()
       .catch(() => ({}))) as CreateInviteRequest;
     const firestore = adminDb();
     const userId = session.user.id;
-    console.log("[Invites] Create POST start", { userId });
 
     // Resolve brandId: prefer provided, else from session, else from user doc
     let brandId =
@@ -102,14 +100,6 @@ export async function POST(request: NextRequest) {
 
     const origin = request.nextUrl.origin;
     const inviteUrl = `${origin}/invite/${token}`;
-
-    console.log("[Invites] Create POST success", {
-      userId,
-      brandId,
-      token,
-      expiresAt: expiresAt.toISOString(),
-      maxUses,
-    });
     return NextResponse.json({
       success: true,
       token,

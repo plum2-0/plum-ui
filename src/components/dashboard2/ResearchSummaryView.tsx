@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Prospect, Brand } from "@/types/brand";
 import OverviewInsights from "./OverviewInsights";
 import RedditBrandListItem from "./RedditBrandListItem";
+import AnimatedRedditList from "./AnimatedRedditList";
 
 interface CombinedResearchSummaryViewProps {
   prospects: Prospect[];
@@ -196,24 +197,24 @@ export default function ResearchSummaryView({
         <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
         {/* Posts List */}
-        <div className="space-y-4">
-          {filteredPosts.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-white/50 font-body text-base">
-                No posts found matching your filters.
-              </p>
-            </div>
-          ) : (
-            filteredPosts.map((post) => (
+        {filteredPosts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-white/50 font-body text-base">
+              No posts found matching your filters.
+            </p>
+          </div>
+        ) : (
+          <AnimatedRedditList>
+            {filteredPosts.map((post) => (
               <RedditBrandListItem
                 key={post.thing_id}
                 post={post}
                 brandId={brandId}
                 prospectId={post.prospectId}
               />
-            ))
-          )}
-        </div>
+            ))}
+          </AnimatedRedditList>
+        )}
       </div>
     </div>
   );

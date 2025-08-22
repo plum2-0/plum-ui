@@ -4,9 +4,9 @@ import { useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { RedditPost } from "@/types/brand";
 import SwipeableProspectModal from "./SwipeableProspectModal";
+import { RedditPostWithProspect } from "@/app/swipe/page";
 
 interface ProspectTargetsProps {
-  value: number;
   posts?: RedditPost[];
   brandId: string;
   brandName?: string;
@@ -19,7 +19,6 @@ interface ProspectTargetsProps {
 }
 
 export default function ProspectTargetStat({
-  value,
   posts = [],
   brandId,
   brandName,
@@ -32,8 +31,25 @@ export default function ProspectTargetStat({
 }: ProspectTargetsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Dedupe posts based on thing_id
+  const uniquePosts = posts.filter(
+    (post, index, self) =>
+      index === self.findIndex((p) => p.thing_id === post.thing_id)
+  );
+
+  // Map to RedditPostWithProspect format
+  const uniquePostsWithProspect: RedditPostWithProspect[] = uniquePosts.map(
+    (post) => ({
+      ...post,
+      prospect_id: prospectId,
+    })
+  );
+
+  // Get unique Reddit users
+  const uniqueUsers = new Set(uniquePosts.map((post) => post.author)).size;
+
   const handleCardClick = () => {
-    if (posts.length > 0) {
+    if (uniquePosts.length > 0) {
       setIsModalOpen(true);
     }
   };
@@ -46,7 +62,7 @@ export default function ProspectTargetStat({
   return (
     <>
       <div
-      className="flex justify-center cursor-pointer"
+        className="flex justify-center cursor-pointer"
         onClick={handleCardClick}
       >
         <GlassPanel
@@ -69,9 +85,9 @@ export default function ProspectTargetStat({
           <div className="relative text-center bold ">
             <div className="text-lg text-white font-body mb-2">{label}</div>
             <div className="text-emerald-300 text-5xl font-heading font-bold">
-              {posts.length}
+              {uniqueUsers}
             </div>
-            {posts.length > 0 && (
+            {uniqueUsers > 0 && (
               <div className="text-white/60 text-xs font-body mt-2">
                 {subtext}
               </div>
@@ -83,7 +99,7 @@ export default function ProspectTargetStat({
       {/* Swipeable Modal */}
       <SwipeableProspectModal
         isOpen={isModalOpen}
-        posts={posts}
+        posts={uniquePostsWithProspect}
         brandId={brandId}
         brandName={brandName}
         brandDetail={brandDetail}

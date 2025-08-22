@@ -51,10 +51,13 @@ export const markdownComponents: Components = {
         </code>
       );
     }
+    // Use span with display:block to avoid p > div nesting issue
     return (
-      <pre className="bg-[#272729] text-white/90 p-3 rounded-md overflow-x-auto mb-3 max-w-full">
-        <code {...rest} className="break-words">{children}</code>
-      </pre>
+      <span className="block bg-[#272729] text-white/90 p-3 rounded-md overflow-x-auto mb-3 max-w-full">
+        <code {...rest} className="block whitespace-pre-wrap break-words font-mono text-sm">
+          {children}
+        </code>
+      </span>
     );
   },
   h1: (props) => <h1 {...props} className="text-xl font-semibold mb-2 break-words" />,

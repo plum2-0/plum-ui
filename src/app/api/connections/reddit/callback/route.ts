@@ -144,9 +144,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(redditUser);
-    console.log("")
-
     const brandRef = firestore.collection("brands").doc(brandId);
     await brandRef.set(
       {

@@ -27,7 +27,6 @@ export default function AgentConversationDetail({
 
   const conversations = agent?.redditAgentConvos || [];
   const metrics = agent?.metrics;
-  console.log(agent);
 
   const handleConversationExpand = (conversationId: string) => {
     setExpandedConversations((prev) => new Set(prev).add(conversationId));

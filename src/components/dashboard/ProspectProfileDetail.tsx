@@ -42,7 +42,6 @@ export function ProspectProfileDetail({
 
   // Get the active conversation
   const activeConversation = currentProfile.active_convos?.[0];
-  console.log("📌 activeConversation", activeConversation);
 
   // Mock engagement analytics (would come from real data in production)
   const engagementData = {

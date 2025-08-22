@@ -59,7 +59,6 @@ export async function GET() {
 
     const brandDoc = querySnapshot.docs[0];
     const brandData = brandDoc.data();
-    console.log(JSON.stringify(brandData, null, 2));
 
     // Check if brand has Reddit configuration
     const hasRedditConfig = !!brandData.source?.reddit?.oauth_token;

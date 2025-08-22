@@ -56,12 +56,10 @@ export const useAgent = (agentId: string) =>
     queryKey: AGENT_QUERY_KEYS.detail(agentId),
     queryFn: async () => {
       const response = await fetch(`${API_BASE}/api/agents/${agentId}`);
-      console.log("response", response);
       if (!response.ok) {
         throw new Error("Failed to fetch agent details");
       }
       const data = await response.json();
-      console.log("response", data);
 
       // Map backend (snake_case) to UI (camelCase) and normalize Reddit convos
       const mapped: AgentDetails = {

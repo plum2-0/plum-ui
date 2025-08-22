@@ -89,12 +89,10 @@ export function ProspectProfilesInbox({
 
   const handleMarkAsRead = (profileId: string) => {
     // TODO: Handle mark as read
-    console.log("Mark as read:", profileId);
   };
 
   const handleArchive = (profileId: string) => {
     // TODO: Handle archive
-    console.log("Archive:", profileId);
   };
 
   if (error) {

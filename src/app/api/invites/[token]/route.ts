@@ -37,11 +37,6 @@ export async function POST(request: NextRequest, context: any) {
         .get();
       const brandExists = brandDoc.exists;
       const brandData = brandExists ? brandDoc.data() : null;
-      console.log("[Invites] Brand verification", {
-        brandId: result.brandId,
-        brandExists,
-        userIds: brandData?.user_ids,
-      });
     }
 
     const res = NextResponse.json(result);
@@ -62,18 +57,8 @@ export async function POST(request: NextRequest, context: any) {
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
     } catch {}
-    console.log("[Invites] Accept POST success", {
-      userId,
-      brandId: result.brandId,
-      token,
-    });
     return res;
   } catch (error: any) {
-    console.error("[Invites] Accept POST error", {
-      message: error?.message,
-      stack: error?.stack,
-    });
-
     if (error instanceof InviteError) {
       return NextResponse.json(
         { error: error.message },
