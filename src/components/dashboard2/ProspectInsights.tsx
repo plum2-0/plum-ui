@@ -31,7 +31,7 @@ interface ProspectInsightsProps {
 
 export default function ProspectsInsights({ brandId }: ProspectInsightsProps) {
   const { selectedProspect } = useProspect();
-  
+
   if (!selectedProspect) {
     return null;
   }
@@ -40,10 +40,7 @@ export default function ProspectsInsights({ brandId }: ProspectInsightsProps) {
   const pendingPosts = selectedProspect.byType.pending.posts;
 
   // Combine solutions and market opportunities
-  const solutionsAndOpportunities = [
-    ...(insights?.identified_solutions || []),
-    ...(insights?.market_opportunities || []),
-  ];
+  const solutionsAndOpportunities = [...(insights?.identified_solutions || [])];
 
   // If no insights, show empty state
   if (!insights) {
@@ -190,7 +187,8 @@ export default function ProspectsInsights({ brandId }: ProspectInsightsProps) {
                   d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
                 />
               </svg>
-              Review {selectedProspect.byType.pending.postCount} Pending Reddit Posts
+              Review {selectedProspect.byType.pending.postCount} Pending Reddit
+              Posts
             </h4>
             <AnimatedRedditList>
               {pendingPosts.map((post) => (

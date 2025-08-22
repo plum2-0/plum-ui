@@ -7,19 +7,13 @@ import { useProspect } from "@/contexts/ProspectContext";
 import { useKeywordQueue } from "@/contexts/KeywordQueueContext";
 import { useBrand } from "@/contexts/BrandContext";
 
-interface MetricStateData {
-  totalPotentialCustomers: number;
-  totalCompetitorMentions: number;
-  totalPosts: number;
-}
-
 export default function BrandSummary() {
   const { brand: brandData } = useBrand();
   const { selectedProspect } = useProspect();
   const { queuedKeywords, hasQueuedKeywords } = useKeywordQueue();
-  
+
   if (!brandData) return null;
-  
+
   const brandId = brandData.id;
   return (
     <GlassPanel
@@ -179,16 +173,18 @@ export default function BrandSummary() {
             <p
               className="text-white/70 font-body text-sm transition-all duration-500"
               style={{
-                color: hasQueuedKeywords ? "#86efac" : "rgba(255, 255, 255, 0.7)",
+                color: hasQueuedKeywords
+                  ? "#86efac"
+                  : "rgba(255, 255, 255, 0.7)",
                 textShadow: hasQueuedKeywords
                   ? "0 0 10px rgba(34, 197, 94, 0.3)"
                   : "none",
               }}
             >
               {hasQueuedKeywords
-                ? `🚀 Ready to discover with ${queuedKeywords.length} new keyword${
-                    queuedKeywords.length !== 1 ? "s" : ""
-                  }`
+                ? `🚀 Ready to discover with ${
+                    queuedKeywords.length
+                  } new keyword${queuedKeywords.length !== 1 ? "s" : ""}`
                 : "Harness AI to discover fresh opportunities in the digital realm"}
             </p>
           </div>

@@ -44,7 +44,7 @@ export default function ResearchSummaryView({
     if (sortBy === "date") {
       deduplicatedPosts.sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.created_utc).getTime() - new Date(a.created_utc).getTime()
       );
     } else {
       deduplicatedPosts.sort((a, b) =>

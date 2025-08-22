@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import SocialMediaManager from "@/components/settings/SocialMediaManager";
-import { useBrandQuery, BRAND_QUERY_KEY } from "@/hooks/api/useBrandQuery";
+import { useBrandQuery, BRAND_QUERY_KEYS } from "@/hooks/api/useBrandQuery";
 import { Brand } from "@/types/brand";
 
 export default function SettingsSocialPage() {
@@ -10,7 +10,7 @@ export default function SettingsSocialPage() {
   const { data, isLoading, error } = useBrandQuery();
 
   const handleBrandUpdate = (updatedBrand: Brand) => {
-    queryClient.setQueryData(BRAND_QUERY_KEY, { brand: updatedBrand });
+    queryClient.setQueryData(BRAND_QUERY_KEYS.all, { brand: updatedBrand });
   };
 
   if (isLoading) {

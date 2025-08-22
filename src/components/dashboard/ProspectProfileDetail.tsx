@@ -200,10 +200,7 @@ export function ProspectProfileDetail({
                           ease: "easeOut",
                         }}
                       >
-                        <LiquidBadge
-                          variant="default"
-                          size="sm"
-                          className="text-xs cursor-pointer hover:scale-105 transition-transform"
+                        <div
                           onClick={() =>
                             window.open(
                               `https://www.reddit.com/r/${subreddit.subreddit}`,
@@ -211,8 +208,14 @@ export function ProspectProfileDetail({
                             )
                           }
                         >
-                          r/{subreddit.subreddit} ({subreddit.count})
-                        </LiquidBadge>
+                          <LiquidBadge
+                            variant="default"
+                            size="sm"
+                            className="text-xs cursor-pointer hover:scale-105 transition-transform"
+                          >
+                            r/{subreddit.subreddit} ({subreddit.count})
+                          </LiquidBadge>
+                        </div>
                       </motion.div>
                     ))}
                   {currentProfile.subreddit_affinities.top_by_volume.length >

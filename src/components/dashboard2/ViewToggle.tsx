@@ -3,14 +3,14 @@
 import { ReactNode } from "react";
 
 interface ViewToggleOption {
-  key: "research" | "posts" | "viz";
+  key: "research" | "viz";
   label: string;
   icon?: ReactNode;
 }
 
 interface ViewToggleProps {
-  value: "research" | "posts" | "viz";
-  onChange: (value: "research" | "posts" | "viz") => void;
+  value: "research" | "viz";
+  onChange: (value: "research" | "viz") => void;
   options: ViewToggleOption[];
 }
 

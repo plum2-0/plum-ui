@@ -63,11 +63,6 @@ export default function FetchNewPostsButton({
       shimmer={true}
       liquid={true}
       className={className}
-      title={
-        isDisabled
-          ? "Select a prospect to unleash the power"
-          : "⚡ UNLEASH THE POWER: Summon fresh Reddit posts from the digital realm"
-      }
     >
       <div className="flex items-center gap-2">
         {refreshPosts.isPending ? (

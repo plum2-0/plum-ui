@@ -120,8 +120,6 @@ export default function DashboardPage() {
       <ProfileProvider selectedProfile={detailedProfile || null}>
         <div className="h-full flex overflow-hidden">
           <DashboardSidebar
-            brandName={brandData.name}
-            prospects={brandData.prospects}
             selectedUseCase={null}
             onUseCaseSelect={handleUseCaseSelect}
             onlyUnread={onlyUnread}

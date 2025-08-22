@@ -8,6 +8,28 @@ export interface ProspectProfile {
   prospect_source?: string;
   prospect_source_id?: string;
   active_convos?: Conversation[];
+  inferred_attributes?: Array<{
+    attribute_key: string;
+    attribute_value: string;
+    confidence?: string;
+  }>;
+  account_stats?: {
+    total_karma: number;
+    account_age_days: number;
+    link_karma: number;
+    comment_karma: number;
+  };
+  subreddit_affinities?: {
+    top_by_volume: Array<{
+      subreddit: string;
+      count: number;
+    }>;
+  };
+  best_reply_windows?: Array<{
+    weekday: string;
+    start_hour_utc: number;
+    end_hour_utc: number;
+  }>;
   // Mocked fields for enhanced UI
   lastMessageTime?: number;
   unreadCount?: number;

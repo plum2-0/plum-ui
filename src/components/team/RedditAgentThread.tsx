@@ -743,13 +743,7 @@ export default function RedditAgentThread({
                                   updateActionStatus(a.actionId, "dismissed")
                                 }
                                 className="px-3 py-1 rounded-xl text-xs font-body font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50"
-                                background="white-10"
-                                blur={10}
-                                border="thin-20"
-                                style={{
-                                  color: "white",
-                                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                                }}
+                                variant="medium"
                               >
                                 {isUpdatingAction === a.actionId
                                   ? "..."
