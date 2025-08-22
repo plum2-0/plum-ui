@@ -46,7 +46,7 @@ export default function ProspectTargetStat({
   return (
     <>
       <div
-        className="flex justify-center cursor-pointer"
+      className="flex justify-center cursor-pointer"
         onClick={handleCardClick}
       >
         <GlassPanel

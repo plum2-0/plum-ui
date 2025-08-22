@@ -20,6 +20,7 @@ export interface RedditPost {
   suggested_agent_reply?: string;
   insert_timestamp?: string;
   status: "IGNORE" | "REPLY" | "PENDING" | "SUGGESTED_REPLY" | string;
+  tags?: PostTags;
 }
 
 export interface Prospect {
@@ -27,7 +28,7 @@ export interface Prospect {
   agent: any | null;
   problem_to_solve: string;
   keywords: string[];
-  insights: any | null;
+  insights: UseCaseInsights | null;
   sourced_reddit_posts: RedditPost[];
   prosepect_profiles: any[];
 }
@@ -57,7 +58,7 @@ export interface UseCaseInsights {
   identified_solutions: string[];
   willingness_to_pay: string;
   demographic_breakdown: string[];
-  X;
+  X: any;
   top_competitors: string[];
   tag_counts: {
     potential_customer: number;

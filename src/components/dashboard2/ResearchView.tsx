@@ -14,8 +14,8 @@ export default function CombinedResearchView({
   brandId,
   brandData,
 }: CombinedResearchViewProps) {
-  // Get posts for this prospect
   const posts = prospect.sourced_reddit_posts || [];
+  console.log(JSON.stringify(posts[0], null, 2));
 
   return (
     <div className="space-y-6">

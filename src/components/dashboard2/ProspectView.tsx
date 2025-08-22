@@ -5,7 +5,7 @@ import GlassPanel from "@/components/ui/GlassPanel";
 import ViewToggle from "./ViewToggle";
 import CombinedResearchView from "./ResearchView";
 import VizView from "./VizView";
-import CombinedResearchSummaryView from "./ResearchSummaryView";
+import ResearchSummaryView from "./ResearchSummaryView";
 import VizSummaryView from "./VizSummaryView";
 import { useProspect } from "@/contexts/ProspectContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -86,7 +86,7 @@ export default function ProspectView() {
         >
           {/* ViewToggle with proper spacing */}
           <div className="px-6 pt-6 pb-2">
-            <div className="flex justify-center">
+            <div className="flex ">
               <ViewToggle
                 value={currentView}
                 onChange={setCurrentView}
@@ -100,7 +100,7 @@ export default function ProspectView() {
 
           <div className="px-6 pb-6">
             {currentView === "research" ? (
-              <CombinedResearchSummaryView
+              <ResearchSummaryView
                 prospects={prospects}
                 brandId={brandId}
                 brandData={brandData}

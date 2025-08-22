@@ -182,14 +182,9 @@ export default function DashboardSidebar({
                 Discover
               </span>
             </button>
-
-            {/* Use Cases List (indented with connector) */}
-            <div className="space-y-1 ml-2 pl-3 border-l border-white/10">
-              {/* Add Use Case Button */}
-            </div>
           </div>
 
-          <button
+          {/* <button
             onClick={() => router.push("/swipe")}
             className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 transform-gpu ${
               pathname === "/swipe"
@@ -263,7 +258,7 @@ export default function DashboardSidebar({
             <span className="flex-1 text-left font-heading font-bold tracking-wide">
               Select
             </span>
-          </button>
+          </button> */}
 
           {/* Engaged Section - Right underneath Select */}
           <button
@@ -340,7 +335,7 @@ export default function DashboardSidebar({
               />
             </svg>
             <span className="flex-1 text-left font-heading font-bold tracking-wide">
-              Engaged
+              Engage
             </span>
           </button>
 

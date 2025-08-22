@@ -192,7 +192,7 @@ export default function OverviewInsights({
                       <th className="text-left p-4 font-heading text-white/80 font-semibold">
                         Use Case
                       </th>
-                      <th className="text-center p-4 font-heading text-white/80 font-semibold min-w-[100px]">
+                      <th className="text-center p-4 font-heading text-white/80 font-semibold min-w-[120px]">
                         <div className="flex items-center justify-center gap-2">
                           <svg
                             className="w-4 h-4 text-emerald-400"
@@ -207,25 +207,7 @@ export default function OverviewInsights({
                               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             />
                           </svg>
-                          Potential
-                        </div>
-                      </th>
-                      <th className="text-center p-4 font-heading text-white/80 font-semibold min-w-[100px]">
-                        <div className="flex items-center justify-center gap-2">
-                          <svg
-                            className="w-4 h-4 text-rose-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                            />
-                          </svg>
-                          Competitors
+                          Potential Customers
                         </div>
                       </th>
                       <th className="text-center p-4 font-heading text-white/80 font-semibold min-w-[80px]">
@@ -239,11 +221,10 @@ export default function OverviewInsights({
                   <tbody>
                     {prospects.map((prospect, index) => {
                       const ucPosts = prospect.sourced_reddit_posts || [];
-                      // TODO: Update tag logic when tags are implemented in new API
-                      const ucTotals = {
-                        potential_customer: 0,
-                        competitor_mention: 0,
-                      };
+                      
+                      // Count distinct Reddit users as potential customers
+                      const uniqueAuthors = new Set(ucPosts.map(post => post.author));
+                      const potentialCustomerCount = uniqueAuthors.size;
 
                       return (
                         <tr
@@ -272,22 +253,7 @@ export default function OverviewInsights({
                               }}
                             >
                               <span className="text-emerald-300 font-heading font-bold text-xl">
-                                {ucTotals.potential_customer}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="p-4 text-center">
-                            <div
-                              className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg"
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(239, 68, 68, 0.15))",
-                                border: "1px solid rgba(244, 63, 94, 0.2)",
-                              }}
-                            >
-                              <span className="text-rose-300 font-heading font-bold text-xl">
-                                {ucTotals.competitor_mention}
+                                {potentialCustomerCount}
                               </span>
                             </div>
                           </td>

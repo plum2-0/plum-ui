@@ -1,14 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import type { Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeSanitize from "rehype-sanitize";
 import type { RedditPost } from "@/types/brand";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
+import {
+  formatTimeAgo,
+  RedditPostHeader,
+  RedditPostTitle,
+  RedditPostContent,
+  RedditStatBadges,
+} from "./RedditItemCommon";
 
 interface RedditPostListItemProps {
   post: RedditPost;
@@ -17,21 +19,9 @@ interface RedditPostListItemProps {
   onIgnore?: (post: RedditPost) => Promise<void>;
 }
 
-// Helper function to format time ago
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffInSeconds < 60) return "just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  return `${Math.floor(diffInSeconds / 86400)}d ago`;
-}
-
 // Agents will be used for reply generation instead of personas
 
-export default function RedditPostListItem({
+export default function RedditBrandListItem({
   post,
   brandId,
   prospectId,
@@ -55,7 +45,6 @@ export default function RedditPostListItem({
 
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [showReplyBox, setShowReplyBox] = useState(!!hasSuggestedReply);
-  const [isContentExpanded, setIsContentExpanded] = useState(false);
 
   // Check if we're returning from Reddit auth for this specific post
   useEffect(() => {
@@ -97,42 +86,6 @@ export default function RedditPostListItem({
     )?.[1]
     ?.trim();
 
-  // Markdown renderers for Reddit-like dark theme
-  const markdownComponents: Components = {
-    a: (props) => <a {...props} className="text-blue-400 hover:underline" />,
-    p: (props) => <p {...props} className="mb-2" />,
-    ul: (props) => <ul {...props} className="list-disc pl-6 mb-2" />,
-    ol: (props) => <ol {...props} cla ssName="list-decimal pl-6 mb-2" />,
-    li: (props) => <li {...props} className="mb-1" />,
-    blockquote: (props) => (
-      <blockquote
-        {...props}
-        className="border-l-4 border-white/20 pl-3 text-white/70 italic"
-      />
-    ),
-    code: (props: any) => {
-      const { inline, children, ...rest } = props;
-      if (inline) {
-        return (
-          <code
-            {...rest}
-            className="bg-[#272729] text-white/90 px-1.5 py-0.5 rounded"
-          >
-            {children}
-          </code>
-        );
-      }
-      return (
-        <pre className="bg-[#272729] text-white/90 p-3 rounded-md overflow-auto mb-3">
-          <code {...rest}>{children}</code>
-        </pre>
-      );
-    },
-    h1: (props) => <h1 {...props} className="text-xl font-semibold mb-2" />,
-    h2: (props) => <h2 {...props} className="text-lg font-semibold mb-2" />,
-    h3: (props) => <h3 {...props} className="text-base font-semibold mb-2" />,
-  };
-
   async function handleIgnore() {
     if (!brandId || !prospectId) {
       console.error("Missing brandId or prospectId for ignore action");
@@ -164,7 +117,9 @@ export default function RedditPostListItem({
   async function handleAddToEngage() {
     if (!brandId || !prospectId) {
       console.error("Missing brandId or prospectId for queue action");
-      alert("Unable to add post to engagement queue. Missing required information.");
+      alert(
+        "Unable to add post to engagement queue. Missing required information."
+      );
       return;
     }
 
@@ -186,7 +141,6 @@ export default function RedditPostListItem({
 
   // Get truncated content for preview
   const contentToShow = postContent || "";
-  const shouldShowExpandButton = contentToShow.length > 200;
   return (
     <div id={`post-${postId}`} className="group">
       <div className="rounded-lg border border-[#343536] bg-[#1a1a1b] p-5 transition-colors duration-200 hover:border-[#4f5355]">
@@ -194,128 +148,18 @@ export default function RedditPostListItem({
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             {/* Subreddit mention */}
-            <div className="flex items-center gap-2 text-xs text-white/60 mb-2">
-              {/* Reddit icon */}
-              <Image
-                src="/reddit.svg"
-                alt="Reddit"
-                width={16}
-                height={16}
-                className="w-4 h-4"
-                aria-hidden={true}
-              />
-              <span className="font-body">
-                Mention of{" "}
-                {mentionedBrand && (
-                  <span className="font-semibold text-orange-400">
-                    {mentionedBrand}
-                  </span>
-                )}{" "}
-                in r/{postSubreddit}
-              </span>
-              <span className="text-white/40">•</span>
-              <span className="font-body">
-                {formatTimeAgo(postCreatedAt)} by {postAuthor}
-              </span>
-            </div>
+            <RedditPostHeader
+              subreddit={postSubreddit}
+              author={postAuthor}
+              createdAt={postCreatedAt}
+              mentionedBrand={mentionedBrand}
+            />
 
             {/* Post title - Clickable */}
-            <h3
-              className="text-white font-heading text-xl md:text-2xl font-semibold leading-tight mb-3 hover:text-white/90 transition-colors cursor-pointer"
-              onClick={() =>
-                window.open(postLink, "_blank", "noopener,noreferrer")
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  window.open(postLink, "_blank", "noopener,noreferrer");
-                }
-              }}
-              tabIndex={0}
-              role="link"
-              title="Open Reddit post in new tab"
-            >
-              {postTitle}
-            </h3>
+            <RedditPostTitle title={postTitle} link={postLink} />
 
             {/* Post Content - Collapsible */}
-            {contentToShow && (
-              <div className="mb-4" onClick={(e) => e.stopPropagation()}>
-                <div className="relative">
-                  {false && shouldShowExpandButton && <div />}
-                  <div
-                    className="font-body text-[15px] md:text-[16px] leading-relaxed"
-                    style={{
-                      color: "#d7dadc",
-                      overflow: isContentExpanded ? "visible" : "hidden",
-                      maxHeight: isContentExpanded ? "none" : 240,
-                      paddingTop: shouldShowExpandButton ? 8 : 0,
-                    }}
-                  >
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeSanitize]}
-                      components={markdownComponents}
-                    >
-                      {contentToShow}
-                    </ReactMarkdown>
-                  </div>
-                  {!isContentExpanded && shouldShowExpandButton && (
-                    <div
-                      className="pointer-events-none absolute bottom-0 left-0 right-0 h-12"
-                      style={{
-                        background:
-                          "linear-gradient(to bottom, rgba(26,26,27,0), rgba(26,26,27,0.9))",
-                      }}
-                    />
-                  )}
-                </div>
-                {shouldShowExpandButton && (
-                  <div className="mt-2 flex justify-start">
-                    <button
-                      onClick={() => setIsContentExpanded(!isContentExpanded)}
-                      className="text-white/60 hover:text-white transition-colors text-xs font-body flex items-center gap-1"
-                    >
-                      {isContentExpanded ? (
-                        <>
-                          <span>Collapse</span>
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 15l7-7 7 7"
-                            />
-                          </svg>
-                        </>
-                      ) : (
-                        <>
-                          <span>Expand</span>
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            {contentToShow && <RedditPostContent content={contentToShow} />}
 
             {/* Tags removed with SubredditPost deprecation */}
 
@@ -325,48 +169,10 @@ export default function RedditPostListItem({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Left-aligned counters styled as badges */}
-              <div className="flex items-center gap-2 text-white/70 font-body text-xs">
-                <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#343536] bg-[#272729]"
-                  aria-label="Upvotes"
-                  title="Upvotes"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 11l5-5m0 0l5 5m-5-5v12"
-                    />
-                  </svg>
-                  <span className="font-medium">{postUpVotes}</span>
-                </span>
-                <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#343536] bg-[#272729]"
-                  aria-label="Comments"
-                  title="Comments"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <span className="font-medium">{postNumComments}</span>
-                </span>
-              </div>
+              <RedditStatBadges
+                upvotes={postUpVotes}
+                comments={postNumComments}
+              />
 
               {/* Spacer to push actions to the right */}
               <div className="ml-auto flex items-center gap-3">

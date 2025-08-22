@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Prospect, Brand } from "@/types/brand";
 import OverviewInsights from "./OverviewInsights";
-import RedditPostListItem from "./RedditBrandListItem";
+import RedditBrandListItem from "./RedditBrandListItem";
 
 interface CombinedResearchSummaryViewProps {
   prospects: Prospect[];
@@ -11,7 +11,7 @@ interface CombinedResearchSummaryViewProps {
   brandData?: Brand | null;
 }
 
-export default function CombinedResearchSummaryView({
+export default function ResearchSummaryView({
   prospects,
   brandId,
 }: CombinedResearchSummaryViewProps) {
@@ -205,7 +205,7 @@ export default function CombinedResearchSummaryView({
             </div>
           ) : (
             filteredPosts.map((post) => (
-              <RedditPostListItem
+              <RedditBrandListItem
                 key={post.thing_id}
                 post={post}
                 brandId={brandId}

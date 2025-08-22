@@ -2,7 +2,7 @@
 
 import GlassPills from "./GlassPills";
 import SolutionsOpportunities from "./SolutionsOpportunities";
-import RedditPostListItem from "./RedditBrandListItem";
+import RedditBrandListItem from "./RedditBrandListItem";
 import type { RedditPost } from "@/types/brand";
 
 interface UseCaseInsightsProps {
@@ -18,6 +18,9 @@ export default function UseCaseInsightsComponent({
   brandId,
   prospectId,
 }: UseCaseInsightsProps) {
+  // Filter posts to only include those with PENDING status
+  const pendingPosts = posts.filter((post) => post.status === "PENDING");
+
   // Combine solutions and market opportunities
   const solutionsAndOpportunities = [
     ...(insights?.identified_solutions || []),
@@ -130,7 +133,7 @@ export default function UseCaseInsightsComponent({
         )}
 
         {/* Reddit Posts Section */}
-        {posts && posts.length > 0 && (
+        {pendingPosts && pendingPosts.length > 0 && (
           <div>
             <h4 className="text-white/90 font-heading text-lg font-semibold mb-4 flex items-center gap-2">
               <svg
@@ -146,12 +149,12 @@ export default function UseCaseInsightsComponent({
                   d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
                 />
               </svg>
-              Related Reddit Posts ({posts.length})
+              Review ({pendingPosts.length}) Pending Reddit Posts
             </h4>
             <div className="space-y-4">
-              {posts.map((post) => (
-                <RedditPostListItem 
-                  key={post.thing_id} 
+              {pendingPosts.map((post) => (
+                <RedditBrandListItem
+                  key={post.thing_id}
                   post={post}
                   brandId={brandId}
                   prospectId={prospectId}
