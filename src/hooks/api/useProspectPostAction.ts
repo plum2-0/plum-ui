@@ -47,7 +47,12 @@ interface ProspectPostActionRequest {
 export function useProspectPostAction() {
   const queryClient = useQueryClient();
 
-  return useMutation<boolean, Error, ProspectPostActionParams>({
+  return useMutation<
+    boolean,
+    Error,
+    ProspectPostActionParams,
+    { previousBrandData?: { brand: Brand } }
+  >({
     onMutate: async ({ post, action, brandId }) => {
       // Cancel any outgoing refetches to prevent overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ["brand", brandId] });
@@ -121,7 +126,7 @@ export function useProspectPostAction() {
         reddit_post: {
           thing_id: post.thing_id,
           title: post.title,
-          content: post.content || post.title,
+          content: post.content || post.title || '',
           author: post.author,
           subreddit: post.subreddit,
           permalink: post.permalink,
@@ -129,7 +134,7 @@ export function useProspectPostAction() {
           score: post.score,
           upvotes: post.upvotes,
           downvotes: post.downvotes,
-          reply_count: post.reply_count,
+          reply_count: post.reply_count || 0,
           thumbnail: post.thumbnail,
           link_flair: post.link_flair,
           suggested_agent_reply: post.suggested_agent_reply,

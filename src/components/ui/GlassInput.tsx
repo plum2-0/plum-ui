@@ -112,7 +112,6 @@ export const GlassInput = forwardRef<
               ...inputStyles,
               minHeight: "80px",
               maxHeight: "300px",
-              ...textareaProps.style,
             }}
           />
           {shimmer && (
