@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, MessageCircle, Clock, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
 
@@ -21,7 +21,7 @@ interface ProspectProfilesInboxProps {
   selectedProfileId?: string;
 }
 
-type FilterType = "all" | "unread" | "replied" | "pending" | "suggested";
+type FilterType = "all" | "your-move" | "their-move";
 type SortType = "recent" | "engagement" | "unread";
 
 export function ProspectProfilesInbox({
@@ -30,7 +30,7 @@ export function ProspectProfilesInbox({
 }: ProspectProfilesInboxProps) {
   const { data: profiles, isLoading, error } = useProspectProfilesQuery();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<FilterType>("all");
+  const [filterType, setFilterType] = useState<FilterType>("your-move");
   const [sortType] = useState<SortType>("recent");
 
   // Filter and sort profiles
@@ -50,20 +50,18 @@ export function ProspectProfilesInbox({
       );
     }
 
-    // Apply status filter - Note: active_convo not available in list view anymore
-    // Will need to be handled differently or removed
+    // Apply status filter
     switch (filterType) {
-      case "unread":
-        filtered = filtered.filter((p) => (p.unreadCount ?? 0) > 0);
+      case "your-move":
+        filtered = filtered.filter(
+          (p) =>
+            p.inbox_status === "UNACTIONED" ||
+            p.status === "PENDING" ||
+            p.status === "SUGGESTED_REPLY"
+        );
         break;
-      case "replied":
+      case "their-move":
         filtered = filtered.filter((p) => p.status === "REPLY");
-        break;
-      case "pending":
-        filtered = filtered.filter((p) => p.status === "PENDING");
-        break;
-      case "suggested":
-        filtered = filtered.filter((p) => p.status === "SUGGESTED_REPLY");
         break;
     }
 
@@ -150,58 +148,60 @@ export function ProspectProfilesInbox({
 
           {/* Filter Chips */}
           <div className="flex gap-2 mb-3 overflow-x-auto">
-            {(["all", "unread", "replied", "suggested"] as FilterType[]).map(
-              (filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setFilterType(filter)}
-                  className={cn(
-                    "px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 transform-gpu whitespace-nowrap",
-                    filterType === filter
-                      ? "text-purple-300"
-                      : "text-white/60 hover:text-white/80"
-                  )}
-                  style={{
-                    background:
-                      filterType === filter
-                        ? "linear-gradient(145deg, rgba(168, 85, 247, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%)"
-                        : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
-                    border:
-                      filterType === filter
-                        ? "1px solid rgba(168, 85, 247, 0.3)"
-                        : "1px solid rgba(255, 255, 255, 0.12)",
-                    boxShadow:
-                      filterType === filter
-                        ? "0 4px 12px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)"
-                        : "0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
-                    transform:
-                      filterType === filter
-                        ? "translateY(-1px)"
-                        : "translateY(0)",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (filterType !== filter) {
-                      e.currentTarget.style.background =
-                        "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (filterType !== filter) {
-                      e.currentTarget.style.background =
-                        "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
-                    }
-                  }}
-                >
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </button>
-              )
-            )}
+            {(
+              [
+                { key: "all", label: "All" },
+                { key: "your-move", label: "Your Move" },
+                { key: "their-move", label: "Their Move" },
+              ] as Array<{ key: FilterType; label: string }>
+            ).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilterType(key)}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 transform-gpu whitespace-nowrap",
+                  filterType === key
+                    ? "text-purple-300"
+                    : "text-white/60 hover:text-white/80"
+                )}
+                style={{
+                  background:
+                    filterType === key
+                      ? "linear-gradient(145deg, rgba(168, 85, 247, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%)"
+                      : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+                  border:
+                    filterType === key
+                      ? "1px solid rgba(168, 85, 247, 0.3)"
+                      : "1px solid rgba(255, 255, 255, 0.12)",
+                  boxShadow:
+                    filterType === key
+                      ? "0 4px 12px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)"
+                      : "0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+                  transform:
+                    filterType === key ? "translateY(-1px)" : "translateY(0)",
+                }}
+                onMouseEnter={(e) => {
+                  if (filterType !== key) {
+                    e.currentTarget.style.background =
+                      "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (filterType !== key) {
+                    e.currentTarget.style.background =
+                      "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow =
+                      "0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
+                  }
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -283,10 +283,13 @@ export function ProspectProfileCard({
   // const latestPost = profile.active_convos?.reddit_conversations[0];
   const isPending = profile.status === "PENDING";
   const hasSuggested = profile.status === "SUGGESTED_REPLY";
+  const isUnactioned = profile.inbox_status === "UNACTIONED";
 
-  const getTimeAgo = (timestamp?: number) => {
+  const getTimeAgo = (timestamp?: number | string) => {
     if (!timestamp) return "";
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    const time =
+      typeof timestamp === "string" ? new Date(timestamp).getTime() : timestamp;
+    const seconds = Math.floor((Date.now() - time) / 1000);
     if (seconds < 60) return "just now";
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
@@ -294,6 +297,19 @@ export function ProspectProfileCard({
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
+  };
+
+  const getInboxStatusColor = (status?: string) => {
+    switch (status) {
+      case "UNACTIONED":
+        return "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/30";
+      case "ACTIONED":
+        return "bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-500/30";
+      case "ARCHIVED":
+        return "bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-400 border-gray-500/30";
+      default:
+        return "bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-300 border-blue-500/30";
+    }
   };
 
   return (
@@ -307,13 +323,13 @@ export function ProspectProfileCard({
     >
       <GlassCard
         blur="light"
-        glow={hasSuggested || isPending}
+        glow={hasSuggested || isPending || isUnactioned}
         className={cn(
           "p-4 cursor-pointer transition-all duration-300 relative overflow-hidden group",
           isSelected
             ? "bg-purple-500/15 border-l-4 border-l-green-400"
             : "hover:bg-white/8 hover:translate-x-1",
-          (isPending || hasSuggested) && "font-medium"
+          (isPending || hasSuggested || isUnactioned) && "font-medium"
         )}
       >
         {/* Hover glow effect */}
@@ -344,15 +360,22 @@ export function ProspectProfileCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-heading font-semibold text-white truncate">
                       {profile.name}
                     </h3>
                   </div>
+
+                  <div className="flex items-center gap-3 mb-1">
+                    {profile.last_contact_time && (
+                      <div className="flex items-center gap-1 text-xs text-white/50">
+                        <Clock className="w-3 h-3" />
+                        <span>{getTimeAgo(profile.last_contact_time)}</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex items-center gap-2">
-                    <p className="text-xs text-white/60">
-                      {getTimeAgo(profile.lastMessageTime)}
-                    </p>
                     {profile.status && (
                       <LiquidBadge
                         variant={
@@ -377,12 +400,24 @@ export function ProspectProfileCard({
             </div>
           </div>
 
-          {/* Message Preview - Simplified without active_convo */}
-          {profile.prospect_source_id && (
-            <div className="mt-3 p-2 bg-white/3 rounded-md">
-              <p className="text-sm text-white/80 line-clamp-2">
-                View details to see conversation
-              </p>
+          {/* Contact Info */}
+          {profile.last_contacted_subreddit && (
+            <div className="mt-3">
+              <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                <MessageCircle className="w-3.5 h-3.5 text-purple-300 flex-shrink-0" />
+                <p className="text-xs text-white/70">
+                  Last contacted in{" "}
+                  <span className="text-purple-300 font-medium">
+                    r/{profile.last_contacted_subreddit}
+                  </span>
+                  {profile.last_contact_time && (
+                    <span className="text-white/50">
+                      {" "}
+                      • {getTimeAgo(profile.last_contact_time)}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
           )}
         </div>

@@ -38,6 +38,9 @@ export interface ProspectProfile {
   tags?: string[];
   interestedUseCase?: string;
   status?: "REPLY" | "PENDING" | "SUGGESTED_REPLY";
+  inbox_status?: "UNACTIONED" | "ACTIONED" | "ARCHIVED";
+  last_contacted_subreddit?: string;
+  last_contact_time?: string;
 }
 
 export interface Conversation {

@@ -7,6 +7,7 @@ interface VizViewProps {
 }
 
 export default function VizView({ prospect }: VizViewProps) {
+  console.log("prospect", prospect);
   return (
     <div className="min-h-[40vh] flex flex-col items-center justify-center">
       <div className="text-center">

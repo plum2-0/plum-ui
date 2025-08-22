@@ -2,9 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BrandOffering } from "@/types/brand";
 import { useToast } from "@/components/ui/Toast";
 import { RefreshIcon } from "@/components/ui/RefreshIcon";
+import { BRAND_QUERY_KEYS } from "@/hooks/api/useBrandQuery";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_PLUM_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface ProspectRefreshPostsParams {
   brandId: string;
@@ -55,7 +55,7 @@ export function useProspectRefreshPosts() {
       };
 
       const response = await fetch(
-        `${API_BASE}/api/brand/${brandId}/prospect/${prospectId}/post/refresh`,
+        `${API_BASE_URL}/api/brand/${brandId}/prospect/${prospectId}/post/refresh`,
         {
           method: "POST",
           headers: {
@@ -75,8 +75,13 @@ export function useProspectRefreshPosts() {
       return result;
     },
     onSuccess: (data, variables) => {
-      // Invalidate brand query to refresh the prospects data
-      queryClient.invalidateQueries({ queryKey: ["brand"] });
+      // Invalidate brand queries to refresh the prospects data
+      if (variables?.brandId) {
+        queryClient.invalidateQueries({
+          queryKey: BRAND_QUERY_KEYS.detail(variables.brandId),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
 
       // Show beautiful liquid glass neumorphic toast
       showToast({

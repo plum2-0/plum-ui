@@ -30,7 +30,6 @@ function IndividualProspectView({
   prospect: Prospect;
   brandId: string;
 }) {
-  console.log("SHEEEprospect", prospect);
   const [currentView, setCurrentView] = useState<"research" | "viz">(
     "research"
   );
@@ -85,7 +84,7 @@ function SummaryView({
       variant="medium"
       style={glassPanelStyles}
     >
-      <div className="px-6 pt-6 pb-2">
+      {/* <div className="px-6 pt-6 pb-2">
         <div className="flex">
           <ViewToggle
             value={currentView}
@@ -96,18 +95,14 @@ function SummaryView({
             ]}
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="px-6 pb-6">
-        {currentView === "research" ? (
-          <ResearchSummaryView
-            prospects={prospects}
-            brandId={brandId}
-            brandData={brandData}
-          />
-        ) : (
-          <VizSummaryView prospects={prospects} brandId={brandId} />
-        )}
+        <ResearchSummaryView
+          prospects={prospects}
+          brandId={brandId}
+          brandData={brandData}
+        />
       </div>
     </GlassPanel>
   );

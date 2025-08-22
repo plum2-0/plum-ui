@@ -6,6 +6,7 @@ import { Prospect } from "@/types/brand";
 import GlassPills from "./GlassPills";
 import ProspectTargetStat from "./ProspectTargetsStat";
 import SolutionsOpportunities from "./SolutionsOpportunities";
+import AllRedditPostsOverview from "./AllRedditPostsOverview";
 
 interface OverviewInsightsProps {
   prospects: Prospect[];
@@ -160,6 +161,11 @@ export default function OverviewInsights({
               items={allSolutionsAndOpportunities}
               title="Key Solutions & Opportunities"
             />
+
+            {/* <div className="border-t border-white/10"></div> */}
+
+            {/* All Reddit Posts Overview */}
+            {/* <AllRedditPostsOverview prospects={prospects} /> */}
           </div>
 
           {/* Divider */}

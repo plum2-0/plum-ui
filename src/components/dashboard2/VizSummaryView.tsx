@@ -72,9 +72,6 @@ export default function VizSummaryView({
     <div className="space-y-6">
       {/* Summary Header */}
       <div>
-        <p className="text-white/50 font-body text-sm mb-1 tracking-wide">
-          Data Visualization
-        </p>
         <h2 className="text-white font-heading text-2xl font-bold mb-2 tracking-tight">
           Brand Analytics Overview
         </h2>

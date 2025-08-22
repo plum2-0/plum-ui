@@ -128,11 +128,26 @@ export function ProspectProfileDetail({
                           </span>
                           <div className="relative group">
                             <HelpCircle className="w-3 h-3 text-white/30 cursor-help" />
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                              <div className="bg-black/90 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
-                                Confidence: {attr.confidence}
+                            <div className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 group-hover:scale-100 scale-95">
+                              <div className="relative bg-black/80 backdrop-blur-xl border border-white/20 text-white text-xs rounded-lg px-3 py-2 w-64 shadow-2xl">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg"></div>
+                                <div className="relative">
+                                  <div className="font-semibold mb-1 text-purple-300">
+                                    Confidence: <span className={cn(
+                                      "capitalize",
+                                      attr.confidence === "high" && "text-green-400",
+                                      attr.confidence === "medium" && "text-yellow-400",
+                                      attr.confidence === "low" && "text-orange-400"
+                                    )}>{attr.confidence}</span>
+                                  </div>
+                                  {attr.llm_explanation && (
+                                    <div className="text-white/90 leading-relaxed">
+                                      {attr.llm_explanation}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-4 border-transparent border-t-black/90"></div>
+                              <div className="absolute bottom-full left-4 -mb-1 w-0 h-0 border-4 border-transparent border-b-white/20"></div>
                             </div>
                           </div>
                         </div>
@@ -253,15 +268,27 @@ export function ProspectProfileDetail({
               </div>
             )}
 
-          {/* Interested In */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
-              Interested In:
-            </span>
-            <LiquidBadge variant="purple" size="md">
-              {engagementData.interestedUseCase}
-            </LiquidBadge>
-          </div>
+          {/* Topics */}
+          {currentProfile?.content_signals?.topics && 
+            currentProfile.content_signals.topics.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
+                Interested In:
+              </span>
+              {currentProfile.content_signals.topics.map((topic) => (
+                <LiquidBadge 
+                  key={topic} 
+                  variant="purple" 
+                  size="sm"
+                  className="text-xs"
+                >
+                  {topic.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                  ).join(' ')}
+                </LiquidBadge>
+              ))}
+            </div>
+          )}
 
           {/* Visual Separator */}
           <div className="border-t border-white/10"></div>

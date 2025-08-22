@@ -5,6 +5,7 @@ import SolutionsOpportunities from "./SolutionsOpportunities";
 import RedditBrandListItem from "./RedditBrandListItem";
 import AnimatedRedditList from "./AnimatedRedditList";
 import ProspectTargetStat from "./ProspectTargetsStat";
+import VizView from "./VizView";
 import { useProspect } from "@/contexts/ProspectContext";
 import type { RedditPost } from "@/types/brand";
 
@@ -92,6 +93,10 @@ export default function ProspectsInsights({ brandId }: ProspectInsightsProps) {
             <div className="border-t border-white/5" />
           </>
         )}
+
+        {/* Data Visualization Section */}
+        <VizView prospect={selectedProspect} />
+        <div className="border-t border-white/5" />
 
         {/* Solutions & Opportunities - Glass Cards Grid */}
         {solutionsAndOpportunities.length > 0 && (
