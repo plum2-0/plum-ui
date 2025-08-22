@@ -3,9 +3,9 @@
 import { useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
 import ViewToggle from "./ViewToggle";
-import CombinedResearchView from "./CombinedResearchView";
+import CombinedResearchView from "./ResearchView";
 import VizView from "./VizView";
-import CombinedResearchSummaryView from "./CombinedResearchSummaryView";
+import CombinedResearchSummaryView from "./ResearchSummaryView";
 import VizSummaryView from "./VizSummaryView";
 import { useProspect } from "@/contexts/ProspectContext";
 import { useBrand } from "@/contexts/BrandContext";
@@ -13,9 +13,9 @@ import { useBrand } from "@/contexts/BrandContext";
 export default function ProspectView() {
   const { brand: brandData } = useBrand();
   const { selectedProspect } = useProspect();
-  
+
   if (!brandData) return null;
-  
+
   const prospects = brandData.prospects || [];
   const brandId = brandData.id;
   const [currentView, setCurrentView] = useState<"research" | "viz">(
@@ -57,8 +57,8 @@ export default function ProspectView() {
 
           <div className="px-6 pb-6">
             {currentView === "research" ? (
-              <CombinedResearchView 
-                prospect={selectedProspect} 
+              <CombinedResearchView
+                prospect={selectedProspect}
                 brandId={brandId}
                 brandData={brandData}
               />
@@ -100,8 +100,8 @@ export default function ProspectView() {
 
           <div className="px-6 pb-6">
             {currentView === "research" ? (
-              <CombinedResearchSummaryView 
-                prospects={prospects} 
+              <CombinedResearchSummaryView
+                prospects={prospects}
                 brandId={brandId}
                 brandData={brandData}
               />

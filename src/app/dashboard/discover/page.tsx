@@ -5,16 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Prospect } from "@/types/brand";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
-import CenterDotsDivider from "@/components/ui/CenterDotsDivider";
-import OverviewInsights from "@/components/dashboard2/OverviewInsights";
-import AgentConversationDetail from "@/components/dashboard2/AgentConversationDetail";
-import GenerateFirstAgent from "@/components/dashboard2/GenerateFirstAgent";
 import BrandSummary from "@/components/dashboard2/BrandSummary";
 import ProspectView from "@/components/dashboard2/ProspectView";
 import { ProspectProvider, useProspect } from "@/contexts/ProspectContext";
 import { KeywordQueueProvider } from "@/contexts/KeywordQueueContext";
 import { BrandProvider, useBrand } from "@/contexts/BrandContext";
-import { useAgent, useAgents } from "@/hooks/api/useAgentQueries";
 import { useGenerateUseCaseInsight } from "@/hooks/api/useBrandQuery";
 
 function UseCaseSummaryContent() {
@@ -24,7 +19,6 @@ function UseCaseSummaryContent() {
   const generateInsight = useGenerateUseCaseInsight();
   const { selectedProspect, setSelectedProspect } = useProspect();
   const [onlyUnread, setOnlyUnread] = useState(false);
-
 
   // Handle prospect selection from URL params
   useEffect(() => {

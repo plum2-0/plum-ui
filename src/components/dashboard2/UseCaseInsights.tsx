@@ -2,13 +2,21 @@
 
 import GlassPills from "./GlassPills";
 import SolutionsOpportunities from "./SolutionsOpportunities";
+import RedditPostListItem from "./RedditBrandListItem";
+import type { RedditPost } from "@/types/brand";
 
 interface UseCaseInsightsProps {
   insights: any | null; // Allow null insights
+  posts?: RedditPost[]; // Add posts prop
+  brandId?: string;
+  prospectId?: string;
 }
 
 export default function UseCaseInsightsComponent({
   insights,
+  posts = [],
+  brandId,
+  prospectId,
 }: UseCaseInsightsProps) {
   // Combine solutions and market opportunities
   const solutionsAndOpportunities = [
@@ -118,6 +126,38 @@ export default function UseCaseInsightsComponent({
               maxVisible={10}
               emptyText="No competitors identified"
             />
+          </div>
+        )}
+
+        {/* Reddit Posts Section */}
+        {posts && posts.length > 0 && (
+          <div>
+            <h4 className="text-white/90 font-heading text-lg font-semibold mb-4 flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-orange-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                />
+              </svg>
+              Related Reddit Posts ({posts.length})
+            </h4>
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <RedditPostListItem 
+                  key={post.thing_id} 
+                  post={post}
+                  brandId={brandId}
+                  prospectId={prospectId}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
