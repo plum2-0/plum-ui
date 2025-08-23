@@ -4,7 +4,7 @@ import { useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
 import ViewToggle from "./ViewToggle";
 import ResearchView from "./ResearchView";
-import VizView from "./VizView";
+import VizProspectView from "./VizProspectView";
 import ResearchSummaryView from "./ResearchSummaryView";
 import VizSummaryView from "./VizSummaryView";
 import { useProspect } from "@/contexts/ProspectContext";
@@ -36,11 +36,11 @@ function IndividualProspectView({
 
   return (
     <GlassPanel
-      className="my-4 rounded-2xl overflow-hidden"
+      className="my-4 p-6 rounded-2xl overflow-hidden"
       variant="medium"
       style={glassPanelStyles}
     >
-      <div className="px-6 pt-4 pb-2">
+      {/* <div className="px-6 pt-4 pb-2">
         <div className="flex mb-4">
           <ViewToggle
             value={currentView}
@@ -51,13 +51,13 @@ function IndividualProspectView({
             ]}
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="px-6 pb-6">
         {currentView === "research" ? (
           <ResearchView prospect={prospect} brandId={brandId} />
         ) : (
-          <VizView prospect={prospect} />
+          <VizProspectView prospect={prospect} />
         )}
       </div>
     </GlassPanel>

@@ -19,7 +19,8 @@ export interface RedditPost {
   link_flair?: string;
   suggested_agent_reply?: string;
   insert_timestamp?: string;
-  status: "IGNORE" | "REPLY" | "PENDING" | "SUGGESTED_REPLY" | string;
+  source_keywords?: string;
+  status: "IGNORE" | "REPLY" | "PENDING" | "SUGGESTED_REPLY" | "ACTIONED" | string;
   tags?: PostTags;
 }
 

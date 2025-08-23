@@ -5,7 +5,7 @@ import SolutionsOpportunities from "./SolutionsOpportunities";
 import RedditBrandListItem from "./RedditBrandListItem";
 import AnimatedRedditList from "./AnimatedRedditList";
 import ProspectTargetStat from "./ProspectTargetsStat";
-import VizView from "./VizView";
+import VizProspectView from "./VizProspectView";
 import { useProspect } from "@/contexts/ProspectContext";
 import type { RedditPost } from "@/types/brand";
 
@@ -81,7 +81,7 @@ export default function ProspectsInsights({ brandId }: ProspectInsightsProps) {
     <div className="border-t border-white/10">
       <div className="p-6 space-y-8">
         {/* Prospect Target Stats - Show unique users count for PENDING posts only */}
-        {pendingPosts && pendingPosts.length > 0 && (
+        {/* {pendingPosts && pendingPosts.length > 0 && (
           <>
             <ProspectTargetStat
               posts={pendingPosts}
@@ -92,10 +92,10 @@ export default function ProspectsInsights({ brandId }: ProspectInsightsProps) {
             />
             <div className="border-t border-white/5" />
           </>
-        )}
+        )} */}
 
         {/* Data Visualization Section */}
-        <VizView prospect={selectedProspect} />
+        <VizProspectView prospect={selectedProspect} />
         <div className="border-t border-white/5" />
 
         {/* Solutions & Opportunities - Glass Cards Grid */}

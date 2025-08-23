@@ -18,7 +18,7 @@ export default function ResearchView({ prospect, brandId }: ResearchViewProps) {
         {/* Prospect Header */}
         <div>
           <p className="text-white/50 font-body text-sm mb-1 tracking-wide">
-            Problem
+            Research Summary
           </p>
           {prospect.insights?.general_summary && (
             <p className="text-white font-bold font-body text-lg leading-relaxed">

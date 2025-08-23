@@ -19,14 +19,13 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
   const generateInsight = useGenerateUseCaseInsight();
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [selectedProfile, setSelectedProfile] =
     useState<ProspectProfile | null>(null);
-
 
   // Fetch agents for the reply component
   const { data: agentsData, isLoading: isLoadingAgents } = useAgents();
@@ -36,10 +35,10 @@ export default function DashboardPage() {
 
   // Fetch detailed profile data with active conversation
   const { data: detailedProfile, isLoading: isLoadingProfile } =
-  useProspectProfileDetailQuery({
-    profileId: selectedProfile?.id,
-    enabled: !!selectedProfile?.id,
-  });
+    useProspectProfileDetailQuery({
+      profileId: selectedProfile?.id,
+      enabled: !!selectedProfile?.id,
+    });
 
   useEffect(() => {
     setSelectedProfile(prospectProfiles?.[0] || null);
@@ -53,12 +52,6 @@ export default function DashboardPage() {
   }, [selectedProfile, prospectProfiles]);
 
   const brandData = brandResponse?.brand || null;
-
-  const handleUseCaseSelect = (useCase: Prospect | null) => {
-    if (useCase) {
-      router.push(`/dashboard/use-case/${useCase.id}`);
-    }
-  };
 
   const handleAddUseCase = async (title: string) => {
     if (!brandData) return Promise.resolve();
@@ -121,9 +114,6 @@ export default function DashboardPage() {
         <div className="h-full flex overflow-hidden">
           <DashboardSidebar
             selectedUseCase={null}
-            onUseCaseSelect={handleUseCaseSelect}
-            onlyUnread={onlyUnread}
-            setOnlyUnread={setOnlyUnread}
             onAddUseCase={handleAddUseCase}
           />
 

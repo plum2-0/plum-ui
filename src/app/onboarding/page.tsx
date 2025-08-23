@@ -282,7 +282,7 @@ function OnboardingContent() {
       }
 
       // Force a hard redirect to dashboard which will refresh the session
-      window.location.href = "/dashboard/engage";
+      window.location.href = "/dashboard/discover";
     } catch (error) {
       console.error("Failed to submit onboarding data:", error);
       alert(

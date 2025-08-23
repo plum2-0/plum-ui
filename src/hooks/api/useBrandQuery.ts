@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useEffect, useRef } from "react";
 import { Brand } from "@/types/brand";
 
 // API Configuration
@@ -43,6 +44,12 @@ function getBrandId(session: any): string | null {
   return session?.user?.brandId || null;
 }
 
+function clearBrandCookie() {
+  if (typeof document !== "undefined") {
+    document.cookie = "brand_id=; Max-Age=0; path=/";
+  }
+}
+
 // API function for fetching brand data
 async function fetchBrandData(brandId: string): Promise<Brand> {
   const response = await fetch(`${API_BASE_URL}/api/brand/${brandId}`, {
@@ -76,8 +83,15 @@ export function useBrandQuery() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const brandId = getBrandId(session);
+  const hasRedirectedRef = useRef(false);
 
-  return useQuery({
+  const redirectToOnboarding = () => {
+    if (typeof window === "undefined") return;
+    if (hasRedirectedRef.current) return;
+    hasRedirectedRef.current = true;
+    router.push("/onboarding");
+  };
+  const queryResult = useQuery({
     // Include brandId in query key for better cache isolation
     queryKey: brandId ? BRAND_QUERY_KEYS.detail(brandId) : BRAND_QUERY_KEYS.all,
     queryFn: async (): Promise<{ brand: Brand }> => {
@@ -88,18 +102,30 @@ export function useBrandQuery() {
 
       if (!brandId) {
         // If no brandId in cookies or session, user likely needs onboarding
-        router.push("/onboarding");
+        redirectToOnboarding();
         throw new BrandQueryError("User needs onboarding", undefined, true);
       }
 
-      const brandData = await fetchBrandData(brandId);
+      let brandData: Brand;
+      try {
+        brandData = await fetchBrandData(brandId);
+      } catch (error) {
+        if (
+          error instanceof BrandQueryError &&
+          (error.needsOnboarding || error.statusCode === 404)
+        ) {
+          clearBrandCookie();
+          redirectToOnboarding();
+        }
+        throw error;
+      }
 
       return {
         brand: brandData,
       };
     },
-    // Only run query when session is loaded, user is authenticated, and brandId exists
-    enabled: status !== "loading" && !!session?.user?.id && !!brandId,
+    // Run when session is ready and user is authenticated
+    enabled: status !== "loading" && !!session?.user?.id,
     // Modern cache settings
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (replaces cacheTime in v5)
@@ -124,6 +150,19 @@ export function useBrandQuery() {
     // Add network mode for better offline handling
     networkMode: "online",
   });
+
+  useEffect(() => {
+    const error = queryResult.error as unknown;
+    if (
+      error instanceof BrandQueryError &&
+      (error.needsOnboarding || error.statusCode === 404)
+    ) {
+      clearBrandCookie();
+      redirectToOnboarding();
+    }
+  }, [queryResult.error, redirectToOnboarding]);
+
+  return queryResult;
 }
 
 // Types for mutation parameters

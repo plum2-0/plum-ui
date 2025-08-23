@@ -6,6 +6,7 @@ import FetchNewPostsButton from "./FetchNewPostsButton";
 import { useProspect } from "@/contexts/ProspectContext";
 import { useKeywordQueue } from "@/contexts/KeywordQueueContext";
 import { useBrand } from "@/contexts/BrandContext";
+import ProspectTargetStat from "./ProspectTargetsStat";
 
 export default function BrandSummary() {
   const { brand: brandData } = useBrand();
@@ -61,24 +62,39 @@ export default function BrandSummary() {
             </h1>
           )}
 
-          {/* Prospect Selector */}
-          {brandData.prospects && brandData.prospects.length > 0 && (
-            <div className="mb-4">
-              <p className="text-white/70 font-body text-sm mb-2">
-                Researching Problems
-              </p>
-              <ProspectSelector
-                prospects={brandData.prospects}
-                placeholder="Summary - All Prospects"
-              />
-            </div>
-          )}
+          <div className="space-y-6">
+            {/* Prospect Selector */}
+            {brandData.prospects && brandData.prospects.length > 0 && (
+              <div>
+                <p className="text-white/70 font-body text-sm mb-2">
+                  Researching Problems
+                </p>
+                <ProspectSelector
+                  prospects={brandData.prospects}
+                  placeholder="Summary - All Prospects"
+                />
+              </div>
+            )}
 
-          {/* Keywords Section */}
-          <KeywordDisplay brandData={brandData} />
+            <ProspectTargetStat
+              brandId={brandId}
+              posts={brandData.prospects.flatMap(
+                (prospect) => prospect.sourced_reddit_posts || []
+              )}
+              prospectId={"overview stat"} // Use first prospect or overview as fallback
+              problemToSolve="Overview - All Use Cases"
+              onStackCompleted={() => {
+                console.log("All prospects reviewed!");
+                // TODO: Show completion message or refresh data
+              }}
+            />
 
-          {/* Subreddits Section */}
-          <SubredditsSection brandData={brandData} />
+            {/* Keywords Section */}
+            <KeywordDisplay brandData={brandData} />
+
+            {/* Subreddits Section */}
+            <SubredditsSection brandData={brandData} />
+          </div>
         </div>
       </div>
 
