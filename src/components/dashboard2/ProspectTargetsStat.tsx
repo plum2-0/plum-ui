@@ -92,14 +92,10 @@ export default function ProspectTargetStat({
                 {subtext}
               </div>
             )}
-            {totalKeywordCounts > 0 && (
-              <div className="text-white/40 text-xs font-body mt-1">
-                Matched {totalKeywordCounts.toLocaleString()} keyword hits
-              </div>
-            )}
             {totalPostsScraped > 0 && (
               <div className="text-white/40 text-xs font-body mt-3 italic">
-                Analyzed {totalPostsScraped.toLocaleString()} posts to find your
+                Analyzed {totalPostsScraped.toLocaleString()} posts and{" "}
+                {totalKeywordCounts.toLocaleString()} keywords to find your
                 ideal customers
               </div>
             )}

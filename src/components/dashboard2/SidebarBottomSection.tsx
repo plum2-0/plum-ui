@@ -14,6 +14,67 @@ export default function SidebarBottomSection() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
+    // Clear all application-specific data before signing out
+    
+    // Clear localStorage
+    if (typeof window !== "undefined") {
+      // Clear any onboarding data
+      localStorage.removeItem("onboardingData");
+      
+      // Clear all localStorage items with our app prefix (if any)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+    
+    // Clear sessionStorage
+    if (typeof window !== "undefined") {
+      // Clear Reddit auth cache
+      sessionStorage.removeItem("reddit_auth_cache");
+      
+      // Clear onboarding redirect tracking
+      sessionStorage.removeItem("lastOnboardingRedirect");
+      sessionStorage.removeItem("lastOnboardingRedirectTime");
+      
+      // Clear any draft data (agent reply drafts)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && (key.startsWith("agent_draft_") || key.startsWith("draft_"))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => sessionStorage.removeItem(key));
+      
+      // Clear all sessionStorage
+      sessionStorage.clear();
+    }
+    
+    // Clear cookies (brand_id, project_id, etc.)
+    if (typeof document !== "undefined") {
+      // Get all cookies
+      const cookies = document.cookie.split(";");
+      
+      // Clear each cookie by setting it with an expired date
+      cookies.forEach(cookie => {
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        
+        // Clear cookie for current path
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        
+        // Also try to clear for current domain and parent domains
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
+      });
+    }
+    
+    // Sign out from NextAuth
     await signOut({ callbackUrl: "/" });
   };
 

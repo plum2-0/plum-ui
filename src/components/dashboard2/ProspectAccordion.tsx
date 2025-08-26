@@ -3,17 +3,23 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBrand } from "@/contexts/BrandContext";
+import { useDeleteProspectKeywords } from "@/hooks/api/useBrandQuery";
+import { useToast } from "@/components/ui/Toast";
+import { PopoverWithPortal } from "@/components/ui/PopoverWithPortal";
 
 interface ProspectAccordionProps {
-  prospects: any; // Accept the raw Prospect[] from parent
+  prospects: any;
 }
 
 export default function ProspectAccordion({}: ProspectAccordionProps) {
-  // Always use the transformed data from context
-  const { prospectsDisplay } = useBrand();
+  const { prospectsDisplay, brand } = useBrand();
+  const deleteKeywordMutation = useDeleteProspectKeywords();
+  const { showToast } = useToast();
 
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
+  const [deletingKeywords, setDeletingKeywords] = useState<Set<string>>(
+    new Set()
+  );
 
   const toggleItem = (id: string) => {
     setExpandedItems((prev) => {
@@ -25,6 +31,38 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
       }
       return newSet;
     });
+  };
+
+  const handleDeleteKeyword = async (prospectId: string, keyword: string) => {
+    if (!brand?.id) return;
+
+    // Create unique key for this keyword deletion
+    const deletionKey = `${prospectId}-${keyword}`;
+    setDeletingKeywords((prev) => new Set(prev).add(deletionKey));
+
+    try {
+      await deleteKeywordMutation.mutateAsync({
+        brandId: brand.id,
+        prospectId,
+        keywords: [keyword],
+      });
+      showToast({
+        message: `Keyword "${keyword}" removed successfully`,
+        type: "success",
+      });
+    } catch (error) {
+      showToast({
+        message: `Failed to remove keyword "${keyword}"`,
+        type: "error",
+      });
+      console.error("Error deleting keyword:", error);
+    } finally {
+      setDeletingKeywords((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(deletionKey);
+        return newSet;
+      });
+    }
   };
 
   if (!prospectsDisplay || prospectsDisplay.length === 0) {
@@ -111,20 +149,39 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 text-left">
-                  <h3 className="heading-3 leading-tight line-clamp-1 mb-3">
+                  <h3 className="heading-3 leading-tight line-clamp-1 mb-6">
                     {prospect.problem_to_solve}
                   </h3>
 
                   {/* Enhanced Metrics Bar */}
-                  <div className="relative">
+                  <div className="relative pt-5">
+                    {/* Combined total display */}
+                    <div className="absolute -top-6 left-0 flex items-center gap-2">
+                      <span className="text-xs text-white/40">Total:</span>
+                      <span className="text-xs font-semibold text-white/60">
+                        {prospect.actionedPosts.length + prospect.pendingPosts.length} posts
+                      </span>
+                      <span className="text-xs text-green-400/60">
+                        ({Math.round(actionedPercentage)}% complete)
+                      </span>
+                    </div>
                     {/* Progress bar background */}
                     <div
-                      className="h-12 rounded-xl overflow-hidden"
+                      className="h-12 rounded-xl overflow-hidden relative"
                       style={{
                         background: "rgba(0, 0, 0, 0.3)",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
                       }}
                     >
+                      {/* Pending fill (full width, behind actioned) */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: `linear-gradient(90deg,
+                            rgba(234, 179, 8, 0.2) 0%,
+                            rgba(202, 138, 4, 0.2) 100%)`,
+                        }}
+                      />
                       {/* Actioned fill */}
                       <motion.div
                         className="h-full relative overflow-hidden"
@@ -160,80 +217,78 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                         />
                       </motion.div>
 
-                      {/* Metrics overlay */}
+                      {/* Metrics overlay - centered vertically */}
                       <div className="absolute inset-0 flex items-center justify-between px-4">
-                        {/* Actioned */}
-                        <motion.div
-                          className="flex items-center gap-2 z-10"
-                          onHoverStart={() => setHoveredMetric("actioned")}
-                          onHoverEnd={() => setHoveredMetric(null)}
+                        {/* Actioned - Enhanced */}
+                        <PopoverWithPortal
+                          trigger={
+                            <div className="flex items-center gap-2 z-10 cursor-help">
+                              <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
+                              <span className="text-white font-bold text-sm">
+                                {prospect.actionedPosts.length}
+                              </span>
+                              <span className="text-green-300 text-xs font-semibold uppercase tracking-wide">
+                                Actioned
+                              </span>
+                            </div>
+                          }
+                          side="top"
+                          align="center"
+                          openOnHover={true}
                         >
-                          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                          <span className="text-white font-semibold text-sm">
-                            {prospect.actionedPosts.length}
+                          <span className="text-white/90 text-xs font-medium">
+                            Posts we've already responded to
                           </span>
-                          <span className="text-green-300 text-xs font-medium">
-                            Actioned
-                          </span>
-                        </motion.div>
+                        </PopoverWithPortal>
 
-                        {/* Pending */}
-                        <motion.div
-                          className="flex items-center gap-2 z-10"
-                          onHoverStart={() => setHoveredMetric("pending")}
-                          onHoverEnd={() => setHoveredMetric(null)}
+                        {/* Pending - Enhanced with matching dull yellow */}
+                        <PopoverWithPortal
+                          trigger={
+                            <div className="flex items-center gap-2 z-10 cursor-help">
+                              {/* Connection line to show relationship */}
+                              <div className="absolute left-[25%] right-[50%] h-[1px] bg-gradient-to-r from-green-400/30 to-yellow-600/30" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-yellow-600 animate-pulse shadow-lg shadow-yellow-600/50" />
+                              <span className="text-white font-bold text-sm">
+                                {prospect.pendingPosts.length}
+                              </span>
+                              <span className="text-yellow-600 text-xs font-semibold uppercase tracking-wide">
+                                Pending
+                              </span>
+                            </div>
+                          }
+                          side="top"
+                          align="center"
+                          openOnHover={true}
                         >
-                          <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                          <span className="text-white font-semibold text-sm">
-                            {prospect.pendingPosts.length}
+                          <span className="text-white/90 text-xs font-medium">
+                            Posts waiting for your action
                           </span>
-                          <span className="text-yellow-300 text-xs font-medium">
-                            Pending
-                          </span>
-                        </motion.div>
+                        </PopoverWithPortal>
 
-                        {/* Potential */}
-                        <motion.div
-                          className="flex items-center gap-2 z-10"
-                          onHoverStart={() => setHoveredMetric("potential")}
-                          onHoverEnd={() => setHoveredMetric(null)}
+                        {/* Posts Scraped - Muted */}
+                        <PopoverWithPortal
+                          trigger={
+                            <div className="flex items-center gap-2 z-10 opacity-50 cursor-help">
+                              <div className="w-2 h-2 rounded-full bg-gray-400" />
+                              <span className="text-white/60 text-xs">
+                                {prospect.totalPostsScraped}
+                              </span>
+                              <span className="text-gray-400 text-xs">
+                                scraped
+                              </span>
+                            </div>
+                          }
+                          side="top"
+                          align="center"
+                          openOnHover={true}
                         >
-                          <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                          <span className="text-white font-semibold text-sm">
-                            {prospect.totalPotentialCustomers}
+                          <span className="text-white/90 text-xs font-medium">
+                            Total posts scraped for this prospect
                           </span>
-                          <span className="text-purple-300 text-xs font-medium">
-                            Potential
-                          </span>
-                        </motion.div>
+                        </PopoverWithPortal>
                       </div>
                     </div>
 
-                    {/* Hover tooltip */}
-                    <AnimatePresence>
-                      {hoveredMetric && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: -45 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="absolute left-0 right-0 mx-auto w-fit px-3 py-1.5 rounded-lg pointer-events-none"
-                          style={{
-                            background: "rgba(0, 0, 0, 0.9)",
-                            backdropFilter: "blur(10px)",
-                            border: "1px solid rgba(255, 255, 255, 0.2)",
-                          }}
-                        >
-                          <span className="text-white/90 text-xs font-medium">
-                            {hoveredMetric === "actioned" &&
-                              "Posts we've already responded to"}
-                            {hoveredMetric === "pending" &&
-                              "Posts waiting for your action"}
-                            {hoveredMetric === "potential" &&
-                              "Total customers interested in this topic"}
-                          </span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 </div>
 
@@ -331,40 +386,73 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               (
                                 item: { keyword: string; count: number },
                                 index: number
-                              ) => (
-                                <motion.div
-                                  key={index}
-                                  initial={{ opacity: 0, scale: 0.9 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ delay: 0.05 * index }}
-                                  className="px-4 py-2 rounded-full text-sm font-body backdrop-blur-md"
-                                  style={{
-                                    background:
-                                      "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.1))",
-                                    border: "1px solid transparent",
-                                    backgroundImage: `
-                                      linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.1)),
-                                      linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.3))
-                                    `,
-                                    backgroundOrigin: "border-box",
-                                    backgroundClip: "padding-box, border-box",
-                                    boxShadow:
-                                      "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-                                  }}
-                                  whileHover={{
-                                    scale: 1.05,
-                                    boxShadow:
-                                      "0 4px 12px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                                  }}
-                                >
-                                  <span className="text-purple-300 font-medium">
-                                    {item.keyword}
-                                  </span>
-                                  <span className="text-white/40 ml-1.5">
-                                    ({item.count})
-                                  </span>
-                                </motion.div>
-                              )
+                              ) => {
+                                const deletionKey = `${prospect.id}-${item.keyword}`;
+                                const isDeleting =
+                                  deletingKeywords.has(deletionKey);
+
+                                return (
+                                  <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.05 * index }}
+                                    className="group relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-body backdrop-blur-md"
+                                    style={{
+                                      background:
+                                        "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.1))",
+                                      border: "1px solid transparent",
+                                      backgroundImage: `
+                                        linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.1)),
+                                        linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.3))
+                                      `,
+                                      backgroundOrigin: "border-box",
+                                      backgroundClip: "padding-box, border-box",
+                                      boxShadow:
+                                        "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+                                      opacity: isDeleting ? 0.5 : 1,
+                                    }}
+                                    whileHover={{
+                                      scale: 1.05,
+                                      boxShadow:
+                                        "0 4px 12px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                    }}
+                                  >
+                                    <span className="text-purple-300 font-medium">
+                                      {item.keyword}
+                                    </span>
+                                    <span className="text-white/40">
+                                      ({item.count})
+                                    </span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteKeyword(
+                                          prospect.id,
+                                          item.keyword
+                                        );
+                                      }}
+                                      disabled={isDeleting}
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1 hover:text-red-400 disabled:cursor-not-allowed"
+                                      title={`Remove "${item.keyword}"`}
+                                    >
+                                      <svg
+                                        className="w-3 h-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M6 18L18 6M6 6l12 12"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </motion.div>
+                                );
+                              }
                             )}
                         </div>
                       </motion.div>

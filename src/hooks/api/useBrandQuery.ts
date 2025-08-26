@@ -314,3 +314,80 @@ export function usePrefetchBrandData() {
     });
   };
 }
+
+// Types for delete prospect keywords mutation
+interface DeleteProspectKeywordsParams {
+  brandId: string;
+  prospectId: string;
+  keywords: string[];
+}
+
+// API function for deleting prospect keywords
+async function deleteProspectKeywords({
+  brandId,
+  prospectId,
+  keywords,
+}: DeleteProspectKeywordsParams): Promise<{ success: boolean }> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/brand/${brandId}/prospect/${prospectId}/keywords`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Plum-UI/1.0",
+      },
+      body: JSON.stringify({ keywords }),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new BrandQueryError(
+      `Failed to delete keywords: ${text}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Hook to delete keywords from a prospect
+ */
+export function useDeleteProspectKeywords() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteProspectKeywords,
+    onSuccess: (_, variables) => {
+      // Invalidate brand queries to refresh the prospect data
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+      
+      // Optimistically update the cache
+      const cachedData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as { brand: Brand } | undefined;
+      if (cachedData?.brand?.prospects) {
+        const updatedProspects = cachedData.brand.prospects.map((prospect) => {
+          if (prospect.id === variables.prospectId) {
+            return {
+              ...prospect,
+              keywords: prospect.keywords?.filter(
+                (kw) => !variables.keywords.includes(kw)
+              ) || [],
+            };
+          }
+          return prospect;
+        });
+        
+        queryClient.setQueryData(BRAND_QUERY_KEYS.all, {
+          brand: {
+            ...cachedData.brand,
+            prospects: updatedProspects,
+          },
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Failed to delete prospect keywords:", error);
+    },
+  });
+}

@@ -21,6 +21,7 @@ interface ProspectDisplay {
   uniqueActionedAuthors: number;
   totalPotentialCustomers: number;
   totalKeywordCounts: number;
+  totalPostsScraped: number;
 }
 
 interface BrandContextType {
@@ -50,12 +51,14 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
       (post) => post.status !== "IGNORE"
     );
 
-    // Calculate keyword counts
+    // Calculate keyword counts (only for prospect.keywords)
     const keywordMap = new Map<string, number>();
+    const allowedKeywords = new Set((prospect.keywords || []).filter(Boolean));
     filteredPosts.forEach((post) => {
-      if (post.source_keywords) {
-        const current = keywordMap.get(post.source_keywords) || 0;
-        keywordMap.set(post.source_keywords, current + 1);
+      const sourceKeyword = post.source_keywords;
+      if (sourceKeyword && allowedKeywords.has(sourceKeyword)) {
+        const current = keywordMap.get(sourceKeyword) || 0;
+        keywordMap.set(sourceKeyword, current + 1);
       }
     });
     const keywordCounts = Array.from(keywordMap.entries())
@@ -129,6 +132,7 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
       uniqueActionedAuthors: actionedUniqueAuthors.size,
       totalPotentialCustomers,
       totalKeywordCounts,
+      totalPostsScraped: prospect.total_posts_scraped || 0,
     };
   });
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Brand } from "@/types/brand";
 import { clearRedditAuthCache } from "@/lib/verify-reddit";
+import { Popover } from "@/components/ui/Popover";
 
 interface RedditConfigProps {
   brand: Brand | null;
@@ -167,25 +168,56 @@ export default function RedditConfig({ brand, onUpdate }: RedditConfigProps) {
           </div>
         )}
 
-        <button
-          onClick={handleConnect}
-          disabled={isConnecting}
-          className="px-6 py-2 rounded-lg glass-button text-white font-body font-medium hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {isConnecting ? (
-            <>
-              <span className="animate-spin">⏳</span>
-              Connecting...
-            </>
-          ) : (
-            <>
-              Connect Reddit Account
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleConnect}
+            disabled={isConnecting}
+            className="px-6 py-2 rounded-lg glass-button text-white font-body font-medium hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isConnecting ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                Connecting...
+              </>
+            ) : (
+              <>
+                Connect Reddit Account
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </>
+            )}
+          </button>
+          
+          <Popover
+            trigger={
+              <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center cursor-help hover:bg-white/20 transition-all">
+                <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            }
+            contentClassName="w-80"
+            align="start"
+            side="top"
+          >
+            <div className="space-y-3">
+              <h4 className="font-body font-semibold text-white text-sm">
+                Why connect Reddit?
+              </h4>
+              <div className="space-y-2 text-white/80 text-xs font-body">
+                <p>🔍 <strong>Monitor Conversations:</strong> Track mentions of your brand and relevant discussions across Reddit communities.</p>
+                <p>💬 <strong>Engage Authentically:</strong> Reply to posts and comments directly from PlumSprout.</p>
+                <p>📊 <strong>Analytics:</strong> Get insights on engagement and sentiment around your brand.</p>
+                <p>🎯 <strong>Find Opportunities:</strong> Discover where your target audience is asking questions you can answer.</p>
+              </div>
+              <p className="text-white/60 text-xs font-body pt-2 border-t border-white/10">
+                We only request read permissions and never post without your explicit action.
+              </p>
+            </div>
+          </Popover>
+        </div>
       </div>
     );
   }
@@ -213,7 +245,40 @@ export default function RedditConfig({ brand, onUpdate }: RedditConfigProps) {
       </div>
 
       <div className="border-t border-white/10 pt-6">
-        <h3 className="text-white font-body font-medium mb-4">Link Your Subreddit</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="text-white font-body font-medium">Link Your Subreddit</h3>
+          <Popover
+            trigger={
+              <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center cursor-help hover:bg-white/20 transition-all">
+                <svg className="w-3 h-3 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            }
+            contentClassName="w-72"
+            align="start"
+            side="right"
+          >
+            <div className="space-y-2">
+              <h4 className="font-body font-semibold text-white text-sm">
+                What is subreddit linking?
+              </h4>
+              <p className="text-white/80 text-xs font-body">
+                Linking your subreddit allows PlumSprout to:
+              </p>
+              <ul className="text-white/70 text-xs font-body space-y-1 ml-3">
+                <li>• Monitor discussions in your community</li>
+                <li>• Track engagement metrics</li>
+                <li>• Identify trending topics</li>
+                <li>• Manage community interactions</li>
+              </ul>
+              <p className="text-white/60 text-xs font-body pt-2 border-t border-white/10">
+                You must be a moderator of the subreddit to link it.
+              </p>
+            </div>
+          </Popover>
+        </div>
         <p className="text-white/60 text-sm font-body mb-4">
           Select a subreddit you moderate to link with your brand:
         </p>
