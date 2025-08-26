@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Prospect } from "@/types/brand";
-import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import {
   useBrandQuery,
   useGenerateUseCaseInsight,
@@ -14,24 +13,33 @@ import { ProspectProfilesInbox } from "@/components/dashboard/ProspectProfilesIn
 import { ProspectProfileDetail } from "@/components/dashboard/ProspectProfileDetail";
 import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import { useProspectProfilesQuery } from "@/hooks/api/useProspectProfilesQuery";
-import { BrandProvider } from "@/contexts/BrandContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
 
 export default function DashboardPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const { data: brandResponse, isLoading, error, refetch } = useBrandQuery();
   const generateInsight = useGenerateUseCaseInsight();
-  const [onlyUnread, setOnlyUnread] = useState(false);
   const [selectedProfile, setSelectedProfile] =
     useState<ProspectProfile | null>(null);
+
+  // Debug logging
+  console.log("🎯 [EngagePage] Session status:", status);
+  console.log("🎯 [EngagePage] Session data:", session);
+  console.log("🎯 [EngagePage] BrandId from session:", session?.user?.brandId);
+  console.log("🎯 [EngagePage] Brand response:", brandResponse);
+  console.log("🎯 [EngagePage] Brand loading:", isLoading);
 
   // Fetch agents for the reply component
   const { data: agentsData, isLoading: isLoadingAgents } = useAgents();
 
   // Fetch prospect profiles
-  const { data: prospectProfiles } = useProspectProfilesQuery();
+  const { data: prospectProfiles, isLoading: isLoadingProfiles, error: profilesError } = useProspectProfilesQuery();
+  
+  console.log("🎯 [EngagePage] Prospect profiles data:", prospectProfiles);
+  console.log("🎯 [EngagePage] Prospect profiles loading:", isLoadingProfiles);
+  console.log("🎯 [EngagePage] Prospect profiles error:", profilesError);
 
   // Fetch detailed profile data with active conversation
   const { data: detailedProfile, isLoading: isLoadingProfile } =
@@ -109,15 +117,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <BrandProvider>
-      <ProfileProvider selectedProfile={detailedProfile || null}>
-        <div className="h-full flex overflow-hidden">
-          <DashboardSidebar
-            selectedUseCase={null}
-            onAddUseCase={handleAddUseCase}
-          />
-
-          <main className="flex-1 flex min-h-0 h-full">
+    <ProfileProvider selectedProfile={detailedProfile || null}>
+      <main className="flex-1 flex min-h-0 h-full overflow-hidden">
             {/* Prospect Profiles Inbox - 30% width */}
             <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
               <ProspectProfilesInbox
@@ -145,9 +146,7 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-          </main>
-        </div>
-      </ProfileProvider>
-    </BrandProvider>
+      </main>
+    </ProfileProvider>
   );
 }

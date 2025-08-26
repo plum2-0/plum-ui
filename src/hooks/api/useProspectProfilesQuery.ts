@@ -37,8 +37,7 @@ export interface ProspectProfile {
   sentiment?: "positive" | "neutral" | "negative";
   tags?: string[];
   interestedUseCase?: string;
-  status?: "REPLY" | "PENDING" | "SUGGESTED_REPLY";
-  inbox_status?: "UNACTIONED" | "ACTIONED" | "ARCHIVED";
+  inbox_status?: "REPLIED" | "UNACTIONED" | "SUGGESTED_REPLY";
   last_contacted_subreddit?: string;
   last_contact_time?: string;
 }
@@ -70,18 +69,45 @@ export const PROSPECT_PROFILES_QUERY_KEY = ["prospect-profiles"] as const;
 // Mock data generator for development
 
 export function useProspectProfilesQuery() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
+
+  // Debug logging for session state
+  console.log("🔍 [useProspectProfilesQuery] Session status:", sessionStatus);
+  console.log("🔍 [useProspectProfilesQuery] Session data:", session);
+  console.log("🔍 [useProspectProfilesQuery] BrandId:", session?.user?.brandId);
+  console.log(
+    "🔍 [useProspectProfilesQuery] Query enabled:",
+    !!session?.user?.brandId
+  );
 
   return useQuery<ProspectProfile[]>({
     queryKey: [...PROSPECT_PROFILES_QUERY_KEY, session?.user?.brandId],
     queryFn: async () => {
       const brandId = session?.user?.brandId;
-      if (!brandId) throw new Error("No brand ID available");
+      console.log("🚀 [queryFn] Starting fetch with brandId:", brandId);
+
+      if (!brandId) {
+        console.error(
+          "❌ [queryFn] No brand ID available, user needs to re-authenticate"
+        );
+        // Throw an auth-specific error that can be caught and handled
+        const error = new Error(
+          "Authentication required: No brand ID found in session. Please log out and log back in."
+        );
+        (error as any).code = "AUTH_MISSING_BRAND_ID";
+        throw error;
+      }
 
       console.log("🚀 Fetching prospect profiles from API, brandId:", brandId);
 
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      console.log("📡 [queryFn] API URL:", backendUrl);
+      console.log(
+        "📡 [queryFn] Full endpoint:",
+        `${backendUrl}/api/brand/${brandId}/prospect/profiles`
+      );
+
       const response = await fetch(
         `${backendUrl}/api/brand/${brandId}/prospect/profiles`,
         {
@@ -93,13 +119,19 @@ export function useProspectProfilesQuery() {
         }
       );
 
+      console.log("📡 [queryFn] Response status:", response.status);
+      console.log("📡 [queryFn] Response ok:", response.ok);
+
       if (!response.ok) {
+        console.error("❌ [queryFn] Fetch failed:", response.statusText);
         throw new Error(
           `Failed to fetch prospect profiles: ${response.statusText}`
         );
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log("✅ [queryFn] Data received:", data);
+      return data;
     },
     enabled: !!session?.user?.brandId, // Only enable when brandId is available
     refetchInterval: 30000, // Poll every 30 seconds for updates

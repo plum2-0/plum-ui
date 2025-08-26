@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useMemo,
+} from "react";
 import { Prospect, RedditPost } from "@/types/brand";
 
 interface PostsByType {
@@ -25,7 +31,10 @@ const ProspectContext = createContext<ProspectContextType | undefined>(
   undefined
 );
 
-function categorizePostsByStatus(posts: RedditPost[]): { actioned: RedditPost[]; pending: RedditPost[] } {
+function categorizePostsByStatus(posts: RedditPost[]): {
+  actioned: RedditPost[];
+  pending: RedditPost[];
+} {
   const actioned: RedditPost[] = [];
   const pending: RedditPost[] = [];
 
@@ -73,13 +82,11 @@ export function ProspectProvider({ children }: { children: ReactNode }) {
     };
   }, [selectedProspect]);
 
-  console.log("selectedProspect", enhancedProspect);
-
   return (
-    <ProspectContext.Provider 
-      value={{ 
-        selectedProspect: enhancedProspect, 
-        setSelectedProspect 
+    <ProspectContext.Provider
+      value={{
+        selectedProspect: enhancedProspect,
+        setSelectedProspect,
       }}
     >
       {children}

@@ -25,7 +25,11 @@ export function useProspectProfileDetailQuery({
     ],
     queryFn: async () => {
       const brandId = session?.user?.brandId;
-      if (!brandId) throw new Error("No brand ID available");
+      if (!brandId) {
+        const error = new Error("Authentication required: No brand ID found in session. Please log out and log back in.");
+        (error as any).code = 'AUTH_MISSING_BRAND_ID';
+        throw error;
+      }
       if (!profileId) throw new Error("No profile ID provided");
 
       const backendUrl =

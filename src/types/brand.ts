@@ -32,6 +32,7 @@ export interface Prospect {
   insights: UseCaseInsights | null;
   sourced_reddit_posts: RedditPost[];
   prosepect_profiles: any[];
+  total_posts_scraped: number;
 }
 
 export interface Brand {

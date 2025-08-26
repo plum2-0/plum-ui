@@ -11,7 +11,7 @@ interface KeywordDisplayProps {
 
 export default function KeywordDisplay({ brandData }: KeywordDisplayProps) {
   const { selectedProspect } = useProspect();
-  const { queuedKeywords, addKeyword, removeKeyword, hasQueuedKeywords } = useKeywordQueue();
+  const { queuedKeywords, addKeyword, removeKeyword } = useKeywordQueue();
   const [isKeywordsExpanded, setIsKeywordsExpanded] = useState(false);
   const [isAddingKeyword, setIsAddingKeyword] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
@@ -73,21 +73,23 @@ export default function KeywordDisplay({ brandData }: KeywordDisplayProps) {
 
   return (
     <div className="mt-4">
-      <div className="flex items-center gap-2 mb-2">
-        <svg
-          className="w-4 h-4 text-purple-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-          />
-        </svg>
-        <span className="text-white/70 font-body text-sm font-medium">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="icon-badge">
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M14.752 11.168l-3.197-3.197m1.414-1.414a2 2 0 112.828 2.828l-7.778 7.778a4 4 0 11-5.657-5.657l7.778-7.778a2 2 0 012.828 0z"
+            />
+          </svg>
+        </span>
+        <span className="eyebrow">
           {selectedProspect ? "Problem Keywords:" : "Top Keywords:"}
         </span>
       </div>
@@ -210,18 +212,22 @@ export default function KeywordDisplay({ brandData }: KeywordDisplayProps) {
               placeholder="Enter keyword..."
               className="px-4 py-2 rounded-lg text-white placeholder-white/40 font-body text-sm focus:outline-none transition-all duration-300"
               style={{
-                background: "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+                background:
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
                 border: "1px solid rgba(168, 85, 247, 0.3)",
-                boxShadow: "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                boxShadow:
+                  "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                 backdropFilter: "blur(10px)",
               }}
               onFocus={(e) => {
                 e.target.style.border = "1px solid rgba(168, 85, 247, 0.5)";
-                e.target.style.boxShadow = "0 4px 12px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15)";
+                e.target.style.boxShadow =
+                  "0 4px 12px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15)";
               }}
               onBlur={(e) => {
                 e.target.style.border = "1px solid rgba(168, 85, 247, 0.3)";
-                e.target.style.boxShadow = "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
+                e.target.style.boxShadow =
+                  "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
               }}
               autoFocus
             />
@@ -229,18 +235,24 @@ export default function KeywordDisplay({ brandData }: KeywordDisplayProps) {
               onClick={handleAddKeyword}
               className="px-4 py-2 rounded-lg text-white font-body text-sm transition-all duration-300 transform hover:scale-105"
               style={{
-                background: "linear-gradient(145deg, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.2) 100%)",
+                background:
+                  "linear-gradient(145deg, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.2) 100%)",
                 border: "1px solid rgba(34, 197, 94, 0.4)",
-                boxShadow: "0 2px 8px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+                boxShadow:
+                  "0 2px 8px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
                 backdropFilter: "blur(10px)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "linear-gradient(145deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.3) 100%)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)";
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.3) 100%)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "linear-gradient(145deg, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.2) 100%)";
-                e.currentTarget.style.boxShadow = "0 2px 8px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)";
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.2) 100%)";
+                e.currentTarget.style.boxShadow =
+                  "0 2px 8px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)";
               }}
             >
               ✨ Add
@@ -252,7 +264,8 @@ export default function KeywordDisplay({ brandData }: KeywordDisplayProps) {
               }}
               className="px-4 py-2 rounded-lg text-white/60 hover:text-white/80 font-body text-sm transition-all duration-300"
               style={{
-                background: "linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)",
+                background:
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)",
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 backdropFilter: "blur(10px)",
               }}

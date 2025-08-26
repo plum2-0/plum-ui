@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
+import { BrandProvider } from "@/contexts/BrandContext";
+import { ScrapeJobProvider } from "@/contexts/ScrapeJobContext";
+import ScrapeJobDrawer from "@/components/dashboard2/ScrapeJobDrawer";
 
 export default function DashboardLayout({
   children,
@@ -114,9 +118,17 @@ export default function DashboardLayout({
       `}</style>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-hidden relative z-10">
-        {children}
-      </div>
+      <BrandProvider>
+        <ScrapeJobProvider>
+          <div className="flex-1 overflow-hidden relative z-10 flex">
+            <DashboardSidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {children}
+            </div>
+          </div>
+          <ScrapeJobDrawer />
+        </ScrapeJobProvider>
+      </BrandProvider>
     </div>
   );
 }

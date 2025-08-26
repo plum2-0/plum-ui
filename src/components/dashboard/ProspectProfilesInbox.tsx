@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Search, MessageCircle, Clock, Hash } from "lucide-react";
+import { Search, MessageCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
 
@@ -33,6 +33,15 @@ export function ProspectProfilesInbox({
   const [filterType, setFilterType] = useState<FilterType>("your-move");
   const [sortType] = useState<SortType>("recent");
 
+  // Debug logging
+  console.log("📦 [ProspectProfilesInbox] Profiles data:", profiles);
+  console.log("📦 [ProspectProfilesInbox] Loading state:", isLoading);
+  console.log("📦 [ProspectProfilesInbox] Error state:", error);
+  console.log(
+    "📦 [ProspectProfilesInbox] Selected profile ID:",
+    selectedProfileId
+  );
+
   // Filter and sort profiles
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
@@ -56,12 +65,11 @@ export function ProspectProfilesInbox({
         filtered = filtered.filter(
           (p) =>
             p.inbox_status === "UNACTIONED" ||
-            p.status === "PENDING" ||
-            p.status === "SUGGESTED_REPLY"
+            p.inbox_status === "SUGGESTED_REPLY"
         );
         break;
       case "their-move":
-        filtered = filtered.filter((p) => p.status === "REPLY");
+        filtered = filtered.filter((p) => p.inbox_status === "REPLIED");
         break;
     }
 
@@ -85,19 +93,23 @@ export function ProspectProfilesInbox({
     return filtered;
   }, [profiles, searchQuery, filterType, sortType]);
 
-  const handleMarkAsRead = (profileId: string) => {
+  const handleMarkAsRead = (_profileId: string) => {
+    void _profileId;
     // TODO: Handle mark as read
   };
 
-  const handleArchive = (profileId: string) => {
+  const handleArchive = (_profileId: string) => {
+    void _profileId;
     // TODO: Handle archive
   };
 
   if (error) {
+    const isAuthError = (error as any)?.code === "AUTH_MISSING_BRAND_ID";
+
     return (
       <div className="h-full flex items-center justify-center p-8">
         <div
-          className="p-6 text-center rounded-2xl"
+          className="p-6 text-center rounded-2xl max-w-md"
           style={{
             background:
               "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
@@ -108,7 +120,28 @@ export function ProspectProfilesInbox({
             border: "1px solid rgba(255, 255, 255, 0.15)",
           }}
         >
-          <p className="text-red-400">Failed to load prospect profiles</p>
+          {isAuthError ? (
+            <>
+              <p className="text-amber-400 mb-2 font-semibold">
+                Authentication Required
+              </p>
+              <p className="text-white/70 mb-4">
+                Your session is missing required information. Please log out and
+                log back in to continue.
+              </p>
+              <button
+                onClick={() => (window.location.href = "/api/auth/signout")}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <p className="text-red-400">
+              Failed to load prospect profiles:{" "}
+              {(error as Error)?.message || "Unknown error"}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -281,8 +314,7 @@ export function ProspectProfileCard({
   onProfileSelect,
 }: ProspectProfileCardProps) {
   // const latestPost = profile.active_convos?.reddit_conversations[0];
-  const isPending = profile.status === "PENDING";
-  const hasSuggested = profile.status === "SUGGESTED_REPLY";
+  const hasSuggested = profile.inbox_status === "SUGGESTED_REPLY";
   const isUnactioned = profile.inbox_status === "UNACTIONED";
 
   const getTimeAgo = (timestamp?: number | string) => {
@@ -299,19 +331,6 @@ export function ProspectProfileCard({
     return `${days}d ago`;
   };
 
-  const getInboxStatusColor = (status?: string) => {
-    switch (status) {
-      case "UNACTIONED":
-        return "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/30";
-      case "ACTIONED":
-        return "bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-500/30";
-      case "ARCHIVED":
-        return "bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-400 border-gray-500/30";
-      default:
-        return "bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-300 border-blue-500/30";
-    }
-  };
-
   return (
     <motion.div
       key={profile.id}
@@ -323,19 +342,39 @@ export function ProspectProfileCard({
     >
       <GlassCard
         blur="light"
-        glow={hasSuggested || isPending || isUnactioned}
+        glow={hasSuggested || isUnactioned}
         className={cn(
           "p-4 cursor-pointer transition-all duration-300 relative overflow-hidden group",
           isSelected
             ? "bg-purple-500/15 border-l-4 border-l-green-400"
             : "hover:bg-white/8 hover:translate-x-1",
-          (isPending || hasSuggested || isUnactioned) && "font-medium"
+          (hasSuggested || isUnactioned) && "font-medium"
         )}
       >
         {/* Hover glow effect */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/5 to-transparent" />
         </div>
+        {profile.inbox_status && (
+          <div className="absolute top-1 right-1 z-20">
+            <LiquidBadge
+              variant={
+                profile.inbox_status === "REPLIED"
+                  ? "success"
+                  : profile.inbox_status === "SUGGESTED_REPLY"
+                  ? "warning"
+                  : "primary"
+              }
+              size="sm"
+            >
+              {profile.inbox_status === "REPLIED"
+                ? "Replied"
+                : profile.inbox_status === "SUGGESTED_REPLY"
+                ? "Suggested"
+                : "Pending"}
+            </LiquidBadge>
+          </div>
+        )}
 
         <div className="relative">
           <div className="flex gap-3">
@@ -361,7 +400,7 @@ export function ProspectProfileCard({
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-heading font-semibold text-white truncate">
+                    <h3 className="font-heading font-semibold text-white truncate max-w-[calc(100%-7rem)]">
                       {profile.name}
                     </h3>
                   </div>
@@ -375,26 +414,7 @@ export function ProspectProfileCard({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {profile.status && (
-                      <LiquidBadge
-                        variant={
-                          profile.status === "REPLY"
-                            ? "success"
-                            : profile.status === "SUGGESTED_REPLY"
-                            ? "warning"
-                            : "primary"
-                        }
-                        size="sm"
-                      >
-                        {profile.status === "REPLY"
-                          ? "Replied"
-                          : profile.status === "SUGGESTED_REPLY"
-                          ? "Suggested"
-                          : "Pending"}
-                      </LiquidBadge>
-                    )}
-                  </div>
+                  <div className="flex items-center gap-2"></div>
                 </div>
               </div>
             </div>
@@ -410,12 +430,6 @@ export function ProspectProfileCard({
                   <span className="text-purple-300 font-medium">
                     r/{profile.last_contacted_subreddit}
                   </span>
-                  {profile.last_contact_time && (
-                    <span className="text-white/50">
-                      {" "}
-                      • {getTimeAgo(profile.last_contact_time)}
-                    </span>
-                  )}
                 </p>
               </div>
             </div>

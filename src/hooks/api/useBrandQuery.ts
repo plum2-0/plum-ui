@@ -40,6 +40,8 @@ function getBrandId(session: any): string | null {
     }
   }
 
+  console.log("----", session);
+
   // Fallback to session brandId if cookie not found
   return session?.user?.brandId || null;
 }

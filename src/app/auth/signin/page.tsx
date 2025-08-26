@@ -8,13 +8,12 @@ import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 function SignInContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/onboarding";
-  const error = searchParams.get("error"); 
-  console.log("callbackUrl", callbackUrl);
+  const error = searchParams.get("error");
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
       {/* Animated Background with Liquid Glass Effect */}
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
           background: `
@@ -25,10 +24,10 @@ function SignInContent() {
           `
         }}
       />
-      
+
       {/* Floating Glass Orbs */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div 
+        <div
           className="absolute top-20 left-20 w-72 h-72 rounded-full opacity-30 animate-pulse"
           style={{
             background: 'radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, rgba(168, 85, 247, 0.1) 70%, transparent 100%)',
@@ -36,7 +35,7 @@ function SignInContent() {
             animation: 'float 6s ease-in-out infinite'
           }}
         />
-        <div 
+        <div
           className="absolute top-40 right-32 w-96 h-96 rounded-full opacity-25 animate-pulse"
           style={{
             background: 'radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.1) 70%, transparent 100%)',
@@ -44,7 +43,7 @@ function SignInContent() {
             animation: 'float 8s ease-in-out infinite reverse'
           }}
         />
-        <div 
+        <div
           className="absolute bottom-20 left-1/3 w-64 h-64 rounded-full opacity-20"
           style={{
             background: 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 70%, transparent 100%)',
@@ -73,7 +72,7 @@ function SignInContent() {
           background: rgba(255, 255, 255, 0.08);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 
+          box-shadow:
             0 8px 32px rgba(0, 0, 0, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }

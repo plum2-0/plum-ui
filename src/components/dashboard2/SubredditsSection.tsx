@@ -57,20 +57,22 @@ export default function SubredditsSection({
   return (
     <div className="mt-4">
       <div className="flex items-center gap-2 mb-2">
-        <svg
-          className="w-4 h-4 text-orange-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-          />
-        </svg>
-        <span className="text-white/70 font-body text-sm font-medium">
+        <span className="icon-badge">
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 12a9 9 0 01-9 9M12 3a9 9 0 019 9M3 12a9 9 0 009 9M12 3a9 9 0 00-9 9m18 0H3"
+            />
+          </svg>
+        </span>
+        <span className="eyebrow">
           {selectedProspect ? "Active Subreddits:" : "Top Subreddits:"}
         </span>
       </div>

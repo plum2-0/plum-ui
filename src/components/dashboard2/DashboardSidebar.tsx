@@ -8,21 +8,11 @@ import MobileSidebarWrapper from "@/components/shared/MobileSidebarWrapper";
 import { useBrand } from "@/contexts/BrandContext";
 
 interface DashboardSidebarProps {
-  selectedUseCase?: Prospect | null;
-  onUseCaseSelect?: (prospect: Prospect | null) => void;
-  onlyUnread?: boolean;
-  setOnlyUnread?: (value: boolean) => void;
   onAddUseCase?: (title: string) => Promise<void> | void;
-  inlineSelection?: boolean; // New prop to disable navigation
 }
 
 export default function DashboardSidebar({
-  selectedUseCase,
-  onUseCaseSelect,
-  onlyUnread = false,
-  setOnlyUnread,
   onAddUseCase,
-  inlineSelection = false,
 }: DashboardSidebarProps) {
   const { brand } = useBrand();
   const brandName = brand?.name || "Total";

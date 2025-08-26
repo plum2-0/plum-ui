@@ -5,6 +5,7 @@ import GlassPanel from "@/components/ui/GlassPanel";
 import { RedditPost } from "@/types/brand";
 import SwipeableProspectModal from "./SwipeableProspectModal";
 import { RedditPostWithProspect } from "@/app/swipe/page";
+import { useBrand } from "@/contexts/BrandContext";
 
 interface ProspectTargetsProps {
   posts?: RedditPost[];
@@ -30,6 +31,7 @@ export default function ProspectTargetStat({
   subtext = "Click To View",
 }: ProspectTargetsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { totalPostsScraped } = useBrand();
 
   // Dedupe posts based on thing_id
   const uniquePosts = posts.filter(
@@ -90,6 +92,11 @@ export default function ProspectTargetStat({
             {uniqueUsers > 0 && (
               <div className="text-white/60 text-xs font-body mt-2">
                 {subtext}
+              </div>
+            )}
+            {totalPostsScraped > 0 && (
+              <div className="text-white/40 text-xs font-body mt-3 italic">
+                Analyzed {totalPostsScraped.toLocaleString()} posts to find your ideal customers
               </div>
             )}
           </div>
