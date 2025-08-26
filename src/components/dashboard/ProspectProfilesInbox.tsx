@@ -22,7 +22,7 @@ interface ProspectProfilesInboxProps {
 }
 
 type FilterType = "all" | "your-move" | "their-move";
-type SortType = "recent" | "engagement" | "unread";
+type SortType = "last-contact" | "engagement" | "unread";
 
 export function ProspectProfilesInbox({
   onProfileSelect,
@@ -31,7 +31,7 @@ export function ProspectProfilesInbox({
   const { data: profiles, isLoading, error } = useProspectProfilesQuery();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("your-move");
-  const [sortType] = useState<SortType>("recent");
+  const [sortType, setSortType] = useState<SortType>("last-contact");
 
   // Debug logging
   console.log("📦 [ProspectProfilesInbox] Profiles data:", profiles);
@@ -73,22 +73,15 @@ export function ProspectProfilesInbox({
         break;
     }
 
-    // Apply sorting
-    switch (sortType) {
-      case "recent":
-        filtered.sort(
-          (a, b) => (b.lastMessageTime ?? 0) - (a.lastMessageTime ?? 0)
-        );
-        break;
-      case "engagement":
-        filtered.sort(
-          (a, b) => (b.engagementScore ?? 0) - (a.engagementScore ?? 0)
-        );
-        break;
-      case "unread":
-        filtered.sort((a, b) => (b.unreadCount ?? 0) - (a.unreadCount ?? 0));
-        break;
-    }
+    filtered.sort((a, b) => {
+      const timeA = a.last_contact_time
+        ? new Date(a.last_contact_time).getTime()
+        : 0;
+      const timeB = b.last_contact_time
+        ? new Date(b.last_contact_time).getTime()
+        : 0;
+      return timeB - timeA;
+    });
 
     return filtered;
   }, [profiles, searchQuery, filterType, sortType]);

@@ -35,7 +35,6 @@ export interface ProspectProfile {
     end_hour_utc: number;
   }>;
   // Mocked fields for enhanced UI
-  lastMessageTime?: number;
   unreadCount?: number;
   engagementScore?: number;
   sentiment?: "positive" | "neutral" | "negative";
