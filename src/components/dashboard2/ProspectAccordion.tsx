@@ -234,117 +234,75 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                   </h3>
 
                   {/* Enhanced Metrics Bar */}
-                  <div className="relative pt-5">
-                    {/* Combined total display */}
-                    <div className="absolute -top-6 left-0 flex items-center gap-2">
-                      <span className="text-xs text-green-400/60">
-                        ({Math.round(actionedPercentage)}% complete)
-                      </span>
-                      <span className="text-xs text-white/40">•</span>
-                      <span className="text-xs text-gray-400">
-                        Analyzed {prospect.totalPostsScraped} posts to find your
-                        ideal customers
-                      </span>
+                  <div className="space-y-3">
+                    {/* Numbers breakdown */}
+                    <div className="flex justify-between items-center gap-4">
+                      {/* Actioned - Enhanced */}
+                      <PopoverWithPortal
+                        trigger={
+                          <div className="flex items-center gap-2 cursor-help">
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
+                            <span className="text-white font-bold text-sm">
+                              {prospect.actionedPosts.length}
+                            </span>
+                            <span className="text-green-300 text-xs font-semibold uppercase tracking-wide">
+                              Engaged
+                            </span>
+                          </div>
+                        }
+                        side="top"
+                        align="center"
+                        openOnHover={true}
+                      >
+                        <span className="text-white/90 text-xs font-medium">
+                          Posts we've already responded to
+                        </span>
+                      </PopoverWithPortal>
+
+                      {/* Pending - Enhanced with matching dull yellow */}
+                      <PopoverWithPortal
+                        trigger={
+                          <div className="flex items-center gap-2 cursor-help">
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-600 animate-pulse shadow-lg shadow-yellow-600/50" />
+                            <span className="text-white font-bold text-sm">
+                              {prospect.pendingPosts.length}
+                            </span>
+                            <span className="text-yellow-600 text-xs font-semibold uppercase tracking-wide">
+                              To Review
+                            </span>
+                          </div>
+                        }
+                        side="top"
+                        align="center"
+                        openOnHover={true}
+                      >
+                        <span className="text-white/90 text-xs font-medium">
+                          Posts waiting for your action
+                        </span>
+                      </PopoverWithPortal>
                     </div>
-                    {/* Progress bar background */}
-                    <div
-                      className="h-12 rounded-xl overflow-hidden relative"
-                      style={{
-                        background: "rgba(0, 0, 0, 0.3)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                      }}
-                    >
-                      {/* Pending fill (full width, behind actioned) */}
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          background: `linear-gradient(90deg,
-                            rgba(234, 179, 8, 0.2) 0%,
-                            rgba(202, 138, 4, 0.2) 100%)`,
-                        }}
-                      />
-                      {/* Actioned fill */}
+
+                    {/* Visual progress bar - thin style matching ProspectTargetsStat */}
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
                       <motion.div
-                        className="h-full relative overflow-hidden"
-                        style={{
-                          width: `${actionedPercentage}%`,
-                          background: `linear-gradient(90deg,
-                            rgba(34, 197, 94, 0.8) 0%,
-                            rgba(16, 185, 129, 0.8) 100%)`,
-                        }}
+                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+                        style={{ width: `${actionedPercentage}%` }}
                         initial={{ width: 0 }}
                         animate={{ width: `${actionedPercentage}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                      >
-                        {/* Shimmer effect */}
-                        <motion.div
-                          className="absolute inset-0"
-                          style={{
-                            background:
-                              "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
-                            transform: "translateX(-100%)",
-                          }}
-                          animate={{
-                            transform: [
-                              "translateX(-100%)",
-                              "translateX(200%)",
-                            ],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            repeatDelay: 3,
-                          }}
-                        />
-                      </motion.div>
+                      />
+                    </div>
 
-                      {/* Metrics overlay - centered vertically */}
-                      <div className="absolute inset-0 flex items-center justify-between px-4">
-                        {/* Actioned - Enhanced */}
-                        <PopoverWithPortal
-                          trigger={
-                            <div className="flex items-center gap-2 z-10 cursor-help">
-                              <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
-                              <span className="text-white font-bold text-sm">
-                                {prospect.actionedPosts.length}
-                              </span>
-                              <span className="text-green-300 text-xs font-semibold uppercase tracking-wide">
-                                Engaged
-                              </span>
-                            </div>
-                          }
-                          side="top"
-                          align="center"
-                          openOnHover={true}
-                        >
-                          <span className="text-white/90 text-xs font-medium">
-                            Posts we've already responded to
-                          </span>
-                        </PopoverWithPortal>
-
-                        {/* Pending - Enhanced with matching dull yellow */}
-                        <PopoverWithPortal
-                          trigger={
-                            <div className="flex items-center gap-2 z-10 cursor-help">
-                              {/* Connection line to show relationship */}
-                              <div className="w-2.5 h-2.5 rounded-full bg-yellow-600 animate-pulse shadow-lg shadow-yellow-600/50" />
-                              <span className="text-white font-bold text-sm">
-                                {prospect.pendingPosts.length}
-                              </span>
-                              <span className="text-yellow-600 text-xs font-semibold uppercase tracking-wide">
-                                To Review
-                              </span>
-                            </div>
-                          }
-                          side="top"
-                          align="center"
-                          openOnHover={true}
-                        >
-                          <span className="text-white/90 text-xs font-medium">
-                            Posts waiting for your action
-                          </span>
-                        </PopoverWithPortal>
-                      </div>
+                    {/* Progress percentage and posts analyzed */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-green-400/60">
+                        ({Math.round(actionedPercentage)}% complete)
+                      </span>
+                      <span className="text-white/40">•</span>
+                      <span className="text-gray-400">
+                        Analyzed {prospect.totalPostsScraped} posts to find your
+                        ideal customers
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -568,24 +526,24 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                   className="px-4 py-2 rounded-full text-sm font-body backdrop-blur-md"
                                   style={{
                                     background:
-                                      "linear-gradient(135deg, rgba(255, 69, 0, 0.15), rgba(255, 87, 34, 0.1))",
+                                      "linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08))",
                                     border: "1px solid transparent",
                                     backgroundImage: `
-                                      linear-gradient(135deg, rgba(255, 69, 0, 0.15), rgba(255, 87, 34, 0.1)),
-                                      linear-gradient(135deg, rgba(255, 69, 0, 0.4), rgba(255, 87, 34, 0.3))
+                                      linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08)),
+                                      linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2))
                                     `,
                                     backgroundOrigin: "border-box",
                                     backgroundClip: "padding-box, border-box",
                                     boxShadow:
-                                      "0 2px 8px rgba(255, 69, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+                                      "0 2px 8px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
                                   }}
                                   whileHover={{
                                     scale: 1.05,
                                     boxShadow:
-                                      "0 4px 12px rgba(255, 69, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                      "0 4px 12px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                                   }}
                                 >
-                                  <span className="text-orange-400 font-medium">
+                                  <span className="text-indigo-300 font-medium">
                                     r/{item.subreddit}
                                   </span>
                                   <span className="text-white/40 ml-1.5">
