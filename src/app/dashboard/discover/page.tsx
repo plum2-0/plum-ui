@@ -28,9 +28,9 @@ function BrandHeader({ name, website }: BrandHeaderProps) {
         href={website}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-block group mb-8"
+        className="inline-block group "
       >
-        <h1 className="heading-1 group-hover:text-blue-400 transition-colors flex items-center gap-3 pb-2 border-b border-white/10">
+        <h1 className="heading-1 group-hover:text-blue-400 transition-colors flex items-center gap-3 pb-2 ">
           {name}
           <svg
             className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 group-hover:-translate-y-1"
@@ -50,9 +50,7 @@ function BrandHeader({ name, website }: BrandHeaderProps) {
     );
   }
 
-  return (
-    <h1 className="heading-1 mb-8 pb-2 border-b border-white/10">{name}</h1>
-  );
+  return <h1 className="heading-1 pb-2 border-b border-white/10">{name}</h1>;
 }
 
 function BrandSummary() {
@@ -102,6 +100,7 @@ function BrandSummary() {
       <div className="flex items-start gap-4">
         <div className="flex-1">
           <BrandHeader name={brandData.name} website={brandData.website} />
+          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent backdrop-blur-sm mt-2 mb-6" />
 
           <div className="space-y-8">
             <ProspectTargetStat
