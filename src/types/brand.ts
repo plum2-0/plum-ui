@@ -20,8 +20,18 @@ export interface RedditPost {
   suggested_agent_reply?: string;
   insert_timestamp?: string;
   source_keywords?: string;
-  status: "IGNORE" | "REPLY" | "PENDING" | "SUGGESTED_REPLY" | "ACTIONED" | string;
+  status:
+    | "IGNORE"
+    | "REPLY"
+    | "PENDING"
+    | "SUGGESTED_REPLY"
+    | "ACTIONED"
+    | string;
   tags?: PostTags;
+}
+
+export interface RedditPostUI extends RedditPost {
+  prospect_id: string;
 }
 
 export interface Prospect {

@@ -6,7 +6,7 @@ const API_BASE =
 
 interface ProspectPostActionParams {
   post: RedditPost;
-  action: "queue" | "ignore";
+  action: "queue" | "ignore" | "reply";
   brandId: string;
   brandName?: string;
   brandDetail?: string;
@@ -17,7 +17,7 @@ interface ProspectPostActionParams {
 }
 
 interface ProspectPostActionRequest {
-  user_content_action: "queue" | "ignore";
+  user_content_action: "queue" | "ignore" | "reply";
   brand_name?: string;
   brand_detail?: string;
   problem?: string;
@@ -32,7 +32,7 @@ interface ProspectPostActionRequest {
     score: number;
     upvotes?: number;
     downvotes?: number;
-    reply_count: number;
+    reply_count?: number;
     thumbnail?: string;
     link_flair?: string;
     suggested_agent_reply?: string | null;
@@ -126,7 +126,7 @@ export function useProspectPostAction() {
         reddit_post: {
           thing_id: post.thing_id,
           title: post.title,
-          content: post.content || post.title || '',
+          content: post.content || '',
           author: post.author,
           subreddit: post.subreddit,
           permalink: post.permalink,
@@ -134,11 +134,11 @@ export function useProspectPostAction() {
           score: post.score,
           upvotes: post.upvotes,
           downvotes: post.downvotes,
-          reply_count: post.reply_count || 0,
+          reply_count: post.reply_count,
           thumbnail: post.thumbnail,
           link_flair: post.link_flair,
           suggested_agent_reply: post.suggested_agent_reply,
-          status: post.status || "PENDING", // Default to PENDING if not provided
+          status: post.status,
         },
         reply_content: replyContent,
         agent_id: agentId,

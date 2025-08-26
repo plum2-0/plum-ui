@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   X,
@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { LiquidBadge } from "@/components/ui/LiquidBadge";
+import { Popover } from "@/components/ui/Popover";
 import { RedditConvo } from "./RedditConvo";
 import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
-import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
 import type { Agent } from "@/types/agent";
 
 interface ProspectProfileDetailProps {
@@ -43,13 +43,7 @@ export function ProspectProfileDetail({
   // Get the active conversation
   const activeConversation = currentProfile.active_convos?.[0];
 
-  // Mock engagement analytics (would come from real data in production)
-  const engagementData = {
-    score: currentProfile.engagementScore || 75,
-    responseTime: "~2 hours",
-    interestedUseCase:
-      currentProfile.interestedUseCase || "Team Collaboration Tools",
-  };
+  // (removed unused mock engagement analytics)
 
   const getSentimentColor = (sentiment?: string) => {
     switch (sentiment) {
@@ -126,30 +120,34 @@ export function ProspectProfileDetail({
                               : "Location: "}
                             {attr.attribute_value}
                           </span>
-                          <div className="relative group">
-                            <HelpCircle className="w-3 h-3 text-white/30 cursor-help" />
-                            <div className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 group-hover:scale-100 scale-95">
-                              <div className="relative bg-black/80 backdrop-blur-xl border border-white/20 text-white text-xs rounded-lg px-3 py-2 w-64 shadow-2xl">
-                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg"></div>
-                                <div className="relative">
-                                  <div className="font-semibold mb-1 text-purple-300">
-                                    Confidence: <span className={cn(
-                                      "capitalize",
-                                      attr.confidence === "high" && "text-green-400",
-                                      attr.confidence === "medium" && "text-yellow-400",
-                                      attr.confidence === "low" && "text-orange-400"
-                                    )}>{attr.confidence}</span>
-                                  </div>
-                                  {attr.llm_explanation && (
-                                    <div className="text-white/90 leading-relaxed">
-                                      {attr.llm_explanation}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="absolute bottom-full left-4 -mb-1 w-0 h-0 border-4 border-transparent border-b-white/20"></div>
+                          <Popover
+                            trigger={
+                              <HelpCircle className="w-3 h-3 text-white/30 cursor-help" />
+                            }
+                            side="bottom"
+                            align="start"
+                          >
+                            <div className="font-semibold mb-1 text-purple-300">
+                              Confidence:{" "}
+                              <span
+                                className={cn(
+                                  "capitalize",
+                                  attr.confidence === "high" &&
+                                    "text-green-400",
+                                  attr.confidence === "medium" &&
+                                    "text-yellow-400",
+                                  attr.confidence === "low" && "text-orange-400"
+                                )}
+                              >
+                                {attr.confidence}
+                              </span>
                             </div>
-                          </div>
+                            {attr.llm_explanation && (
+                              <div className="text-white/90 leading-relaxed">
+                                {attr.llm_explanation}
+                              </div>
+                            )}
+                          </Popover>
                         </div>
                       ))}
                   </div>
@@ -269,26 +267,29 @@ export function ProspectProfileDetail({
             )}
 
           {/* Topics */}
-          {currentProfile?.content_signals?.topics && 
+          {currentProfile?.content_signals?.topics &&
             currentProfile.content_signals.topics.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
-                Interested In:
-              </span>
-              {currentProfile.content_signals.topics.map((topic) => (
-                <LiquidBadge 
-                  key={topic} 
-                  variant="purple" 
-                  size="sm"
-                  className="text-xs"
-                >
-                  {topic.split('-').map(word => 
-                    word.charAt(0).toUpperCase() + word.slice(1)
-                  ).join(' ')}
-                </LiquidBadge>
-              ))}
-            </div>
-          )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-white/60 uppercase tracking-wider mr-2">
+                  Interested In:
+                </span>
+                {currentProfile.content_signals.topics.map((topic) => (
+                  <LiquidBadge
+                    key={topic}
+                    variant="purple"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    {topic
+                      .split("-")
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                      )
+                      .join(" ")}
+                  </LiquidBadge>
+                ))}
+              </div>
+            )}
 
           {/* Visual Separator */}
           <div className="border-t border-white/10"></div>

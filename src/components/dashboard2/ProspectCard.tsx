@@ -18,16 +18,13 @@ import { glassStyles } from "@/lib/styles/glassMorphism";
 
 interface ProspectCardProps {
   post: RedditPost;
-  brandId: string;
   className?: string;
   onReply?: () => void;
 }
 
 export default function ProspectCard({
   post,
-  brandId,
   className = "",
-  onReply,
 }: ProspectCardProps) {
   const [showScrollFade, setShowScrollFade] = useState(true);
   const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);

@@ -2,56 +2,43 @@
 
 import { useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
-import { RedditPost } from "@/types/brand";
+import { Brand, RedditPostUI } from "@/types/brand";
 import SwipeableProspectModal from "./SwipeableProspectModal";
-import { RedditPostWithProspect } from "@/app/swipe/page";
-import { useBrand } from "@/contexts/BrandContext";
 
 interface ProspectTargetsProps {
-  posts?: RedditPost[];
-  brandId: string;
-  brandName?: string;
-  brandDetail?: string;
-  prospectId: string;
-  problemToSolve?: string;
+  posts?: RedditPostUI[];
+  // Precomputed stats passed from callers (BrandContext/DiscoverPage)
+  uniqueUsers: number;
+  uniquePendingAuthors: number;
+  uniqueActionedAuthors: number;
+  totalKeywordCounts?: number;
+  totalPostsScraped?: number;
+  onSwipe?: (args: {
+    direction: "left" | "right";
+    post: RedditPostUI;
+  }) => void | Promise<void>;
   onStackCompleted?: () => void;
   label?: string;
   subtext?: string;
+  problemToSolve?: string;
 }
 
 export default function ProspectTargetStat({
   posts = [],
-  brandId,
-  brandName,
-  brandDetail,
-  prospectId,
-  problemToSolve,
-  onStackCompleted,
+  uniqueUsers,
+  uniquePendingAuthors,
+  uniqueActionedAuthors,
+  totalKeywordCounts = 0,
+  totalPostsScraped = 0,
   label = "Potential Customers Identified",
   subtext = "Click To View",
+  onSwipe,
+  onStackCompleted,
 }: ProspectTargetsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { totalPostsScraped } = useBrand();
-
-  // Dedupe posts based on thing_id
-  const uniquePosts = posts.filter(
-    (post, index, self) =>
-      index === self.findIndex((p) => p.thing_id === post.thing_id)
-  );
-
-  // Map to RedditPostWithProspect format
-  const uniquePostsWithProspect: RedditPostWithProspect[] = uniquePosts.map(
-    (post) => ({
-      ...post,
-      prospect_id: prospectId,
-    })
-  );
-
-  // Get unique Reddit users
-  const uniqueUsers = new Set(uniquePosts.map((post) => post.author)).size;
 
   const handleCardClick = () => {
-    if (uniquePosts.length > 0) {
+    if (posts.length > 0) {
       setIsModalOpen(true);
     }
   };
@@ -89,14 +76,31 @@ export default function ProspectTargetStat({
             <div className="text-emerald-300 text-5xl font-heading font-bold">
               {uniqueUsers}
             </div>
+            <div className="mt-2 flex items-center justify-center gap-3 text-xs text-white/70 font-body">
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-orange-400/70"></span>
+                Pending {uniquePendingAuthors}
+              </span>
+              <span className="text-white/20">|</span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400/70"></span>
+                Actioned {uniqueActionedAuthors}
+              </span>
+            </div>
             {uniqueUsers > 0 && (
               <div className="text-white/60 text-xs font-body mt-2">
                 {subtext}
               </div>
             )}
+            {totalKeywordCounts > 0 && (
+              <div className="text-white/40 text-xs font-body mt-1">
+                Matched {totalKeywordCounts.toLocaleString()} keyword hits
+              </div>
+            )}
             {totalPostsScraped > 0 && (
               <div className="text-white/40 text-xs font-body mt-3 italic">
-                Analyzed {totalPostsScraped.toLocaleString()} posts to find your ideal customers
+                Analyzed {totalPostsScraped.toLocaleString()} posts to find your
+                ideal customers
               </div>
             )}
           </div>
@@ -106,12 +110,8 @@ export default function ProspectTargetStat({
       {/* Swipeable Modal */}
       <SwipeableProspectModal
         isOpen={isModalOpen}
-        posts={uniquePostsWithProspect}
-        brandId={brandId}
-        brandName={brandName}
-        brandDetail={brandDetail}
-        prospectId={prospectId}
-        problemToSolve={problemToSolve}
+        posts={posts}
+        onSwipe={onSwipe}
         onClose={() => setIsModalOpen(false)}
         onStackCompleted={handleStackCompleted}
       />

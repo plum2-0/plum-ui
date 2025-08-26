@@ -11,13 +11,11 @@ import {
 import { useBrand } from "@/contexts/BrandContext";
 import GlassPanel from "@/components/ui/GlassPanel";
 import ProspectAccordion from "@/components/dashboard2/ProspectAccordion";
-import KeywordDisplay from "@/components/dashboard2/KeywordDisplay";
-import SubredditsSection from "@/components/dashboard2/SubredditsSection";
 import ProspectTargetStat from "@/components/dashboard2/ProspectTargetsStat";
 import VizSummaryView from "@/components/dashboard2/VizSummaryView";
-import { LiquidButton } from "@/components/ui/LiquidButton";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
 
 interface BrandHeaderProps {
   name: string;
@@ -59,11 +57,35 @@ function BrandHeader({ name, website }: BrandHeaderProps) {
 }
 
 function BrandSummary() {
-  const { brand: brandData, allSourcedRedditPosts } = useBrand();
+  const {
+    brand: brandData,
+    postsToReview,
+    totalPostsScraped,
+    totalKeywordsCounts,
+    brandAggregates,
+  } = useBrand();
+  const postActionMutation = useProspectPostAction();
+  const handleSwipe = useCallback(
+    ({ direction, post }: { direction: "left" | "right"; post: any }) => {
+      if (!brandData) return;
+      const prospect = brandData.prospects?.find(
+        (p) => p.id === post.prospect_id
+      );
+      const problem = prospect?.problem_to_solve;
+      postActionMutation.mutate({
+        post,
+        action: direction === "right" ? "queue" : "ignore",
+        brandId: brandData.id,
+        brandName: brandData.name,
+        brandDetail: brandData.detail || undefined,
+        prospectId: post.prospect_id,
+        problem,
+      });
+    },
+    [brandData, postActionMutation]
+  );
 
   if (!brandData) return null;
-
-  const brandId = brandData.id;
   return (
     <GlassPanel
       className="rounded-2xl p-6"
@@ -84,9 +106,13 @@ function BrandSummary() {
 
           <div className="space-y-8">
             <ProspectTargetStat
-              brandId={brandId}
-              posts={allSourcedRedditPosts}
-              prospectId={"overview stat"}
+              posts={postsToReview}
+              uniqueUsers={brandAggregates.totalPotentialCustomers}
+              uniquePendingAuthors={brandAggregates.uniquePendingAuthors}
+              uniqueActionedAuthors={brandAggregates.uniqueActionedAuthors}
+              totalPostsScraped={totalPostsScraped}
+              totalKeywordCounts={totalKeywordsCounts}
+              onSwipe={handleSwipe}
               problemToSolve="Overview - All Use Cases"
               onStackCompleted={() => {
                 console.log("All prospects reviewed!");
@@ -134,6 +160,7 @@ function BrandSummary() {
 }
 
 type HintType = "no-posts" | "no-prospects" | "low-engagement" | null;
+type NonNullHint = Exclude<HintType, null>;
 
 interface HintConfig {
   type: HintType;
@@ -145,39 +172,31 @@ interface HintConfig {
 }
 
 function HelpHintSection() {
-  const { brand: brandData, allSourcedRedditPosts } = useBrand();
-  const { openDrawer, addScrapeJob } = useScrapeJob();
+  const { brand: brandData, postsToReview } = useBrand();
+  const { openDrawer } = useScrapeJob();
   const [currentHint, setCurrentHint] = useState<HintType>(null);
   const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
     if (!brandData) return;
 
-    console.log("HelpHintSection Debug:", {
-      postsLength: allSourcedRedditPosts.length,
-      prospectsLength: brandData.prospects?.length,
-      prospects: brandData.prospects,
-    });
-
     // Check conditions in priority order
     if (!brandData.prospects || brandData.prospects.length === 0) {
       setCurrentHint("no-prospects");
-    } else if (allSourcedRedditPosts.length === 0) {
+    } else if (postsToReview.length === 0) {
       setCurrentHint("no-posts");
     } else {
       // Check for low engagement (example: average score < 5)
       const avgScore =
-        allSourcedRedditPosts.reduce(
-          (acc, post) => acc + (post.score || 0),
-          0
-        ) / (allSourcedRedditPosts.length || 1);
+        postsToReview.reduce((acc, post) => acc + (post.score || 0), 0) /
+        (postsToReview.length || 1);
       if (avgScore < 5) {
         setCurrentHint("low-engagement");
       } else {
         setCurrentHint(null);
       }
     }
-  }, [brandData, allSourcedRedditPosts]);
+  }, [brandData, postsToReview]);
 
   const handleScrapeAllProspects = useCallback(() => {
     if (!brandData || !brandData.prospects) return;
@@ -194,7 +213,7 @@ function HelpHintSection() {
     openDrawer(scrapeJobs);
   }, [brandData, openDrawer]);
 
-  const hints: Record<HintType, Omit<HintConfig, "type">> = {
+  const hints: Record<NonNullHint, Omit<HintConfig, "type">> = {
     "no-posts": {
       icon: (
         <svg

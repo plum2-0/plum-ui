@@ -12,7 +12,11 @@ export interface ProspectProfile {
     attribute_key: string;
     attribute_value: string;
     confidence?: string;
+    llm_explanation?: string;
   }>;
+  content_signals?: {
+    topics: string[];
+  };
   account_stats?: {
     total_karma: number;
     account_age_days: number;

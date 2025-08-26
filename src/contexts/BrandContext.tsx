@@ -1,7 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode, useMemo } from "react";
-import { Brand, RedditPost, UseCaseInsights } from "@/types/brand";
+import {
+  Brand,
+  RedditPost,
+  RedditPostUI,
+  UseCaseInsights,
+} from "@/types/brand";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 
 interface ProspectDisplay {
@@ -10,16 +15,25 @@ interface ProspectDisplay {
   problem_to_solve: string;
   keywordCounts: { keyword: string; count: number }[];
   subredditCounts: { subreddit: string; count: number }[];
-  pendingPosts: RedditPost[];
-  actionedPosts: RedditPost[];
+  pendingPosts: RedditPostUI[];
+  actionedPosts: RedditPostUI[];
+  uniquePendingAuthors: number;
+  uniqueActionedAuthors: number;
   totalPotentialCustomers: number;
+  totalKeywordCounts: number;
 }
 
 interface BrandContextType {
   brand: Brand | null;
   prospectsDisplay: ProspectDisplay[];
   totalPostsScraped: number;
-  allSourcedRedditPosts: RedditPost[];
+  totalKeywordsCounts: number;
+  postsToReview: RedditPostUI[];
+  brandAggregates: {
+    uniquePendingAuthors: number;
+    uniqueActionedAuthors: number;
+    totalPotentialCustomers: number;
+  };
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -48,6 +62,11 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
       .map(([keyword, count]) => ({ keyword, count }))
       .sort((a, b) => b.count - a.count);
 
+    const totalKeywordCounts = keywordCounts.reduce(
+      (sum, item) => sum + item.count,
+      0
+    );
+
     // Calculate subreddit counts
     const subredditMap = new Map<string, number>();
     filteredPosts.forEach((post) => {
@@ -61,21 +80,42 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
       .sort((a, b) => b.count - a.count);
 
     // Separate pending and actioned posts
-    const pendingPosts = filteredPosts.filter(
-      (post) => post.status === "PENDING" || post.status === "SUGGESTED_REPLY"
-    );
-    const actionedPosts = filteredPosts.filter(
-      (post) => post.status === "ACTIONED" || post.status === "REPLY"
-    );
+    const pendingPosts = filteredPosts
+      .filter(
+        (post) => post.status === "PENDING" || post.status === "SUGGESTED_REPLY"
+      )
+      .map((post) => {
+        return {
+          ...post,
+          prospect_id: prospect.id,
+        };
+      });
+    const actionedPosts = filteredPosts
+      .filter((post) => post.status === "ACTIONED" || post.status === "REPLY")
+      .map((post) => {
+        return {
+          ...post,
+          prospect_id: prospect.id,
+        };
+      });
 
     // Calculate unique potential customers
-    const uniqueAuthors = new Set<string>();
-    [...pendingPosts, ...actionedPosts].forEach((post) => {
+    const pendingUniqueAuthors = new Set<string>();
+    pendingPosts.forEach((post) => {
       if (post.author) {
-        uniqueAuthors.add(post.author);
+        pendingUniqueAuthors.add(post.author);
       }
     });
-    const totalPotentialCustomers = uniqueAuthors.size;
+    const actionedUniqueAuthors = new Set<string>();
+    actionedPosts.forEach((post) => {
+      if (post.author) {
+        actionedUniqueAuthors.add(post.author);
+      }
+    });
+    const totalPotentialCustomers = new Set<string>([
+      ...pendingUniqueAuthors,
+      ...actionedUniqueAuthors,
+    ]).size;
 
     return {
       id: prospect.id,
@@ -85,7 +125,10 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
       subredditCounts,
       pendingPosts,
       actionedPosts,
+      uniquePendingAuthors: pendingUniqueAuthors.size,
+      uniqueActionedAuthors: actionedUniqueAuthors.size,
       totalPotentialCustomers,
+      totalKeywordCounts,
     };
   });
 }
@@ -106,12 +149,42 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     }, 0);
   }, [data?.brand]);
 
-  const allSourcedRedditPosts = useMemo<RedditPost[]>(() => {
+  const totalKeywordsCounts = useMemo(() => {
+    if (!prospectsDisplay || prospectsDisplay.length === 0) return 0;
+    return prospectsDisplay.reduce((total, prospect) => {
+      return total + (prospect.totalKeywordCounts || 0);
+    }, 0);
+  }, [prospectsDisplay]);
+
+  const postsToReview = useMemo<RedditPostUI[]>(() => {
     if (!data?.brand || !data.brand.prospects) return [];
-    return data.brand.prospects.flatMap(
-      (prospect) => prospect.sourced_reddit_posts || []
-    );
+    return prospectsDisplay.flatMap((prospect) => prospect.pendingPosts || []);
   }, [data?.brand]);
+
+  const brandAggregates = useMemo(() => {
+    const pendingAuthors = new Set<string>();
+    const actionedAuthors = new Set<string>();
+
+    prospectsDisplay.forEach((prospect) => {
+      (prospect.pendingPosts || []).forEach((post) => {
+        if (post.author) pendingAuthors.add(post.author);
+      });
+      (prospect.actionedPosts || []).forEach((post) => {
+        if (post.author) actionedAuthors.add(post.author);
+      });
+    });
+
+    const totalPotentialCustomers = new Set<string>([
+      ...pendingAuthors,
+      ...actionedAuthors,
+    ]).size;
+
+    return {
+      uniquePendingAuthors: pendingAuthors.size,
+      uniqueActionedAuthors: actionedAuthors.size,
+      totalPotentialCustomers,
+    };
+  }, [prospectsDisplay]);
 
   return (
     <BrandContext.Provider
@@ -119,7 +192,9 @@ export function BrandProvider({ children }: { children: ReactNode }) {
         brand: data?.brand || null,
         prospectsDisplay,
         totalPostsScraped,
-        allSourcedRedditPosts,
+        totalKeywordsCounts,
+        postsToReview,
+        brandAggregates,
         isLoading,
         error,
         refetch,

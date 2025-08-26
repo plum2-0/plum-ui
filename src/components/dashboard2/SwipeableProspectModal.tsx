@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
@@ -10,22 +10,19 @@ import {
   useMotionValue,
   useTransform,
 } from "framer-motion";
-import { RedditPost } from "@/types/brand";
 import ProspectCard from "./ProspectCard";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
 import { glassStyles } from "@/lib/styles/glassMorphism";
 import { liquidGradients } from "@/lib/styles/gradients";
-import { RedditPostWithProspect } from "@/app/swipe/page";
+import { RedditPostUI } from "@/types/brand";
 
 interface SwipeableProspectModalProps {
   isOpen: boolean;
-  posts: RedditPostWithProspect[];
-  brandId: string;
-  brandName?: string;
-  brandDetail?: string;
-  prospectId: string;
-  problemToSolve?: string;
+  posts: RedditPostUI[];
+  onSwipe?: (args: {
+    direction: "left" | "right";
+    post: RedditPostUI;
+  }) => void | Promise<void>;
   onClose: () => void;
   onStackCompleted?: () => void;
   standalone?: boolean;
@@ -39,11 +36,7 @@ const SWIPE_VELOCITY_THRESHOLD = 500;
 export default function SwipeableProspectModal({
   isOpen,
   posts,
-  brandId,
-  brandName,
-  brandDetail,
-  prospectId,
-  problemToSolve,
+  onSwipe,
   onClose,
   onStackCompleted,
   standalone = false,
@@ -56,13 +49,8 @@ export default function SwipeableProspectModal({
     x: number;
     y: number;
   }>({ x: 0, y: 0 });
-  const [exitingPost, setExitingPost] = useState<RedditPostWithProspect | null>(
-    null
-  );
+  const [exitingPost, setExitingPost] = useState<RedditPostUI | null>(null);
   // Derive background card behavior from exit state instead of a separate flag
-
-  // Use the mutation hook
-  const postActionMutation = useProspectPostAction();
 
   // Motion values for drag
   const x = useMotionValue(0);
@@ -86,6 +74,51 @@ export default function SwipeableProspectModal({
   const progress =
     posts.length > 0 ? ((currentIndex + 1) / posts.length) * 100 : 0;
 
+  // Render cycle tracker
+  const renderCountRef = useRef(0);
+  const didResetOpenStateRef = useRef(false);
+  renderCountRef.current += 1;
+  console.log("[Render] SwipeableProspectModal", {
+    renderCount: renderCountRef.current,
+    currentIndex,
+    currentPostId: currentPost?.thing_id,
+    exitX,
+    isAnimating,
+    postsCount: posts.length,
+  });
+
+  // Detect posts order/identity changes from parent
+  const prevPostsIdsRef = useRef<string[] | null>(null);
+  useEffect(() => {
+    const ids = posts.map((p) => p.thing_id);
+    if (
+      prevPostsIdsRef.current &&
+      ids.join(",") !== prevPostsIdsRef.current.join(",")
+    ) {
+      console.warn("[Posts] Order or identity changed", {
+        previous: prevPostsIdsRef.current,
+        next: ids,
+      });
+    }
+    prevPostsIdsRef.current = ids;
+  }, [posts]);
+
+  // Track which IDs are on deck to render (active + next backgrounds + exiting)
+  useEffect(() => {
+    const activeId = posts[currentIndex]?.thing_id;
+    const nextId = posts[currentIndex + 1]?.thing_id;
+    const thirdId = posts[currentIndex + 2]?.thing_id;
+    const exitingId = exitingPost?.thing_id;
+    console.log("[Stack] visible snapshot", {
+      currentIndex,
+      exitX,
+      activeId,
+      nextId,
+      thirdId,
+      exitingId,
+    });
+  }, [posts, currentIndex, exitX, exitingPost]);
+
   // Debug exit / index transitions
   useEffect(() => {
     if (!isOpen) return;
@@ -108,12 +141,21 @@ export default function SwipeableProspectModal({
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
+      if (didResetOpenStateRef.current) {
+        console.log("[Lifecycle] Modal open detected (reset suppressed)");
+        return;
+      }
       setCurrentIndex(0);
       setIsAnimating(false);
       setExitX(null);
       // no extra stack flag needed
       x.set(0);
       y.set(0);
+      didResetOpenStateRef.current = true;
+      console.log("[Lifecycle] Modal opened, state reset once");
+    } else {
+      // Allow reset next time it opens
+      didResetOpenStateRef.current = false;
     }
   }, [isOpen, x, y]);
 
@@ -155,46 +197,31 @@ export default function SwipeableProspectModal({
         currentPost: currentPost.thing_id,
       });
 
-      // Fire off API call asynchronously
-      postActionMutation.mutate(
-        {
-          post: currentPost,
-          action: direction === "right" ? "queue" : "ignore",
-          brandId: brandId,
-          brandName: brandName,
-          brandDetail: brandDetail,
-          prospectId: currentPost.prospect_id,
-          problem: problemToSolve,
-        },
-        {
-          onSuccess: (result) => {
-            console.log("API call successful:", result);
-          },
-          onError: (error) => {
-            console.error("Failed to perform action on post:", error);
-          },
-        }
-      );
+      // Delegate side-effects to parent
+      try {
+        onSwipe?.({ direction, post: currentPost });
+      } catch (error) {
+        console.error("onSwipe handler threw:", error);
+      }
 
       // Capture current position before starting exit animation
       setExitStartPosition({ x: x.get(), y: y.get() });
+      console.log("[Swipe] preparing exit", {
+        direction,
+        exitStartX: x.get(),
+        exitStartY: y.get(),
+        currentPostId: currentPost.thing_id,
+      });
 
       // Set exit animation direction
       setExitingPost(currentPost);
       setExitX(direction);
+      console.log("[Swipe] exit state set", {
+        exitingPostId: currentPost.thing_id,
+        exitDirection: direction,
+      });
     },
-    [
-      currentPost,
-      isAnimating,
-      brandId,
-      brandName,
-      brandDetail,
-      prospectId,
-      problemToSolve,
-      postActionMutation,
-      x,
-      y,
-    ]
+    [currentPost, isAnimating, onSwipe, x, y]
   );
 
   const handleDragEnd = useCallback(
@@ -311,13 +338,9 @@ export default function SwipeableProspectModal({
                 if (postIndex >= posts.length) return null;
 
                 const post = posts[postIndex];
-                const targetScale = exitX
-                  ? 1 - (cardPosition - 1) * 0.05
-                  : 1 - cardPosition * 0.05;
-                const targetY = exitX
-                  ? (cardPosition - 1) * 8
-                  : cardPosition * 8;
-                console.debug("[Stack] bg render", {
+                const targetScale = 1 - cardPosition * 0.05;
+                const targetY = cardPosition * 8;
+                console.debug("[BG] render", {
                   key: `bg-${post.thing_id}`,
                   cardPosition,
                   postIndex,
@@ -326,20 +349,17 @@ export default function SwipeableProspectModal({
                   exitX,
                   targetScale,
                   targetY,
+                  zIndex: VISIBLE_CARDS - cardPosition,
                 });
 
                 return (
                   <motion.div
                     key={`bg-${post.thing_id}`} // Use post ID instead of index
                     className="absolute inset-0 pointer-events-none"
-                    layoutId={`card-${post.thing_id}`}
                     initial={false}
                     animate={{
-                      // If an exit is in progress, shift up one slot
-                      scale: exitX
-                        ? 1 - (cardPosition - 1) * 0.05
-                        : 1 - cardPosition * 0.05,
-                      y: exitX ? (cardPosition - 1) * 8 : cardPosition * 8,
+                      scale: 1 - cardPosition * 0.05,
+                      y: cardPosition * 8,
                       opacity: 1,
                     }}
                     transition={{
@@ -354,12 +374,7 @@ export default function SwipeableProspectModal({
                     }}
                     layout
                   >
-                    <ProspectCard
-                      post={post}
-                      brandId={brandId}
-                      className="h-full"
-                      onReply={() => handleSwipe("right")}
-                    />
+                    <ProspectCard post={post} className="h-full" />
                   </motion.div>
                 );
               })}
@@ -402,12 +417,7 @@ export default function SwipeableProspectModal({
                       damping: 20,
                     }}
                   >
-                    <ProspectCard
-                      post={currentPost}
-                      brandId={brandId}
-                      className="h-full"
-                      onReply={() => handleSwipe("right")}
-                    />
+                    <ProspectCard post={currentPost} className="h-full" />
 
                     {/* Like Indicator */}
                     <motion.div
@@ -536,12 +546,7 @@ export default function SwipeableProspectModal({
                       zIndex: VISIBLE_CARDS + 2,
                     }}
                   >
-                    <ProspectCard
-                      post={exitingPost}
-                      brandId={brandId}
-                      className="h-full"
-                      onReply={() => handleSwipe("right")}
-                    />
+                    <ProspectCard post={exitingPost} className="h-full" />
 
                     {/* Exit indicators - show on exiting card */}
                     {exitX === "right" && (
