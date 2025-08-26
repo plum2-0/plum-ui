@@ -44,6 +44,7 @@ export interface ProspectProfile {
   inbox_status?: "REPLIED" | "UNACTIONED" | "SUGGESTED_REPLY";
   last_contacted_subreddit?: string;
   last_contact_time?: string;
+  prospect_status?: "REMOVED" | "ENGAGED" | "CONVERTED" | "LOADING";
 }
 
 export interface Conversation {

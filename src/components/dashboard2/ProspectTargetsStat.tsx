@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
-import { Brand, RedditPostUI } from "@/types/brand";
+import { RedditPostUI } from "@/types/brand";
 import SwipeableProspectModal from "./SwipeableProspectModal";
 
 interface ProspectTargetsProps {
@@ -19,7 +19,6 @@ interface ProspectTargetsProps {
   }) => void | Promise<void>;
   onStackCompleted?: () => void;
   label?: string;
-  subtext?: string;
   problemToSolve?: string;
 }
 
@@ -30,8 +29,7 @@ export default function ProspectTargetStat({
   uniqueActionedAuthors,
   totalKeywordCounts = 0,
   totalPostsScraped = 0,
-  label = "Potential Customers Identified",
-  subtext = "Click To View",
+  label = "Potential Leads",
   onSwipe,
   onStackCompleted,
 }: ProspectTargetsProps) {
@@ -47,6 +45,11 @@ export default function ProspectTargetStat({
     onStackCompleted?.();
     setIsModalOpen(false);
   };
+
+  const progressPercentage =
+    uniqueUsers > 0
+      ? Math.round((uniqueActionedAuthors / uniqueUsers) * 100)
+      : 0;
 
   return (
     <>
@@ -71,29 +74,76 @@ export default function ProspectTargetStat({
                 "radial-gradient(circle at center, rgba(34, 197, 94, 0.1) 0%, transparent 70%)",
             }}
           />
-          <div className="relative text-center bold ">
-            <div className="text-lg text-white font-body mb-2">{label}</div>
-            <div className="text-emerald-300 text-5xl font-heading font-bold">
+          <div className="relative text-center">
+            <div className="text-lg text-white font-body mb-4">{label}</div>
+
+            {/* Main number display */}
+            <div className="text-emerald-300 text-5xl font-heading font-bold mb-6">
               {uniqueUsers}
             </div>
-            <div className="mt-2 flex items-center justify-center gap-3 text-xs text-white/70 font-body">
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-orange-400/70"></span>
-                Pending {uniquePendingAuthors}
-              </span>
-              <span className="text-white/20">|</span>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400/70"></span>
-                Actioned {uniqueActionedAuthors}
-              </span>
-            </div>
-            {uniqueUsers > 0 && (
-              <div className="text-white/60 text-xs font-body mt-2">
-                {subtext}
+
+            {/* Progress bar and breakdown */}
+            <div className="space-y-3">
+              {/* Visual progress bar */}
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+                  style={{ width: `${progressPercentage}%` }}
+                />
               </div>
-            )}
+
+              {/* Numbers breakdown */}
+              <div className="flex justify-between items-center gap-4">
+                <div className="flex-1 text-left">
+                  <div className="text-emerald-400 text-2xl font-heading font-bold">
+                    {uniqueActionedAuthors}
+                  </div>
+                  <div className="text-emerald-400/70 text-xs font-body uppercase tracking-wider">
+                    Engaged
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
+                    <span className="text-white/40 text-sm">vs</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 text-right">
+                  <div className="text-orange-300 text-2xl font-heading font-bold">
+                    {uniquePendingAuthors}
+                  </div>
+                  <div className="text-orange-300/70 text-xs font-body uppercase tracking-wider">
+                    To Review
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA button */}
+              {uniquePendingAuthors > 0 && (
+                <div className="pt-2">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500/10 to-orange-400/10 backdrop-blur-sm border border-orange-400/30 text-orange-300 text-sm md:text-base font-body transition-all duration-200 group-hover:from-orange-500/20 group-hover:to-orange-400/20 group-hover:border-orange-400/50">
+                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                    <span className="font-medium">Tap to review</span>
+                    <span className="text-orange-300/60">→</span>
+                  </div>
+                </div>
+              )}
+
+              {/* All reviewed state */}
+              {uniquePendingAuthors === 0 && uniqueActionedAuthors > 0 && (
+                <div className="pt-2">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 backdrop-blur-sm border border-emerald-400/30 text-emerald-300 text-sm md:text-base font-body">
+                    <span className="text-emerald-400">✓</span>
+                    <span className="font-medium">All Leads Reviewed!</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer stats */}
             {totalPostsScraped > 0 && (
-              <div className="text-white/40 text-xs font-body mt-3 italic">
+              <div className="text-white/40 text-xs font-body mt-4 italic">
                 Analyzed {totalPostsScraped.toLocaleString()} posts and{" "}
                 {totalKeywordCounts.toLocaleString()} keywords to find your
                 ideal customers

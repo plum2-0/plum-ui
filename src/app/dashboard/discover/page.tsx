@@ -126,24 +126,9 @@ function BrandSummary() {
           <div>
             <div className="content-divider my-8"></div>
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="icon-badge">
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 1.343-3 3 0 1.306.835 2.418 2 2.83V18h2v-4.17a3.001 3.001 0 00-1-5.83z"
-                    />
-                  </svg>
-                </span>
-                <p className="eyebrow">Researching Problems</p>
-              </div>
+              <h2 className="text-gray-200 my-4 text-2xl">
+                Researching Problems
+              </h2>
               <AddProspectButton brandId={brandData.id} />
             </div>
             {brandData.prospects && brandData.prospects.length > 0 ? (
@@ -387,7 +372,12 @@ function AddProspectButton({ brandId }: AddProspectButtonProps) {
   );
 }
 
-type HintType = "no-posts" | "no-prospects" | "low-engagement" | "prospects-need-scraping" | null;
+type HintType =
+  | "no-posts"
+  | "no-prospects"
+  | "low-engagement"
+  | "prospects-need-scraping"
+  | null;
 type NonNullHint = Exclude<HintType, null>;
 
 interface HintConfig {
@@ -414,9 +404,10 @@ function HelpHintSection() {
     } else {
       // Check if any prospects have 0 pending posts
       const prospectsNeedingScraping = prospectsDisplay.filter(
-        (prospect) => !prospect.pendingPosts || prospect.pendingPosts.length === 0
+        (prospect) =>
+          !prospect.pendingPosts || prospect.pendingPosts.length === 0
       );
-      
+
       if (prospectsNeedingScraping.length > 0) {
         setCurrentHint("prospects-need-scraping");
       } else if (postsToReview.length === 0) {
@@ -455,15 +446,19 @@ function HelpHintSection() {
 
     // Filter prospects that need scraping (have 0 pending posts)
     const prospectsNeedingScraping = prospectsDisplay.filter(
-      (prospectDisplay) => !prospectDisplay.pendingPosts || prospectDisplay.pendingPosts.length === 0
+      (prospectDisplay) =>
+        !prospectDisplay.pendingPosts ||
+        prospectDisplay.pendingPosts.length === 0
     );
 
     // Find the full prospect data for those that need scraping
     const scrapeJobs: ScrapeJob[] = prospectsNeedingScraping
       .map((prospectDisplay) => {
-        const prospect = brandData.prospects?.find(p => p.id === prospectDisplay.id);
+        const prospect = brandData.prospects?.find(
+          (p) => p.id === prospectDisplay.id
+        );
         if (!prospect) return null;
-        
+
         return {
           prospectId: prospect.id,
           brandName: brandData.name,
@@ -564,8 +559,11 @@ function HelpHintSection() {
         </svg>
       ),
       title: "Some Problems Need Research",
-      description:
-        `${prospectsDisplay.filter(p => !p.pendingPosts || p.pendingPosts.length === 0).length} of your defined problems have no posts yet. Search for conversations about these specific problems.`,
+      description: `${
+        prospectsDisplay.filter(
+          (p) => !p.pendingPosts || p.pendingPosts.length === 0
+        ).length
+      } of your defined problems have no posts yet. Search for conversations about these specific problems.`,
       actionLabel: "Search Missing Problems",
       actionHandler: handleScrapeProspectsWithNoPosts,
     },

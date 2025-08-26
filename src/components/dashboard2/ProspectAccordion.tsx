@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBrand } from "@/contexts/BrandContext";
-import { useDeleteProspectKeywords } from "@/hooks/api/useBrandQuery";
+import {
+  useDeleteProspectKeywords,
+  useDeleteProspect,
+} from "@/hooks/api/useBrandQuery";
 import { useToast } from "@/components/ui/Toast";
 import { PopoverWithPortal } from "@/components/ui/PopoverWithPortal";
+import { LiquidButton } from "@/components/ui/LiquidButton";
 
 interface ProspectAccordionProps {
   prospects: any;
@@ -14,10 +18,17 @@ interface ProspectAccordionProps {
 export default function ProspectAccordion({}: ProspectAccordionProps) {
   const { prospectsDisplay, brand } = useBrand();
   const deleteKeywordMutation = useDeleteProspectKeywords();
+  const deleteProspectMutation = useDeleteProspect();
   const { showToast } = useToast();
 
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [deletingKeywords, setDeletingKeywords] = useState<Set<string>>(
+    new Set()
+  );
+  const [confirmDeleteProspect, setConfirmDeleteProspect] = useState<
+    string | null
+  >(null);
+  const [deletingProspects, setDeletingProspects] = useState<Set<string>>(
     new Set()
   );
 
@@ -65,6 +76,45 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
     }
   };
 
+  const handleDeleteProspect = async (prospectId: string) => {
+    if (!brand?.id) return;
+
+    setDeletingProspects((prev) => new Set(prev).add(prospectId));
+    setConfirmDeleteProspect(null);
+
+    try {
+      await deleteProspectMutation.mutateAsync({
+        brandId: brand.id,
+        prospectId,
+      });
+
+      // Remove from expanded items
+      setExpandedItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(prospectId);
+        return newSet;
+      });
+
+      showToast({
+        message: "Prospect deleted successfully",
+        type: "success",
+      });
+    } catch (error) {
+      showToast({
+        message: "Failed to delete prospect",
+        type: "error",
+      });
+      console.error("Error deleting prospect:", error);
+
+      // Remove from deleting set on error
+      setDeletingProspects((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(prospectId);
+        return newSet;
+      });
+    }
+  };
+
   if (!prospectsDisplay || prospectsDisplay.length === 0) {
     return (
       <div className="space-y-4">
@@ -86,11 +136,21 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
             ? (prospect.actionedPosts.length / totalPosts) * 100
             : 0;
         const isLoading = prospect.id.startsWith("temp-");
+        const isDeleting = deletingProspects.has(prospect.id);
 
         return (
           <motion.div
             key={prospect.id}
             className="rounded-2xl overflow-hidden transition-all duration-300"
+            animate={{
+              opacity: isDeleting ? 0 : 1,
+              scale: isDeleting ? 0.95 : 1,
+              height: isDeleting ? 0 : "auto",
+            }}
+            transition={{
+              duration: 0.3,
+              ease: "easeOut",
+            }}
             style={{
               background: `linear-gradient(135deg,
                 rgba(255, 255, 255, 0.06) 0%,
@@ -177,14 +237,13 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                   <div className="relative pt-5">
                     {/* Combined total display */}
                     <div className="absolute -top-6 left-0 flex items-center gap-2">
-                      <span className="text-xs text-white/40">Total:</span>
-                      <span className="text-xs font-semibold text-white/60">
-                        {prospect.actionedPosts.length +
-                          prospect.pendingPosts.length}{" "}
-                        posts
-                      </span>
                       <span className="text-xs text-green-400/60">
                         ({Math.round(actionedPercentage)}% complete)
+                      </span>
+                      <span className="text-xs text-white/40">•</span>
+                      <span className="text-xs text-gray-400">
+                        Analyzed {prospect.totalPostsScraped} posts to find your
+                        ideal customers
                       </span>
                     </div>
                     {/* Progress bar background */}
@@ -250,7 +309,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                 {prospect.actionedPosts.length}
                               </span>
                               <span className="text-green-300 text-xs font-semibold uppercase tracking-wide">
-                                Actioned
+                                Engaged
                               </span>
                             </div>
                           }
@@ -273,7 +332,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                 {prospect.pendingPosts.length}
                               </span>
                               <span className="text-yellow-600 text-xs font-semibold uppercase tracking-wide">
-                                Pending
+                                To Review
                               </span>
                             </div>
                           }
@@ -283,28 +342,6 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                         >
                           <span className="text-white/90 text-xs font-medium">
                             Posts waiting for your action
-                          </span>
-                        </PopoverWithPortal>
-
-                        {/* Posts Scraped - Muted */}
-                        <PopoverWithPortal
-                          trigger={
-                            <div className="flex items-center gap-2 z-10 opacity-50 cursor-help">
-                              <div className="w-2 h-2 rounded-full bg-gray-400" />
-                              <span className="text-white/60 text-xs">
-                                {prospect.totalPostsScraped}
-                              </span>
-                              <span className="text-gray-400 text-xs">
-                                scraped
-                              </span>
-                            </div>
-                          }
-                          side="top"
-                          align="center"
-                          openOnHover={true}
-                        >
-                          <span className="text-white/90 text-xs font-medium">
-                            Total posts scraped for this prospect
                           </span>
                         </PopoverWithPortal>
                       </div>
@@ -372,7 +409,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                       >
                         <div className="flex items-center gap-2 mb-4">
                           <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            className="w-6 h-6 rounded-lg flex items-center justify-center"
                             style={{
                               background:
                                 "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.2))",
@@ -382,7 +419,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             }}
                           >
                             <svg
-                              className="w-4 h-4 text-purple-300"
+                              className="w-3.5 h-3.5 text-purple-300"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -395,7 +432,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               />
                             </svg>
                           </div>
-                          <h4 className="text-white/90 font-heading text-base font-semibold">
+                          <h4 className="text-white/90 font-heading text-sm font-semibold">
                             Top Keywords
                           </h4>
                         </div>
@@ -488,7 +525,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-6" />
                         <div className="flex items-center gap-2 mb-4">
                           <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            className="w-6 h-6 rounded-lg flex items-center justify-center"
                             style={{
                               background:
                                 "linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2))",
@@ -498,7 +535,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             }}
                           >
                             <svg
-                              className="w-4 h-4 text-green-300"
+                              className="w-3.5 h-3.5 text-green-300"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -511,7 +548,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               />
                             </svg>
                           </div>
-                          <h4 className="text-white/90 font-heading text-base font-semibold">
+                          <h4 className="text-white/90 font-heading text-sm font-semibold">
                             Top Subreddits
                           </h4>
                         </div>
@@ -531,24 +568,24 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                   className="px-4 py-2 rounded-full text-sm font-body backdrop-blur-md"
                                   style={{
                                     background:
-                                      "linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1))",
+                                      "linear-gradient(135deg, rgba(255, 69, 0, 0.15), rgba(255, 87, 34, 0.1))",
                                     border: "1px solid transparent",
                                     backgroundImage: `
-                                      linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1)),
-                                      linear-gradient(135deg, rgba(34, 197, 94, 0.4), rgba(16, 185, 129, 0.3))
+                                      linear-gradient(135deg, rgba(255, 69, 0, 0.15), rgba(255, 87, 34, 0.1)),
+                                      linear-gradient(135deg, rgba(255, 69, 0, 0.4), rgba(255, 87, 34, 0.3))
                                     `,
                                     backgroundOrigin: "border-box",
                                     backgroundClip: "padding-box, border-box",
                                     boxShadow:
-                                      "0 2px 8px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+                                      "0 2px 8px rgba(255, 69, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
                                   }}
                                   whileHover={{
                                     scale: 1.05,
                                     boxShadow:
-                                      "0 4px 12px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                      "0 4px 12px rgba(255, 69, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                                   }}
                                 >
-                                  <span className="text-green-300 font-medium">
+                                  <span className="text-orange-400 font-medium">
                                     r/{item.subreddit}
                                   </span>
                                   <span className="text-white/40 ml-1.5">
@@ -571,7 +608,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                         <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-6" />
                         <div className="flex items-center gap-2 mb-4">
                           <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            className="w-6 h-6 rounded-lg flex items-center justify-center"
                             style={{
                               background:
                                 "linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2))",
@@ -581,7 +618,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             }}
                           >
                             <svg
-                              className="w-4 h-4 text-blue-300"
+                              className="w-3.5 h-3.5 text-blue-300"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -594,7 +631,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               />
                             </svg>
                           </div>
-                          <h4 className="text-white/90 font-heading text-base font-semibold">
+                          <h4 className="text-white/90 font-heading text-sm font-semibold">
                             Insights
                           </h4>
                         </div>
@@ -602,7 +639,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                         <div className="space-y-4">
                           {/* General Summary */}
                           {prospect.insights.general_summary && (
-                            <p className="text-white/80 font-body text-base leading-relaxed">
+                            <p className="text-white/80 font-body text-sm leading-relaxed">
                               {prospect.insights.general_summary}
                             </p>
                           )}
@@ -675,22 +712,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               0 && (
                               <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="icon-badge">
-                                    <svg
-                                      className="w-3.5 h-3.5"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  </span>
-                                  <h5 className="text-white/80 font-heading text-sm font-semibold">
+                                  <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
                                     Identified Solutions
                                   </h5>
                                 </div>
@@ -703,12 +725,12 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                         className="px-3 py-1.5 rounded-full text-sm font-body"
                                         style={{
                                           background:
-                                            "rgba(147, 51, 234, 0.15)",
+                                            "rgba(255, 255, 255, 0.05)",
                                           border:
-                                            "1px solid rgba(147, 51, 234, 0.3)",
+                                            "1px solid rgba(255, 255, 255, 0.1)",
                                         }}
                                       >
-                                        <span className="text-purple-300">
+                                        <span className="text-white/70">
                                           {solution}
                                         </span>
                                       </span>
@@ -725,22 +747,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               0 && (
                               <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="icon-badge">
-                                    <svg
-                                      className="w-3.5 h-3.5"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M7 8a4 4 0 118 0 4 4 0 01-8 0z"
-                                      />
-                                    </svg>
-                                  </span>
-                                  <h5 className="text-white/80 font-heading text-sm font-semibold">
+                                  <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
                                     Demographics
                                   </h5>
                                 </div>
@@ -753,12 +760,12 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                         className="px-3 py-1.5 rounded-full text-sm font-body"
                                         style={{
                                           background:
-                                            "rgba(59, 130, 246, 0.15)",
+                                            "rgba(255, 255, 255, 0.05)",
                                           border:
-                                            "1px solid rgba(59, 130, 246, 0.3)",
+                                            "1px solid rgba(255, 255, 255, 0.1)",
                                         }}
                                       >
-                                        <span className="text-blue-300">
+                                        <span className="text-white/70">
                                           {demo}
                                         </span>
                                       </span>
@@ -772,22 +779,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             prospect.insights.top_competitors.length > 0 && (
                               <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="icon-badge">
-                                    <svg
-                                      className="w-3.5 h-3.5"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M9 17v-6h13M9 17H5a2 2 0 01-2-2V7a2 2 0 012-2h4m0 12l4-4m0 0l-4-4m4 4H3"
-                                      />
-                                    </svg>
-                                  </span>
-                                  <h5 className="text-white/80 font-heading text-sm font-semibold">
+                                  <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
                                     Top Competitors
                                   </h5>
                                 </div>
@@ -801,12 +793,12 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                           className="px-3 py-1.5 rounded-full text-sm font-body"
                                           style={{
                                             background:
-                                              "rgba(234, 179, 8, 0.15)",
+                                              "rgba(255, 255, 255, 0.05)",
                                             border:
-                                              "1px solid rgba(234, 179, 8, 0.3)",
+                                              "1px solid rgba(255, 255, 255, 0.1)",
                                           }}
                                         >
-                                          <span className="text-yellow-300">
+                                          <span className="text-white/70">
                                             {competitor}
                                           </span>
                                         </span>
@@ -818,6 +810,156 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                         </div>
                       </motion.div>
                     )}
+
+                    {/* Danger Zone */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="mt-8 pt-8 border-t"
+                      style={{
+                        borderColor: "rgba(239, 68, 68, 0.2)",
+                      }}
+                    >
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded-lg flex items-center justify-center"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2))",
+                              border: "1px solid rgba(239, 68, 68, 0.3)",
+                              boxShadow:
+                                "0 2px 8px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <svg
+                              className="w-3.5 h-3.5 text-red-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                              />
+                            </svg>
+                          </div>
+                          <h4 className="text-red-400 font-heading text-sm font-semibold">
+                            Danger Zone
+                          </h4>
+                        </div>
+
+                        <div
+                          className="p-4 rounded-xl"
+                          style={{
+                            background: "rgba(239, 68, 68, 0.05)",
+                            border: "1px solid rgba(239, 68, 68, 0.15)",
+                          }}
+                        >
+                          <p className="text-white/70 text-sm mb-4">
+                            Deleting this prospect will permanently remove all
+                            associated data including scraped posts, keywords,
+                            and insights. This action cannot be undone.
+                          </p>
+
+                          {confirmDeleteProspect === prospect.id ? (
+                            <div className="flex items-center gap-3">
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex-1"
+                              >
+                                <p className="text-red-400 text-sm font-semibold mb-3">
+                                  Are you absolutely sure?
+                                </p>
+                                <div className="flex gap-2">
+                                  <LiquidButton
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleDeleteProspect(prospect.id)
+                                    }
+                                    disabled={isDeleting}
+                                    className="flex items-center gap-2"
+                                  >
+                                    {isDeleting ? (
+                                      <>
+                                        <motion.div
+                                          className="w-3 h-3 rounded-full bg-white/50"
+                                          animate={{ opacity: [0.3, 1, 0.3] }}
+                                          transition={{
+                                            duration: 1,
+                                            repeat: Infinity,
+                                          }}
+                                        />
+                                        <span>Deleting...</span>
+                                      </>
+                                    ) : (
+                                      <div className="flex items-center gap-2">
+                                        <svg
+                                          className="w-4 h-4"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                          />
+                                        </svg>
+                                        <span>Yes, Delete Prospect</span>
+                                      </div>
+                                    )}
+                                  </LiquidButton>
+                                  <LiquidButton
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() =>
+                                      setConfirmDeleteProspect(null)
+                                    }
+                                    disabled={isDeleting}
+                                  >
+                                    Cancel
+                                  </LiquidButton>
+                                </div>
+                              </motion.div>
+                            </div>
+                          ) : (
+                            <LiquidButton
+                              variant="danger"
+                              size="sm"
+                              onClick={() =>
+                                setConfirmDeleteProspect(prospect.id)
+                              }
+                              shimmer={true}
+                              className="flex items-center gap-2"
+                            >
+                              <div className="flex items-center gap-2">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                                <span>Delete Prospect</span>
+                              </div>
+                            </LiquidButton>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
                 </motion.div>
               )}

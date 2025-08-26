@@ -392,6 +392,85 @@ export function useDeleteProspectKeywords() {
   });
 }
 
+// Types for delete prospect mutation
+interface DeleteProspectParams {
+  brandId: string;
+  prospectId: string;
+}
+
+// API function for deleting a prospect
+async function deleteProspect({
+  brandId,
+  prospectId,
+}: DeleteProspectParams): Promise<{ success: boolean }> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/brand/${brandId}/prospect/${prospectId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Plum-UI/1.0",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new BrandQueryError(
+      `Failed to delete prospect: ${text}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Hook to delete a prospect
+ */
+export function useDeleteProspect() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteProspect,
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: BRAND_QUERY_KEYS.all });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as { brand: Brand } | undefined;
+
+      // Optimistically update to the new value
+      if (previousData?.brand?.prospects) {
+        const updatedProspects = previousData.brand.prospects.filter(
+          (prospect) => prospect.id !== variables.prospectId
+        );
+
+        queryClient.setQueryData(BRAND_QUERY_KEYS.all, {
+          brand: {
+            ...previousData.brand,
+            prospects: updatedProspects,
+          },
+        });
+      }
+
+      // Return a context with the previous data
+      return { previousData };
+    },
+    onError: (error, variables, context) => {
+      // If the mutation fails, use the context to roll back
+      if (context?.previousData) {
+        queryClient.setQueryData(BRAND_QUERY_KEYS.all, context.previousData);
+      }
+      console.error("Failed to delete prospect:", error);
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+    },
+  });
+}
+
 // Types for add brand prospect mutation
 interface AddBrandProspectParams {
   brandId: string;

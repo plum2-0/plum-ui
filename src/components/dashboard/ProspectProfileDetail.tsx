@@ -10,6 +10,7 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -55,6 +56,42 @@ export function ProspectProfileDetail({
         return "text-yellow-400 bg-yellow-400/10";
     }
   };
+
+  // Show loading state if prospect_status is LOADING
+  if (currentProfile.prospect_status === "LOADING") {
+    return (
+      <div className="h-full flex flex-col bg-gradient-to-br from-black/60 via-purple-900/5 to-black/40">
+        <GlassCard blur="ultra" className="m-4 p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center space-y-4">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+                className="w-16 h-16 mx-auto"
+              >
+                <RefreshCw className="w-16 h-16 text-purple-400" />
+              </motion.div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-white">
+                  Loading Profile Data
+                </h3>
+                <p className="text-white/60 text-sm">
+                  We're fetching the latest information for {currentProfile.name}
+                </p>
+                <p className="text-white/40 text-xs mt-4">
+                  Please refresh this page in 60 seconds to check back
+                </p>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-black/60 via-purple-900/5 to-black/40">
