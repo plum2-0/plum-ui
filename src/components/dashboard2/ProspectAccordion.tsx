@@ -85,6 +85,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
           totalPosts > 0
             ? (prospect.actionedPosts.length / totalPosts) * 100
             : 0;
+        const isLoading = prospect.id.startsWith("temp-");
 
         return (
           <motion.div
@@ -144,13 +145,32 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
 
             {/* Accordion Header */}
             <button
-              onClick={() => toggleItem(prospect.id)}
+              onClick={() => !isLoading && toggleItem(prospect.id)}
               className="w-full p-5 relative group"
+              disabled={isLoading}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 text-left">
-                  <h3 className="heading-3 leading-tight line-clamp-1 mb-6">
+                  <h3 className="heading-3 leading-tight line-clamp-1 mb-6 flex items-center gap-3">
                     {prospect.problem_to_solve}
+                    {isLoading && (
+                      <motion.div
+                        className="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs"
+                        style={{
+                          background: "rgba(168, 85, 247, 0.2)",
+                          border: "1px solid rgba(168, 85, 247, 0.3)",
+                        }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <motion.div
+                          className="w-2 h-2 rounded-full bg-purple-400"
+                          animate={{ opacity: [0.3, 1, 0.3] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        />
+                        <span className="text-purple-300">Creating...</span>
+                      </motion.div>
+                    )}
                   </h3>
 
                   {/* Enhanced Metrics Bar */}
@@ -159,7 +179,9 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                     <div className="absolute -top-6 left-0 flex items-center gap-2">
                       <span className="text-xs text-white/40">Total:</span>
                       <span className="text-xs font-semibold text-white/60">
-                        {prospect.actionedPosts.length + prospect.pendingPosts.length} posts
+                        {prospect.actionedPosts.length +
+                          prospect.pendingPosts.length}{" "}
+                        posts
                       </span>
                       <span className="text-xs text-green-400/60">
                         ({Math.round(actionedPercentage)}% complete)
@@ -246,7 +268,6 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                           trigger={
                             <div className="flex items-center gap-2 z-10 cursor-help">
                               {/* Connection line to show relationship */}
-                              <div className="absolute left-[25%] right-[50%] h-[1px] bg-gradient-to-r from-green-400/30 to-yellow-600/30" />
                               <div className="w-2.5 h-2.5 rounded-full bg-yellow-600 animate-pulse shadow-lg shadow-yellow-600/50" />
                               <span className="text-white font-bold text-sm">
                                 {prospect.pendingPosts.length}
@@ -288,7 +309,6 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                         </PopoverWithPortal>
                       </div>
                     </div>
-
                   </div>
                 </div>
 

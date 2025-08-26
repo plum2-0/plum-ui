@@ -482,23 +482,23 @@ export default function ScrapeJobDrawer() {
                       </motion.div>
                     </div>
 
-                    {/* Progress bar overlay */}
+                    {/* Progress bar overlay - thin bar at bottom */}
                     <motion.div
-                      className="absolute bottom-0 left-0 h-full"
+                      className="absolute bottom-0 left-0 h-1"
                       initial={{ width: "0%" }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 0.5, ease: "easeOut" }}
                       style={{
-                        background: "linear-gradient(90deg, rgba(168, 85, 247, 0.3) 0%, rgba(34, 197, 94, 0.4) 50%, rgba(168, 85, 247, 0.3) 100%)",
-                        backdropFilter: "blur(10px)",
-                        borderRight: progress > 0 && progress < 100 ? "2px solid rgba(255, 255, 255, 0.8)" : "none",
+                        background: "linear-gradient(90deg, rgba(168, 85, 247, 0.8) 0%, rgba(34, 197, 94, 0.9) 50%, rgba(168, 85, 247, 0.8) 100%)",
+                        boxShadow: "0 0 10px rgba(168, 85, 247, 0.6), 0 0 20px rgba(34, 197, 94, 0.4)",
+                        borderRadius: "0 2px 2px 0",
                       }}
                     >
                       {/* Shimmer effect on progress */}
                       <div
                         className="absolute inset-0"
                         style={{
-                          background: "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)",
+                          background: "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%)",
                           backgroundSize: "200% 100%",
                           animation: "shimmer 1.5s linear infinite",
                         }}

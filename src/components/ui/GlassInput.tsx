@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  forwardRef,
-  TextareaHTMLAttributes,
-  InputHTMLAttributes,
-  useEffect,
-  useRef,
-} from "react";
+import { forwardRef, useEffect, useRef } from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { glassStyles, GlassVariant } from "@/lib/styles/glassMorphism";
@@ -20,18 +14,15 @@ interface BaseGlassInputProps {
 }
 
 type GlassTextareaProps = BaseGlassInputProps &
-  Omit<
-    TextareaHTMLAttributes<HTMLTextAreaElement>,
-    keyof HTMLMotionProps<"textarea">
-  > & {
+  HTMLMotionProps<"textarea"> & {
     type?: "textarea";
+    rows?: number;
+    minHeight?: string | number;
+    maxHeight?: string | number;
   };
 
 type GlassInputFieldProps = BaseGlassInputProps &
-  Omit<
-    InputHTMLAttributes<HTMLInputElement>,
-    keyof HTMLMotionProps<"input">
-  > & {
+  HTMLMotionProps<"input"> & {
     type?: "text" | "email" | "password" | "number" | "search" | "tel" | "url";
   };
 
@@ -102,16 +93,22 @@ export const GlassInput = forwardRef<
 
     if (type === "textarea") {
       const textareaProps = props as GlassTextareaProps;
+      const {
+        minHeight: minHeightOverride,
+        maxHeight: maxHeightOverride,
+        rows,
+        ...restTextareaProps
+      } = textareaProps;
       return (
         <div className="relative">
           <motion.textarea
             {...commonProps}
-            {...textareaProps}
-            rows={2}
+            {...restTextareaProps}
+            rows={rows ?? 2}
             style={{
               ...inputStyles,
-              minHeight: "80px",
-              maxHeight: "300px",
+              minHeight: minHeightOverride ?? "80px",
+              maxHeight: maxHeightOverride ?? "300px",
             }}
           />
           {shimmer && (

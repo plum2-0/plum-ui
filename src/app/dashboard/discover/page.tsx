@@ -3,19 +3,18 @@
 import { useSession } from "next-auth/react";
 import { ProspectProvider } from "@/contexts/ProspectContext";
 import { KeywordQueueProvider } from "@/contexts/KeywordQueueContext";
-import {
-  ScrapeJobProvider,
-  useScrapeJob,
-  ScrapeJob,
-} from "@/contexts/ScrapeJobContext";
+import { useScrapeJob, ScrapeJob } from "@/contexts/ScrapeJobContext";
 import { useBrand } from "@/contexts/BrandContext";
 import GlassPanel from "@/components/ui/GlassPanel";
 import ProspectAccordion from "@/components/dashboard2/ProspectAccordion";
 import ProspectTargetStat from "@/components/dashboard2/ProspectTargetsStat";
 import VizSummaryView from "@/components/dashboard2/VizSummaryView";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
+import { useAddBrandProspect } from "@/hooks/api/useBrandQuery";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { useToast } from "@/components/ui/Toast";
 
 interface BrandHeaderProps {
   name: string;
@@ -124,10 +123,10 @@ function BrandSummary() {
           </div>
 
           {/* Prospect Accordion */}
-          {brandData.prospects && brandData.prospects.length > 0 && (
-            <div>
-              <div className="content-divider my-8"></div>
-              <div className="flex items-center gap-2 mb-2">
+          <div>
+            <div className="content-divider my-8"></div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
                 <span className="icon-badge">
                   <svg
                     className="w-3.5 h-3.5"
@@ -145,12 +144,24 @@ function BrandSummary() {
                 </span>
                 <p className="eyebrow">Researching Problems</p>
               </div>
-              <ProspectAccordion prospects={brandData.prospects} />
-              <div className="mt-6">
-                <VizSummaryView prospects={brandData.prospects} />
-              </div>
+              <AddProspectButton brandId={brandData.id} />
             </div>
-          )}
+            {brandData.prospects && brandData.prospects.length > 0 ? (
+              <>
+                <ProspectAccordion prospects={brandData.prospects} />
+                <div className="mt-6">
+                  <VizSummaryView prospects={brandData.prospects} />
+                </div>
+              </>
+            ) : (
+              <div className="mt-4 text-center py-8">
+                <p className="text-white/50 text-sm">
+                  No prospects defined yet. Click the + button to add your first
+                  problem to validate.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -159,7 +170,224 @@ function BrandSummary() {
   );
 }
 
-type HintType = "no-posts" | "no-prospects" | "low-engagement" | null;
+interface AddProspectButtonProps {
+  brandId: string;
+}
+
+function AddProspectButton({ brandId }: AddProspectButtonProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const addProspectMutation = useAddBrandProspect();
+  const { showToast } = useToast();
+
+  // Auto-focus input when expanded
+  useEffect(() => {
+    if (isExpanded && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isExpanded]);
+
+  const handleSubmit = async () => {
+    if (!inputValue.trim()) {
+      showToast({
+        message: "Please enter a problem description",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      await addProspectMutation.mutateAsync({
+        brandId,
+        problemToSolve: inputValue.trim(),
+      });
+
+      showToast({
+        message: "New prospect added successfully",
+        type: "success",
+      });
+
+      // Reset state
+      setInputValue("");
+      setIsExpanded(false);
+    } catch {
+      showToast({
+        message: "Failed to add prospect. Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    } else if (e.key === "Escape") {
+      setInputValue("");
+      setIsExpanded(false);
+    }
+  };
+
+  return (
+    <AnimatePresence mode="wait">
+      {!isExpanded ? (
+        <motion.button
+          key="button"
+          onClick={() => setIsExpanded(true)}
+          className="group relative"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(34, 197, 94, 0.2))",
+              border: "1px solid transparent",
+              backgroundImage: `
+                linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(34, 197, 94, 0.2)),
+                linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(34, 197, 94, 0.4))
+              `,
+              backgroundOrigin: "border-box",
+              backgroundClip: "padding-box, border-box",
+              boxShadow:
+                "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            <svg
+              className="w-4 h-4 text-white/80 transition-transform group-hover:rotate-90"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </div>
+          {/* Hover tooltip */}
+          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <span className="text-xs text-white/60 whitespace-nowrap">
+              Add Problem
+            </span>
+          </div>
+        </motion.button>
+      ) : (
+        <motion.div
+          key="input"
+          className="relative"
+          initial={{ opacity: 0, width: 0 }}
+          animate={{ opacity: 1, width: "320px" }}
+          exit={{ opacity: 0, width: 0 }}
+          transition={{
+            duration: 0.3,
+            type: "spring",
+            stiffness: 200,
+            damping: 20,
+          }}
+        >
+          <div className="space-y-2">
+            {/* Helper text */}
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-xs text-white/60 font-body"
+            >
+              What problem are you looking to validate?
+            </motion.p>
+
+            {/* Input container */}
+            <div className="relative">
+              <GlassInput
+                ref={inputRef as any}
+                type="textarea"
+                value={inputValue}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setInputValue(e.target.value)
+                }
+                onKeyDown={handleKeyDown}
+                placeholder="Describe a new problem to validate..."
+                variant="ultra"
+                shimmer={true}
+                autoResize={true}
+                rows={1}
+                minHeight="44px"
+                maxHeight="180px"
+                className="py-2"
+                disabled={addProspectMutation.isPending}
+              />
+
+              {/* Action buttons */}
+              <div className="absolute right-2 bottom-2 flex gap-1">
+                <motion.button
+                  onClick={() => {
+                    setInputValue("");
+                    setIsExpanded(false);
+                  }}
+                  disabled={addProspectMutation.isPending}
+                  className="px-2 py-1 rounded-md text-xs font-medium text-white/60 hover:text-white/80 transition-colors disabled:opacity-50"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  onClick={handleSubmit}
+                  disabled={addProspectMutation.isPending || !inputValue.trim()}
+                  className="px-3 py-1 rounded-md text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: addProspectMutation.isPending
+                      ? "rgba(168, 85, 247, 0.2)"
+                      : "linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(34, 197, 94, 0.3))",
+                    border: "1px solid rgba(168, 85, 247, 0.4)",
+                    color: "rgba(255, 255, 255, 0.9)",
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {addProspectMutation.isPending ? (
+                    <div className="flex items-center gap-1">
+                      <motion.div
+                        className="w-2 h-2 rounded-full bg-white/60"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      />
+                      <span>Adding...</span>
+                    </div>
+                  ) : (
+                    "Add"
+                  )}
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Hint text */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-xs text-white/40 font-body"
+            >
+              Press <span className="text-white/60">Enter</span> to add or{" "}
+              <span className="text-white/60">Esc</span> to cancel
+            </motion.p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+type HintType = "no-posts" | "no-prospects" | "low-engagement" | "prospects-need-scraping" | null;
 type NonNullHint = Exclude<HintType, null>;
 
 interface HintConfig {
@@ -172,7 +400,7 @@ interface HintConfig {
 }
 
 function HelpHintSection() {
-  const { brand: brandData, postsToReview } = useBrand();
+  const { brand: brandData, postsToReview, prospectsDisplay } = useBrand();
   const { openDrawer } = useScrapeJob();
   const [currentHint, setCurrentHint] = useState<HintType>(null);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -183,20 +411,29 @@ function HelpHintSection() {
     // Check conditions in priority order
     if (!brandData.prospects || brandData.prospects.length === 0) {
       setCurrentHint("no-prospects");
-    } else if (postsToReview.length === 0) {
-      setCurrentHint("no-posts");
     } else {
-      // Check for low engagement (example: average score < 5)
-      const avgScore =
-        postsToReview.reduce((acc, post) => acc + (post.score || 0), 0) /
-        (postsToReview.length || 1);
-      if (avgScore < 5) {
-        setCurrentHint("low-engagement");
+      // Check if any prospects have 0 pending posts
+      const prospectsNeedingScraping = prospectsDisplay.filter(
+        (prospect) => !prospect.pendingPosts || prospect.pendingPosts.length === 0
+      );
+      
+      if (prospectsNeedingScraping.length > 0) {
+        setCurrentHint("prospects-need-scraping");
+      } else if (postsToReview.length === 0) {
+        setCurrentHint("no-posts");
       } else {
-        setCurrentHint(null);
+        // Check for low engagement (example: average score < 5)
+        const avgScore =
+          postsToReview.reduce((acc, post) => acc + (post.score || 0), 0) /
+          (postsToReview.length || 1);
+        if (avgScore < 5) {
+          setCurrentHint("low-engagement");
+        } else {
+          setCurrentHint(null);
+        }
       }
     }
-  }, [brandData, postsToReview]);
+  }, [brandData, postsToReview, prospectsDisplay]);
 
   const handleScrapeAllProspects = useCallback(() => {
     if (!brandData || !brandData.prospects) return;
@@ -212,6 +449,36 @@ function HelpHintSection() {
     // Open drawer with the jobs
     openDrawer(scrapeJobs);
   }, [brandData, openDrawer]);
+
+  const handleScrapeProspectsWithNoPosts = useCallback(() => {
+    if (!brandData || !brandData.prospects) return;
+
+    // Filter prospects that need scraping (have 0 pending posts)
+    const prospectsNeedingScraping = prospectsDisplay.filter(
+      (prospectDisplay) => !prospectDisplay.pendingPosts || prospectDisplay.pendingPosts.length === 0
+    );
+
+    // Find the full prospect data for those that need scraping
+    const scrapeJobs: ScrapeJob[] = prospectsNeedingScraping
+      .map((prospectDisplay) => {
+        const prospect = brandData.prospects?.find(p => p.id === prospectDisplay.id);
+        if (!prospect) return null;
+        
+        return {
+          prospectId: prospect.id,
+          brandName: brandData.name,
+          problemToSolve: prospect.problem_to_solve,
+          keywords: prospect.keywords || [],
+          numPosts: 50, // Default number of posts per prospect
+        };
+      })
+      .filter((job): job is ScrapeJob => job !== null);
+
+    // Open drawer with the jobs
+    if (scrapeJobs.length > 0) {
+      openDrawer(scrapeJobs);
+    }
+  }, [brandData, prospectsDisplay, openDrawer]);
 
   const hints: Record<NonNullHint, Omit<HintConfig, "type">> = {
     "no-posts": {
@@ -279,6 +546,28 @@ function HelpHintSection() {
         "The posts we found have low engagement. Consider refining your keywords to find more active discussions.",
       actionLabel: "Optimize Keywords",
       actionHandler: () => console.log("Navigate to keyword optimization"),
+    },
+    "prospects-need-scraping": {
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      ),
+      title: "Some Problems Need Research",
+      description:
+        `${prospectsDisplay.filter(p => !p.pendingPosts || p.pendingPosts.length === 0).length} of your defined problems have no posts yet. Search for conversations about these specific problems.`,
+      actionLabel: "Search Missing Problems",
+      actionHandler: handleScrapeProspectsWithNoPosts,
     },
   };
 

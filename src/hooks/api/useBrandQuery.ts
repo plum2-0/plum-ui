@@ -391,3 +391,106 @@ export function useDeleteProspectKeywords() {
     },
   });
 }
+
+// Types for add brand prospect mutation
+interface AddBrandProspectParams {
+  brandId: string;
+  problemToSolve: string;
+  keywords?: string[];
+}
+
+interface AddBrandProspectResponse {
+  id: string;
+  problem_to_solve: string;
+  keywords: string[];
+  insights: any | null;
+  sourced_reddit_posts: any[];
+  prosepect_profiles: any[];
+  total_posts_scraped: number;
+}
+
+// API function for adding a brand prospect
+async function addBrandProspect({
+  brandId,
+  problemToSolve,
+  keywords = [],
+}: AddBrandProspectParams): Promise<AddBrandProspectResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/brand/${brandId}/prospect`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Plum-UI/1.0",
+      },
+      body: JSON.stringify({
+        problem_to_solve: problemToSolve,
+        keywords,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new BrandQueryError(
+      `Failed to add prospect: ${text}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Hook to add a new prospect to a brand
+ */
+export function useAddBrandProspect() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addBrandProspect,
+    onMutate: async ({ brandId, problemToSolve, keywords }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: BRAND_QUERY_KEYS.all });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as { brand: Brand } | undefined;
+
+      // Optimistically update to the new value
+      if (previousData?.brand) {
+        const optimisticProspect = {
+          id: `temp-${Date.now()}`, // Temporary ID
+          problem_to_solve: problemToSolve,
+          keywords: keywords || [],
+          insights: null,
+          sourced_reddit_posts: [],
+          prosepect_profiles: [],
+          total_posts_scraped: 0,
+          agent: null,
+          isLoading: true, // Flag to show loading state
+        };
+
+        queryClient.setQueryData(BRAND_QUERY_KEYS.all, {
+          brand: {
+            ...previousData.brand,
+            prospects: [...(previousData.brand.prospects || []), optimisticProspect],
+          },
+        });
+      }
+
+      // Return a context object with the snapshotted value
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousData) {
+        queryClient.setQueryData(BRAND_QUERY_KEYS.all, context.previousData);
+      }
+      console.error("Failed to add prospect:", err);
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+    },
+  });
+}
