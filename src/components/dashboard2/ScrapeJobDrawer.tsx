@@ -6,11 +6,11 @@ import { RightSidePanel } from "@/components/ui/RightSidePanel";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { GlassInput } from "@/components/ui/GlassInput";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { 
-  Accordion, 
-  AccordionItem, 
-  AccordionTrigger, 
-  AccordionContent 
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
 } from "@/components/ui/GlassAccordion";
 import { useScrapeJob, ScrapeJob } from "@/contexts/ScrapeJobContext";
 import { useProspectRefreshPostsParallel } from "@/hooks/api/useProspectRefreshPostsParallel";
@@ -26,7 +26,11 @@ interface ScrapeJobAccordionProps {
   onRemove: () => void;
 }
 
-function ScrapeJobAccordion({ job, onUpdate, onRemove }: ScrapeJobAccordionProps) {
+function ScrapeJobAccordion({
+  job,
+  onUpdate,
+  onRemove,
+}: ScrapeJobAccordionProps) {
   const [newKeyword, setNewKeyword] = useState("");
 
   const handleAddKeyword = (e: React.KeyboardEvent) => {
@@ -73,7 +77,9 @@ function ScrapeJobAccordion({ job, onUpdate, onRemove }: ScrapeJobAccordionProps
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs text-white/60">Keywords</label>
-              <span className="text-xs text-white/40">{job.keywords.length} active</span>
+              <span className="text-xs text-white/40">
+                {job.keywords.length} active
+              </span>
             </div>
             <div className="flex flex-wrap gap-1.5 mb-3 max-h-32 overflow-y-auto">
               <AnimatePresence mode="popLayout">
@@ -110,7 +116,9 @@ function ScrapeJobAccordion({ job, onUpdate, onRemove }: ScrapeJobAccordionProps
 
           {/* Posts count section */}
           <div>
-            <label className="text-xs text-white/60 mb-2 block">Posts to Analyze</label>
+            <label className="text-xs text-white/60 mb-2 block">
+              Posts to Analyze
+            </label>
             <div className="grid grid-cols-4 gap-2">
               {postCountOptions.map((count) => (
                 <button
@@ -187,7 +195,7 @@ export default function ScrapeJobDrawer() {
       setProgress(0);
       let currentProgress = 0;
       let messageIndex = 0;
-      
+
       // Update loading message
       setLoadingMessage(loadingMessages[0]);
       const messageInterval = setInterval(() => {
@@ -215,32 +223,12 @@ export default function ScrapeJobDrawer() {
     if (!brand?.id || scrapeJobs.size === 0) return;
 
     const jobsArray = Array.from(scrapeJobs.values());
-    
+
     try {
       const result = await refreshPosts.mutateAsync({
         brandId: brand.id,
         brandOfferings: brand.offerings,
         scrapeJobs: jobsArray,
-      });
-
-      // Show epic success toast
-      const totalPostsFound = result?.successCount || 0;
-      const totalProspects = jobsArray.length;
-      
-      showToast({
-        type: 'success',
-        message: `🚀 Power unleashed! Discovered ${totalPostsFound} fresh opportunities across ${totalProspects} prospect${totalProspects !== 1 ? 's' : ''}. Your content arsenal is loaded!`,
-        duration: 6000,
-        icon: (
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", duration: 0.8 }}
-            className="text-3xl"
-          >
-            ⚡
-          </motion.div>
-        ),
       });
 
       // Close drawer after showing success
@@ -252,8 +240,9 @@ export default function ScrapeJobDrawer() {
       }, 1500);
     } catch (error) {
       showToast({
-        type: 'error',
-        message: 'Failed to wield power. The digital realm resists... Try again!',
+        type: "error",
+        message:
+          "Failed to wield power. The digital realm resists... Try again!",
         duration: 5000,
       });
       setProgress(0);
@@ -262,9 +251,12 @@ export default function ScrapeJobDrawer() {
 
   const jobsArray = Array.from(scrapeJobs.values());
   const totalPosts = getTotalPostsCount();
-  
+
   // Calculate total new keywords across all jobs
-  const totalNewKeywords = jobsArray.reduce((total, job) => total + job.keywords.length, 0);
+  const totalNewKeywords = jobsArray.reduce(
+    (total, job) => total + job.keywords.length,
+    0
+  );
 
   return (
     <RightSidePanel
@@ -285,9 +277,10 @@ export default function ScrapeJobDrawer() {
                   }`}
                   style={{
                     filter: scrapeJobs.size > 0 ? "brightness(1.2)" : "none",
-                    textShadow: scrapeJobs.size > 0
-                      ? "0 0 20px rgba(34, 197, 94, 0.5)"
-                      : "none",
+                    textShadow:
+                      scrapeJobs.size > 0
+                        ? "0 0 20px rgba(34, 197, 94, 0.5)"
+                        : "none",
                   }}
                 >
                   ⚡
@@ -341,7 +334,11 @@ export default function ScrapeJobDrawer() {
                       <div className="flex items-center gap-2">
                         <motion.div
                           animate={{ rotate: 360 }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                         >
                           <svg
                             className="w-4 h-4"
@@ -359,7 +356,9 @@ export default function ScrapeJobDrawer() {
                         </motion.div>
                         <span>Wielding Power {Math.round(progress)}%</span>
                       </div>
-                      <span className="text-xs opacity-80">{loadingMessage}</span>
+                      <span className="text-xs opacity-80">
+                        {loadingMessage}
+                      </span>
                     </motion.div>
                   ) : (
                     <motion.div
@@ -407,7 +406,8 @@ export default function ScrapeJobDrawer() {
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
                   style={{
-                    background: "linear-gradient(90deg, rgba(168, 85, 247, 0.8) 0%, rgba(34, 197, 94, 0.9) 50%, rgba(168, 85, 247, 0.8) 100%)",
+                    background:
+                      "linear-gradient(90deg, rgba(168, 85, 247, 0.8) 0%, rgba(34, 197, 94, 0.9) 50%, rgba(168, 85, 247, 0.8) 100%)",
                     boxShadow: "0 0 10px rgba(168, 85, 247, 0.6)",
                   }}
                 />
@@ -430,7 +430,9 @@ export default function ScrapeJobDrawer() {
                   >
                     <ScrapeJobAccordion
                       job={job}
-                      onUpdate={(updates) => updateScrapeJob(job.prospectId, updates)}
+                      onUpdate={(updates) =>
+                        updateScrapeJob(job.prospectId, updates)
+                      }
                       onRemove={() => removeScrapeJob(job.prospectId)}
                     />
                   </motion.div>
@@ -460,7 +462,8 @@ export default function ScrapeJobDrawer() {
               </div>
               <p className="text-white/40 mb-2">No scrape jobs configured</p>
               <p className="text-sm text-white/30">
-                Add prospects from your dashboard to start configuring scrape jobs
+                Add prospects from your dashboard to start configuring scrape
+                jobs
               </p>
             </motion.div>
           )}
