@@ -41,11 +41,13 @@ SwipeableProspectModal
   - Max rotation: ±25 degrees
   - Formula: `rotation = (dragX / screenWidth) * 50`
 - **Stamp opacity**: Progressive fade-in based on drag distance
-  - Threshold: 50px to start showing
-  - Full opacity at: 150px
+  - Threshold: 30px to start showing (lowered from 50px for earlier feedback)
+  - Full opacity at: 100px (lowered from 150px for quicker visual confirmation)
 
 ### Phase 2: Release Decision Point
-**Swipe Threshold**: 120px or velocity > 500px/s
+**Swipe Threshold**: 80px or velocity > 300px/s
+
+> **Learning**: Initial thresholds (120px/500px) were too high for comfortable swiping. Users struggled to trigger swipes, with cards consistently snapping back. Lowered to 80px/300px for better UX.
 
 #### If Below Threshold:
 - Spring animation back to center
@@ -87,22 +89,25 @@ SwipeableProspectModal
 ## Implementation Details
 
 ### 1. Gesture Handling
+
+> **Critical Learning**: Stamp opacity must use Framer Motion's `MotionValue` objects, not regular state. Direct state updates caused stamps to persist after drag release.
+
 ```typescript
-// Using framer-motion for gestures
-const handleDrag = (event, info) => {
-  // Update rotation based on X offset
-  setRotation(info.offset.x * 0.15)
-  
-  // Update stamp opacity
-  const threshold = 50
-  const maxOpacity = 150
-  
-  if (info.offset.x > threshold) {
-    setLikeOpacity(Math.min((info.offset.x - threshold) / maxOpacity, 1))
-  } else if (info.offset.x < -threshold) {
-    setNopeOpacity(Math.min((Math.abs(info.offset.x) - threshold) / maxOpacity, 1))
-  }
-}
+// Using framer-motion for gestures with MotionValues
+const x = useMotionValue(0);
+const rotate = useTransform(x, [-200, 0, 200], [-25, 0, 25]);
+
+// Stamp opacity MUST use transforms for proper cleanup
+const likeOpacity = useTransform(
+  x,
+  [0, 30, 130],
+  [0, 0, 1]
+);
+const nopeOpacity = useTransform(
+  x,
+  [-130, -30, 0],
+  [1, 0, 0]
+);
 ```
 
 ### 2. Animation Timing Coordination
@@ -191,6 +196,10 @@ interface SwipeableProspectModalProps {
 4. **Mid-animation Close**: Gracefully cancel all animations
 5. **Touch vs Mouse**: Unified gesture system
 6. **Screen Rotation**: Recalculate boundaries
+7. **Index Management**: 
+   - **Critical Issue Found**: Double-slicing the posts array causes ghost cards
+   - **Solution**: Pass full array with currentIndex, slice only in CardStack
+   - **Key Strategy**: Use absolute indices for React keys to prevent DOM recycling
 
 ## Testing Considerations
 
@@ -200,12 +209,32 @@ interface SwipeableProspectModalProps {
 4. **Memory Leaks**: Test rapid mount/unmount
 5. **Accessibility**: Keyboard navigation support
 
+## Implementation Lessons Learned
+
+### Key Discoveries
+1. **Swipe Thresholds**: User testing revealed 120px/500px too high; 80px/300px provides better UX
+2. **MotionValue Requirements**: Stamps must use Framer Motion transforms, not React state
+3. **Index Management**: Avoid double-slicing arrays; use absolute indices for keys
+4. **Visual Feedback Timing**: Earlier stamp appearance (30px) improves user confidence
+
+### Common Pitfalls to Avoid
+- Don't slice the posts array multiple times (parent + child)
+- Don't use regular state for drag-dependent values
+- Don't use relative indices for React keys in animated lists
+- Don't set thresholds too high for mobile/touch interfaces
+
+### Successful Patterns
+- Use `useMotionValue` and `useTransform` for all drag-related values
+- Pass full data arrays with indices rather than pre-sliced arrays
+- Lower thresholds for better mobile UX
+- Use absolute indices (`currentIndex + index`) for stable keys
+
 ## Next Steps
 
-1. Create base component structure
-2. Implement gesture handling with framer-motion
-3. Build animation coordination system
-4. Add visual polish (stamps, shadows)
-5. Optimize performance
+✅ ~~Create base component structure~~
+✅ ~~Implement gesture handling with framer-motion~~
+✅ ~~Build animation coordination system~~
+✅ ~~Add visual polish (stamps, shadows)~~
+✅ ~~Optimize performance~~
 6. Add accessibility features
 7. Write comprehensive tests

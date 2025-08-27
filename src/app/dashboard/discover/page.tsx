@@ -60,6 +60,7 @@ function BrandSummary() {
     totalPostsScraped,
     totalKeywordsCounts,
     brandAggregates,
+    refetch,
   } = useBrand();
   const postActionMutation = useProspectPostAction();
   const handleSwipe = useCallback(
@@ -113,7 +114,12 @@ function BrandSummary() {
               onSwipe={handleSwipe}
               problemToSolve="Overview - All Use Cases"
               onStackCompleted={() => {
-                console.log("All prospects reviewed!");
+                console.log("All prospects reviewed! Refreshing brand data...");
+                refetch();
+              }}
+              onModalClose={() => {
+                console.log("Modal closed, refreshing brand data...");
+                refetch();
               }}
             />
 

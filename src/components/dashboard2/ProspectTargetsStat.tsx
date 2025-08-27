@@ -18,6 +18,7 @@ interface ProspectTargetsProps {
     post: RedditPostUI;
   }) => void | Promise<void>;
   onStackCompleted?: () => void;
+  onModalClose?: () => void;
   label?: string;
   problemToSolve?: string;
 }
@@ -32,6 +33,7 @@ export default function ProspectTargetStat({
   label = "Potential Leads",
   onSwipe,
   onStackCompleted,
+  onModalClose,
 }: ProspectTargetsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -158,7 +160,10 @@ export default function ProspectTargetStat({
         isOpen={isModalOpen}
         posts={posts}
         onSwipe={onSwipe}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          onModalClose?.();
+        }}
         onStackCompleted={handleStackCompleted}
       />
     </>
