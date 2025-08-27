@@ -49,7 +49,7 @@ export function useAgentReply(brandId: string) {
       setIsGenerating(true);
       try {
         const agent = agents.find((a) => a.id === agentId);
-        
+
         if (!brandData) {
           throw new Error("Brand data not loaded");
         }
@@ -57,16 +57,18 @@ export function useAgentReply(brandId: string) {
         // Build PlumReplyGenerationRequest
         const payload = {
           brand: brandData,
-          agent: agent ? {
-            id: agent.id,
-            name: agent.name,
-            persona: agent.persona,
-            goal: agent.goal,
-            avatar_url: agent.avatar,
-            created_at: agent.createdAt.toISOString(),
-            actions: []
-          } : null,
-          conversation_thread: [post] // Single post as conversation thread
+          agent: agent
+            ? {
+                id: agent.id,
+                name: agent.name,
+                persona: agent.persona,
+                goal: agent.goal,
+                avatar_url: agent.avatar,
+                created_at: agent.createdAt.toISOString(),
+                actions: [],
+              }
+            : null,
+          conversation_thread: [post], // Single post as conversation thread
         };
 
         const resp = await fetch(`${API_BASE}/api/agents/generate/reply`, {
@@ -97,6 +99,7 @@ export function useAgentReply(brandId: string) {
     isLoadingAgents: isLoading,
     agentsError: error,
     isGenerating,
+    isBrandLoaded: !!brandData,
     generateWithAgent,
   } as const;
 }

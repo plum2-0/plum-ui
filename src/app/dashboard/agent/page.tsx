@@ -337,8 +337,10 @@ export default function AgentPage() {
                     onBlur={() => {
                       if (localPersona !== agent?.persona && agent?.id) {
                         updateAgent.mutate({
-                          id: agent.id,
-                          persona: localPersona,
+                          agentId: agent.id,
+                          data: {
+                            persona: localPersona,
+                          },
                         });
                       }
                     }}
@@ -386,8 +388,10 @@ export default function AgentPage() {
                     onBlur={() => {
                       if (localGoal !== agent?.goal && agent?.id) {
                         updateAgent.mutate({
-                          id: agent.id,
-                          goal: localGoal,
+                          agentId: agent.id,
+                          data: {
+                            goal: localGoal,
+                          },
                         });
                       }
                     }}

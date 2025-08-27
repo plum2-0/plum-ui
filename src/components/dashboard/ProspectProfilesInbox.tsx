@@ -309,6 +309,14 @@ export function ProspectProfileCard({
   // const latestPost = profile.active_convos?.reddit_conversations[0];
   const hasSuggested = profile.inbox_status === "SUGGESTED_REPLY";
   const isUnactioned = profile.inbox_status === "UNACTIONED";
+  const cardRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll into view when selected
+  React.useEffect(() => {
+    if (isSelected && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isSelected]);
 
   // Debug logging
   console.log(
@@ -331,6 +339,7 @@ export function ProspectProfileCard({
 
   return (
     <motion.div
+      ref={cardRef}
       key={profile.id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

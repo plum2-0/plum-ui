@@ -14,6 +14,7 @@ import { ProspectProfileDetail } from "@/components/dashboard/ProspectProfileDet
 import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import { useProspectProfilesQuery } from "@/hooks/api/useProspectProfilesQuery";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { ReplyProvider } from "@/contexts/ReplyContext";
 import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
 
 export default function DashboardPage() {
@@ -60,6 +61,21 @@ export default function DashboardPage() {
   }, [selectedProfile, prospectProfiles]);
 
   const brandData = brandResponse?.brand || null;
+
+  // Handle reply success - auto-select next profile
+  const handleReplySuccess = () => {
+    if (!prospectProfiles || prospectProfiles.length === 0) return;
+    
+    const currentIndex = prospectProfiles.findIndex(p => p.id === selectedProfile?.id);
+    if (currentIndex !== undefined && currentIndex !== -1 && currentIndex < prospectProfiles.length - 1) {
+      // Select the next profile in the list
+      setSelectedProfile(prospectProfiles[currentIndex + 1]);
+    } else if (currentIndex === prospectProfiles.length - 1) {
+      // We're at the last profile, optionally could loop back to first
+      // For now, just stay on the current profile
+      console.log("You've replied to the last profile in the inbox");
+    }
+  };
 
   const handleAddUseCase = async (title: string) => {
     if (!brandData) return Promise.resolve();
@@ -118,35 +134,37 @@ export default function DashboardPage() {
 
   return (
     <ProfileProvider selectedProfile={detailedProfile || null}>
-      <main className="flex-1 flex min-h-0 h-full overflow-hidden">
-            {/* Prospect Profiles Inbox - 30% width */}
-            <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
-              <ProspectProfilesInbox
-                onProfileSelect={setSelectedProfile}
-                selectedProfileId={selectedProfile?.id}
-              />
-            </div>
-
-            {/* Detail View - 70% width */}
-            <div className="flex-1 h-full">
-              {detailedProfile ? (
-                <ProspectProfileDetail
-                  profile={detailedProfile}
-                  onClose={() => setSelectedProfile(null)}
-                  agents={agentsData?.agents || []}
-                  isLoadingAgents={isLoadingAgents}
-                  setSelectedProfile={setSelectedProfile}
-                  isLoadingProfile={isLoadingProfile}
+      <ReplyProvider onReplySuccess={handleReplySuccess}>
+        <main className="flex-1 flex min-h-0 h-full overflow-hidden">
+              {/* Prospect Profiles Inbox - 30% width */}
+              <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
+                <ProspectProfilesInbox
+                  onProfileSelect={setSelectedProfile}
+                  selectedProfileId={selectedProfile?.id}
                 />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-white/60 text-xl font-body">
-                    No prospect profile selected
+              </div>
+
+              {/* Detail View - 70% width */}
+              <div className="flex-1 h-full">
+                {detailedProfile ? (
+                  <ProspectProfileDetail
+                    profile={detailedProfile}
+                    onClose={() => setSelectedProfile(null)}
+                    agents={agentsData?.agents || []}
+                    isLoadingAgents={isLoadingAgents}
+                    setSelectedProfile={setSelectedProfile}
+                    isLoadingProfile={isLoadingProfile}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-white/60 text-xl font-body">
+                      No prospect profile selected
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-      </main>
+                )}
+              </div>
+        </main>
+      </ReplyProvider>
     </ProfileProvider>
   );
 }

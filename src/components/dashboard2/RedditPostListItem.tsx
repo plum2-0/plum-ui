@@ -183,6 +183,7 @@ export default function RedditPostListItem({
                 setCustomReply={setCustomReply}
                 replySent={replySent}
                 post={post}
+                onClose={() => setShowReplyBox(false)}
               />
             )}
           </div>
