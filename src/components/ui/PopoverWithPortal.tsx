@@ -24,7 +24,8 @@ export function PopoverWithPortal({
   openOnHover = true,
 }: PopoverWithPortalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [isPositioned, setIsPositioned] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
@@ -46,9 +47,141 @@ export function PopoverWithPortal({
     }
   }, []);
 
+  // Function to calculate initial position based on trigger
+  const calculateInitialPosition = () => {
+    if (!triggerRef.current) return null;
+    
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const scrollY = window.scrollY;
+    const scrollX = window.scrollX;
+    
+    // Estimate content size (will be refined once rendered)
+    const estimatedWidth = 200;
+    const estimatedHeight = 50;
+    
+    let top = 0;
+    let left = 0;
+    
+    // Calculate vertical position based on side
+    switch (side) {
+      case "top":
+        top = triggerRect.top + scrollY - estimatedHeight - 8;
+        break;
+      case "bottom":
+        top = triggerRect.bottom + scrollY + 8;
+        break;
+      case "left":
+        top = triggerRect.top + scrollY;
+        break;
+      case "right":
+        top = triggerRect.top + scrollY;
+        break;
+    }
+    
+    // Calculate horizontal position based on side and align
+    if (side === "top" || side === "bottom") {
+      switch (align) {
+        case "start":
+          left = triggerRect.left + scrollX;
+          break;
+        case "center":
+          left = triggerRect.left + scrollX + (triggerRect.width - estimatedWidth) / 2;
+          break;
+        case "end":
+          left = triggerRect.right + scrollX - estimatedWidth;
+          break;
+      }
+    } else {
+      switch (side) {
+        case "left":
+          left = triggerRect.left + scrollX - estimatedWidth - 8;
+          break;
+        case "right":
+          left = triggerRect.right + scrollX + 8;
+          break;
+      }
+    }
+    
+    return { top, left };
+  };
+
   // Calculate position
   useEffect(() => {
     if (!isOpen || !triggerRef.current || !contentRef.current) return;
+
+    // Use RAF to ensure DOM is ready
+    requestAnimationFrame(() => {
+      const triggerRect = triggerRef.current!.getBoundingClientRect();
+      const contentRect = contentRef.current!.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+      
+      let top = 0;
+      let left = 0;
+
+      // Calculate vertical position based on side
+      switch (side) {
+        case "top":
+          top = triggerRect.top + scrollY - contentRect.height - 8;
+          break;
+        case "bottom":
+          top = triggerRect.bottom + scrollY + 8;
+          break;
+        case "left":
+          top = triggerRect.top + scrollY + (triggerRect.height - contentRect.height) / 2;
+          break;
+        case "right":
+          top = triggerRect.top + scrollY + (triggerRect.height - contentRect.height) / 2;
+          break;
+      }
+
+      // Calculate horizontal position based on side and align
+      if (side === "top" || side === "bottom") {
+        switch (align) {
+          case "start":
+            left = triggerRect.left + scrollX;
+            break;
+          case "center":
+            left = triggerRect.left + scrollX + (triggerRect.width - contentRect.width) / 2;
+            break;
+          case "end":
+            left = triggerRect.right + scrollX - contentRect.width;
+            break;
+        }
+      } else {
+        // For left/right sides
+        switch (side) {
+          case "left":
+            left = triggerRect.left + scrollX - contentRect.width - 8;
+            break;
+          case "right":
+            left = triggerRect.right + scrollX + 8;
+            break;
+        }
+      }
+
+      // Ensure the popover stays within viewport
+      const padding = 10;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Horizontal bounds
+      if (left < padding) {
+        left = padding;
+      } else if (left + contentRect.width > viewportWidth - padding) {
+        left = viewportWidth - contentRect.width - padding;
+      }
+
+      // Vertical bounds
+      if (top < scrollY + padding) {
+        top = scrollY + padding;
+      } else if (top + contentRect.height > scrollY + viewportHeight - padding) {
+        top = scrollY + viewportHeight - contentRect.height - padding;
+      }
+
+      setPosition({ top, left });
+      setIsPositioned(true);
+    });
 
     const updatePosition = () => {
       const triggerRect = triggerRef.current!.getBoundingClientRect();
@@ -121,8 +254,6 @@ export function PopoverWithPortal({
 
       setPosition({ top, left });
     };
-
-    updatePosition();
     
     // Update position on scroll/resize
     window.addEventListener("scroll", updatePosition, true);
@@ -133,6 +264,15 @@ export function PopoverWithPortal({
       window.removeEventListener("resize", updatePosition);
     };
   }, [isOpen, side, align]);
+
+  // Reset positioned state when closing
+  useEffect(() => {
+    if (!isOpen) {
+      setIsPositioned(false);
+      setPosition(null);
+    }
+  }, [isOpen]);
+
 
   // Click outside handler
   useEffect(() => {
@@ -155,7 +295,16 @@ export function PopoverWithPortal({
 
   const hoverHandlers = openOnHover
     ? {
-        onMouseEnter: () => setIsOpen(true),
+        onMouseEnter: () => {
+          // Calculate initial position before opening
+          if (!position) {
+            const initialPos = calculateInitialPosition();
+            if (initialPos) {
+              setPosition(initialPos);
+            }
+          }
+          setIsOpen(true);
+        },
         onMouseLeave: (e: React.MouseEvent) => {
           // Check if we're moving to the content
           const relatedTarget = e.relatedTarget as HTMLElement;
@@ -184,17 +333,17 @@ export function PopoverWithPortal({
         {trigger}
       </div>
       
-      {portalContainer && isOpen && createPortal(
+      {portalContainer && isOpen && position && createPortal(
         <div
           ref={contentRef}
-          className={cn(
-            "absolute transition-all duration-200",
-            isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95"
-          )}
+          className="absolute"
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
             pointerEvents: isOpen ? "auto" : "none",
+            opacity: isPositioned ? 1 : 0,
+            transform: isPositioned ? "scale(1)" : "scale(0.95)",
+            transition: isPositioned ? "all 200ms" : "none",
           }}
           {...contentHoverHandlers}
         >

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Search, MessageCircle, Clock } from "lucide-react";
+import { Search, MessageCircle, Clock, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/components/ui/GlassCard";
 
@@ -310,6 +310,11 @@ export function ProspectProfileCard({
   const hasSuggested = profile.inbox_status === "SUGGESTED_REPLY";
   const isUnactioned = profile.inbox_status === "UNACTIONED";
 
+  // Debug logging
+  console.log(
+    `📦 [ProspectProfileCard] Profile ${profile.name} - ID: ${profile.id}, isSelected: ${isSelected}`
+  );
+
   const getTimeAgo = (timestamp?: number | string) => {
     if (!timestamp) return "";
     const time =
@@ -337,12 +342,21 @@ export function ProspectProfileCard({
         blur="light"
         glow={hasSuggested || isUnactioned}
         className={cn(
-          "p-4 cursor-pointer transition-all duration-300 relative overflow-hidden group",
+          "p-4 cursor-pointer transition-all duration-300 relative overflow-hidden group border border-white/10",
           isSelected
-            ? "bg-purple-500/15 border-l-4 border-l-green-400"
-            : "hover:bg-white/8 hover:translate-x-1",
+            ? "border-l-4 border-l-purple-400/60"
+            : "hover:bg-white/8 hover:translate-x-1 border-l-4 border-l-transparent",
           (hasSuggested || isUnactioned) && "font-medium"
         )}
+        style={{
+          ...(isSelected && {
+            background:
+              "linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%)",
+            backdropFilter: "blur(40px) saturate(1.4)",
+            boxShadow:
+              "0 8px 32px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+          }),
+        }}
       >
         {/* Hover glow effect */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

@@ -90,14 +90,6 @@ export default function ProspectCard({
     h3: (props) => <h3 {...props} className="text-base font-semibold mb-2" />,
   };
 
-  // Debug mount/unmount and identity
-  useEffect(() => {
-    console.log("[ProspectCard] mount", { postId: post.thing_id });
-    return () => {
-      console.log("[ProspectCard] unmount", { postId: post.thing_id });
-    };
-  }, [post.thing_id]);
-
   return (
     <div
       className={`relative w-full max-w-4xl ${className}`}

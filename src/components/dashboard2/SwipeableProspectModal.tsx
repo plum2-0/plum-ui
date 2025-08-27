@@ -1,37 +1,393 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { createPortal, flushSync } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   motion,
   AnimatePresence,
-  PanInfo,
   useMotionValue,
   useTransform,
+  PanInfo,
+  useAnimation,
+  MotionValue,
 } from "framer-motion";
-import ProspectCard from "./ProspectCard";
-import { LiquidButton } from "@/components/ui/LiquidButton";
-import { glassStyles } from "@/lib/styles/glassMorphism";
-import { liquidGradients } from "@/lib/styles/gradients";
 import { RedditPostUI } from "@/types/brand";
+import ProspectCard from "./ProspectCard";
+
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
+
+interface SwipeState {
+  currentIndex: number;
+  isDragging: boolean;
+  dragOffset: { x: number; y: number };
+  rotation: number;
+  swipeDirection: "left" | "right" | null;
+  isAnimating: boolean;
+  preloadedCards: number[]; // indices of cards to keep rendered
+}
 
 interface SwipeableProspectModalProps {
   isOpen: boolean;
   posts: RedditPostUI[];
-  onSwipe?: (args: {
+  onSwipe?: (data: {
     direction: "left" | "right";
     post: RedditPostUI;
   }) => void | Promise<void>;
   onClose: () => void;
   onStackCompleted?: () => void;
-  standalone?: boolean;
+  showActionButtons?: boolean;
+  swipeThreshold?: number;
 }
 
-const SWIPE_THRESHOLD = 100;
-const MAX_ROTATION = 30;
-const VISIBLE_CARDS = 3;
-const SWIPE_VELOCITY_THRESHOLD = 500;
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const SWIPE_CONFIG = {
+  // Swipe thresholds
+  DISTANCE_THRESHOLD: 80,  // Lower threshold for easier swiping
+  VELOCITY_THRESHOLD: 300,  // Lower velocity threshold
+  
+  // Visual configuration  
+  MAX_ROTATION: 25,
+  STAMP_OPACITY_START: 30,  // Show stamps earlier
+  STAMP_OPACITY_FULL: 100,  // Full opacity at lower distance
+  
+  // Card stack
+  VISIBLE_CARDS: 3,
+  CARD_SCALE_OFFSET: 0.05,
+  CARD_Y_OFFSET: 10,
+  
+  // Animation durations (ms)
+  EXIT_DURATION: 300,
+  NEXT_CARD_DURATION: 250,
+  THIRD_CARD_DURATION: 200,
+  NEW_CARD_DURATION: 150,
+  SNAP_BACK_DURATION: 200,
+  
+  // Exit animation targets
+  EXIT_X_DISTANCE: 400,
+  EXIT_Y_DISTANCE: 100,
+  EXIT_ROTATION: 45,
+  EXIT_SCALE: 0.8,
+};
+
+// ============================================================================
+// COMPONENTS
+// ============================================================================
+
+// Component: SwipeStamp
+function SwipeStamp({
+  type,
+  opacity,
+}: {
+  type: "like" | "nope";
+  opacity: number | MotionValue<number>;
+}) {
+  const isLike = type === "like";
+  
+  return (
+    <motion.div
+      className="absolute top-8 pointer-events-none"
+      style={{
+        [isLike ? "right" : "left"]: "32px",
+        opacity,
+        transform: "rotate(-15deg)",
+      }}
+    >
+      <div
+        className="px-6 py-3 rounded-xl font-bold text-2xl uppercase tracking-wider"
+        style={{
+          color: isLike ? "#22c55e" : "#ef4444",
+          border: `4px solid ${isLike ? "#22c55e" : "#ef4444"}`,
+          backgroundColor: isLike ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)",
+          boxShadow: `0 4px 20px ${isLike ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+        }}
+      >
+        {isLike ? "LIKE" : "NOPE"}
+      </div>
+    </motion.div>
+  );
+}
+
+// Component: ActionButtons
+function ActionButtons({
+  onSwipe,
+  disabled,
+}: {
+  onSwipe: (direction: "left" | "right") => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="flex justify-center gap-8 mt-8">
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => onSwipe("left")}
+        disabled={disabled}
+        className="w-16 h-16 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        style={{
+          background: "linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1))",
+          border: "2px solid rgba(239, 68, 68, 0.4)",
+          boxShadow: "0 4px 16px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        <svg
+          className="w-8 h-8 text-red-400"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={3}
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </motion.button>
+      
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => onSwipe("right")}
+        disabled={disabled}
+        className="w-16 h-16 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        style={{
+          background: "linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))",
+          border: "2px solid rgba(34, 197, 94, 0.4)",
+          boxShadow: "0 4px 16px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        <svg
+          className="w-8 h-8 text-emerald-400"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+        </svg>
+      </motion.button>
+    </div>
+  );
+}
+
+// Component: ProgressIndicator
+function ProgressIndicator({
+  current,
+  total,
+}: {
+  current: number;
+  total: number;
+}) {
+  const progress = ((current + 1) / total) * 100;
+  
+  return (
+    <div className="mb-6">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm text-white/60">
+          {current + 1} of {total}
+        </span>
+        <span className="text-sm text-white/60">
+          {Math.round(progress)}%
+        </span>
+      </div>
+      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+        <motion.div
+          className="h-full rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          style={{
+            background: "linear-gradient(90deg, #8b5cf6, #3b82f6)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Component: CardStack  
+function CardStack({
+  posts,
+  currentIndex,
+  isAnimating,
+  swipeDirection,
+  onDrag,
+  onDragEnd,
+  onAnimationComplete,
+}: {
+  posts: RedditPostUI[];
+  currentIndex: number;
+  isAnimating: boolean;
+  swipeDirection: "left" | "right" | null;
+  onDrag: (event: any, info: PanInfo) => void;
+  onDragEnd: (event: any, info: PanInfo) => void;
+  onAnimationComplete: () => void;
+}) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 0, 200], [-SWIPE_CONFIG.MAX_ROTATION, 0, SWIPE_CONFIG.MAX_ROTATION]);
+  
+  // Calculate stamp opacity based on drag distance
+  const likeOpacity = useTransform(x, [SWIPE_CONFIG.STAMP_OPACITY_START, SWIPE_CONFIG.STAMP_OPACITY_FULL], [0, 1]);
+  const nopeOpacity = useTransform(x, [-SWIPE_CONFIG.STAMP_OPACITY_FULL, -SWIPE_CONFIG.STAMP_OPACITY_START], [1, 0]);
+  
+  // Get the cards to display - using currentIndex to slice from full posts array
+  const visiblePosts = posts.slice(currentIndex, Math.min(currentIndex + SWIPE_CONFIG.VISIBLE_CARDS + 1, posts.length));
+  
+  return (
+    <div
+      className="relative"
+      style={{
+        height: "600px",
+        perspective: "1000px",
+      }}
+    >
+      <AnimatePresence mode="popLayout">
+        {visiblePosts.map((post, index) => {
+          const isTop = index === 0 && !isAnimating;
+          const isExiting = index === 0 && isAnimating && swipeDirection;
+          const cardIndex = index;
+          const absoluteIndex = currentIndex + index;  // Use absolute index for keys
+          
+          // Calculate positioning for stack effect
+          const scale = 1 - cardIndex * SWIPE_CONFIG.CARD_SCALE_OFFSET;
+          const yOffset = cardIndex * SWIPE_CONFIG.CARD_Y_OFFSET;
+          const zIndex = SWIPE_CONFIG.VISIBLE_CARDS - cardIndex;
+          
+          // Shadow intensity based on position
+          const shadowOpacity = 0.3 - cardIndex * 0.1;
+          const shadowBlur = 40 - cardIndex * 10;
+          
+          if (isExiting && swipeDirection) {
+            // Exit animation for swiped card
+            return (
+              <motion.div
+                key={`card-${absoluteIndex}-exit`}
+                className="absolute inset-0"
+                initial={{
+                  x: x.get(),
+                  y: y.get(),
+                  rotate: rotate.get(),
+                  scale: 1,
+                }}
+                animate={{
+                  x: swipeDirection === "right" ? SWIPE_CONFIG.EXIT_X_DISTANCE : -SWIPE_CONFIG.EXIT_X_DISTANCE,
+                  y: swipeDirection === "right" ? -SWIPE_CONFIG.EXIT_Y_DISTANCE : SWIPE_CONFIG.EXIT_Y_DISTANCE,
+                  rotate: swipeDirection === "right" ? SWIPE_CONFIG.EXIT_ROTATION : -SWIPE_CONFIG.EXIT_ROTATION,
+                  opacity: 0,
+                  scale: SWIPE_CONFIG.EXIT_SCALE,
+                }}
+                transition={{
+                  duration: SWIPE_CONFIG.EXIT_DURATION / 1000,
+                  ease: "easeOut",
+                }}
+                onAnimationComplete={onAnimationComplete}
+                style={{ zIndex: zIndex + 10 }}
+              >
+                <ProspectCard post={post} className="h-full" />
+                <SwipeStamp
+                  type={swipeDirection === "right" ? "like" : "nope"}
+                  opacity={1}
+                />
+              </motion.div>
+            );
+          }
+          
+          if (isTop) {
+            // Top draggable card
+            return (
+              <motion.div
+                key={`card-${absoluteIndex}`}
+                className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                style={{
+                  x,
+                  y,
+                  rotate,
+                  zIndex,
+                  boxShadow: `0 ${shadowBlur}px ${shadowBlur * 2}px rgba(0, 0, 0, ${shadowOpacity})`,
+                }}
+                drag={!isAnimating}
+                dragSnapToOrigin={true}
+                dragElastic={0.2}
+                dragConstraints={{
+                  left: -300,
+                  right: 300,
+                  top: -200,
+                  bottom: 200,
+                }}
+                onDrag={(event, info) => {
+                  onDrag(event, info);
+                }}
+                onDragEnd={(event, info) => {
+                  onDragEnd(event, info);
+                  // Reset motion values when snap back occurs
+                  if (Math.abs(info.offset.x) < SWIPE_CONFIG.DISTANCE_THRESHOLD) {
+                    setTimeout(() => {
+                      x.set(0);
+                      y.set(0);
+                    }, 50);
+                  }
+                }}
+                whileDrag={{
+                  scale: 1.05,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 30,
+                }}
+              >
+                <ProspectCard post={post} className="h-full" />
+                <SwipeStamp type="like" opacity={likeOpacity} />
+                <SwipeStamp type="nope" opacity={nopeOpacity} />
+              </motion.div>
+            );
+          }
+          
+          // Background cards with scaling animation
+          const targetScale = isAnimating ? scale + SWIPE_CONFIG.CARD_SCALE_OFFSET : scale;
+          const targetY = isAnimating ? yOffset - SWIPE_CONFIG.CARD_Y_OFFSET : yOffset;
+          
+          return (
+            <motion.div
+              key={`card-${absoluteIndex}`}
+              className="absolute inset-0 pointer-events-none"
+              initial={cardIndex === SWIPE_CONFIG.VISIBLE_CARDS ? {
+                scale: scale - SWIPE_CONFIG.CARD_SCALE_OFFSET,
+                y: yOffset + SWIPE_CONFIG.CARD_Y_OFFSET,
+                opacity: 0,
+              } : false}
+              animate={{
+                scale: targetScale,
+                y: targetY,
+                opacity: 1,
+              }}
+              transition={{
+                duration: (cardIndex === 1 ? SWIPE_CONFIG.NEXT_CARD_DURATION : 
+                          cardIndex === 2 ? SWIPE_CONFIG.THIRD_CARD_DURATION :
+                          SWIPE_CONFIG.NEW_CARD_DURATION) / 1000,
+                ease: "easeOut",
+              }}
+              style={{
+                zIndex,
+                boxShadow: `0 ${shadowBlur}px ${shadowBlur * 2}px rgba(0, 0, 0, ${shadowOpacity})`,
+              }}
+            >
+              <ProspectCard post={post} className="h-full" />
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 export default function SwipeableProspectModal({
   isOpen,
@@ -39,140 +395,131 @@ export default function SwipeableProspectModal({
   onSwipe,
   onClose,
   onStackCompleted,
-  standalone = false,
+  showActionButtons = true,
+  swipeThreshold = SWIPE_CONFIG.DISTANCE_THRESHOLD,
 }: SwipeableProspectModalProps) {
-  const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [exitX, setExitX] = useState<number | "left" | "right" | null>(null);
-  const [exitStartPosition, setExitStartPosition] = useState<{
-    x: number;
-    y: number;
-  }>({ x: 0, y: 0 });
-  const [exitingPost, setExitingPost] = useState<RedditPostUI | null>(null);
-  // Derive background card behavior from exit state instead of a separate flag
-
-  // Motion values for drag
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  // Transform x position to rotation
-  const rotate = useTransform(
-    x,
-    [-300, 0, 300],
-    [-MAX_ROTATION, 0, MAX_ROTATION]
-  );
-
-  // Transform x position to opacity for indicators
-  const likeOpacity = useTransform(x, [0, 100], [0, 1]);
-  const nopeOpacity = useTransform(x, [-100, 0], [1, 0]);
-
-  // Background cards transition is coordinated with exitX so they promote smoothly
-
-  const currentPost = posts[currentIndex];
-  const hasNext = currentIndex < posts.length - 1;
-  const progress =
-    posts.length > 0 ? ((currentIndex + 1) / posts.length) * 100 : 0;
-
-  // Render cycle tracker
-  const renderCountRef = useRef(0);
-  const didResetOpenStateRef = useRef(false);
-  renderCountRef.current += 1;
-  console.log("[Render] SwipeableProspectModal", {
-    renderCount: renderCountRef.current,
-    currentIndex,
-    currentPostId: currentPost?.thing_id,
-    exitX,
-    isAnimating,
-    postsCount: posts.length,
+  const [state, setState] = useState<SwipeState>({
+    currentIndex: 0,
+    isDragging: false,
+    dragOffset: { x: 0, y: 0 },
+    rotation: 0,
+    swipeDirection: null,
+    isAnimating: false,
+    preloadedCards: [0, 1, 2, 3],
   });
-
-  // Detect posts order/identity changes from parent
-  const prevPostsIdsRef = useRef<string[] | null>(null);
+  
+  const [mounted, setMounted] = useState(false);
+  
   useEffect(() => {
-    const ids = posts.map((p) => p.thing_id);
-    if (
-      prevPostsIdsRef.current &&
-      ids.join(",") !== prevPostsIdsRef.current.join(",")
-    ) {
-      console.warn("[Posts] Order or identity changed", {
-        previous: prevPostsIdsRef.current,
-        next: ids,
-      });
-    }
-    prevPostsIdsRef.current = ids;
-  }, [posts]);
-
-  // Track which IDs are on deck to render (active + next backgrounds + exiting)
-  useEffect(() => {
-    const activeId = posts[currentIndex]?.thing_id;
-    const nextId = posts[currentIndex + 1]?.thing_id;
-    const thirdId = posts[currentIndex + 2]?.thing_id;
-    const exitingId = exitingPost?.thing_id;
-    console.log("[Stack] visible snapshot", {
-      currentIndex,
-      exitX,
-      activeId,
-      nextId,
-      thirdId,
-      exitingId,
-    });
-  }, [posts, currentIndex, exitX, exitingPost]);
-
-  // Debug exit / index transitions
-  useEffect(() => {
-    if (!isOpen) return;
-    console.log("[SwipeableProspectModal] state", {
-      currentIndex,
-      exitX,
-      hasNext,
-      currentPostId: currentPost?.thing_id,
-      postsCount: posts.length,
-    });
-  }, [
-    currentIndex,
-    exitX,
-    hasNext,
-    currentPost?.thing_id,
-    isOpen,
-    posts.length,
-  ]);
-
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+  
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      if (didResetOpenStateRef.current) {
-        console.log("[Lifecycle] Modal open detected (reset suppressed)");
-        return;
-      }
-      setCurrentIndex(0);
-      setIsAnimating(false);
-      setExitX(null);
-      // no extra stack flag needed
-      x.set(0);
-      y.set(0);
-      didResetOpenStateRef.current = true;
-      console.log("[Lifecycle] Modal opened, state reset once");
-    } else {
-      // Allow reset next time it opens
-      didResetOpenStateRef.current = false;
+      setState({
+        currentIndex: 0,
+        isDragging: false,
+        dragOffset: { x: 0, y: 0 },
+        rotation: 0,
+        swipeDirection: null,
+        isAnimating: false,
+        preloadedCards: [0, 1, 2, 3],
+      });
     }
-  }, [isOpen, x, y]);
-
+  }, [isOpen]);
+  
+  // Handle drag events
+  const handleDrag = useCallback((event: any, info: PanInfo) => {
+    setState(prev => ({
+      ...prev,
+      isDragging: true,
+      dragOffset: info.offset,
+      rotation: info.offset.x * 0.15,
+    }));
+  }, []);
+  
+  // Execute swipe animation and callbacks
+  const executeSwipe = useCallback(async (direction: "left" | "right") => {
+    if (state.isAnimating || state.currentIndex >= posts.length) return;
+    
+    const currentPost = posts[state.currentIndex];
+    
+    setState(prev => ({
+      ...prev,
+      isAnimating: true,
+      swipeDirection: direction,
+    }));
+    
+    // Call onSwipe callback
+    if (onSwipe) {
+      try {
+        await onSwipe({ direction, post: currentPost });
+      } catch (error) {
+        console.error("Error in onSwipe:", error);
+      }
+    }
+  }, [state.currentIndex, state.isAnimating, posts, onSwipe]);
+  
+  // Handle drag end - determine if swipe occurred
+  const handleDragEnd = useCallback((event: any, info: PanInfo) => {
+    const swipeDistance = Math.abs(info.offset.x);
+    const swipeVelocity = Math.abs(info.velocity.x);
+    
+    if (swipeDistance > swipeThreshold || swipeVelocity > SWIPE_CONFIG.VELOCITY_THRESHOLD) {
+      const direction = info.offset.x > 0 ? "right" : "left";
+      executeSwipe(direction);
+    } else {
+      // Snap back
+      setState(prev => ({
+        ...prev,
+        isDragging: false,
+        dragOffset: { x: 0, y: 0 },
+        rotation: 0,
+      }));
+    }
+  }, [swipeThreshold, executeSwipe]);
+  
+  // Handle animation completion
+  const handleAnimationComplete = useCallback(() => {
+    setState(prev => {
+      const nextIndex = prev.currentIndex + 1;
+      const isComplete = nextIndex >= posts.length;
+      
+      if (isComplete) {
+        setTimeout(() => {
+          onStackCompleted?.();
+          onClose();
+        }, 200);
+      }
+      
+      return {
+        ...prev,
+        currentIndex: nextIndex,
+        isAnimating: false,
+        swipeDirection: null,
+        dragOffset: { x: 0, y: 0 },
+        rotation: 0,
+        preloadedCards: [nextIndex, nextIndex + 1, nextIndex + 2, nextIndex + 3],
+      };
+    });
+  }, [posts.length, onStackCompleted, onClose]);
+  
   // Handle escape key
   useEffect(() => {
     if (!isOpen) return;
-
+    
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
       }
     };
-
+    
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
-
+  
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -184,485 +531,98 @@ export default function SwipeableProspectModal({
       document.body.style.overflow = "";
     };
   }, [isOpen]);
-
-  const handleSwipe = useCallback(
-    (direction: "left" | "right") => {
-      if (!currentPost || isAnimating) return;
-
-      setIsAnimating(true);
-
-      console.log("Handling swipe:", {
-        direction,
-        action: direction === "right" ? "queue" : "ignore",
-        currentPost: currentPost.thing_id,
-      });
-
-      // Delegate side-effects to parent
-      try {
-        onSwipe?.({ direction, post: currentPost });
-      } catch (error) {
-        console.error("onSwipe handler threw:", error);
-      }
-
-      // Capture current position before starting exit animation
-      setExitStartPosition({ x: x.get(), y: y.get() });
-      console.log("[Swipe] preparing exit", {
-        direction,
-        exitStartX: x.get(),
-        exitStartY: y.get(),
-        currentPostId: currentPost.thing_id,
-      });
-
-      // Set exit animation direction
-      setExitingPost(currentPost);
-      setExitX(direction);
-      console.log("[Swipe] exit state set", {
-        exitingPostId: currentPost.thing_id,
-        exitDirection: direction,
-      });
-    },
-    [currentPost, isAnimating, onSwipe, x, y]
-  );
-
-  const handleDragEnd = useCallback(
-    (_: any, info: PanInfo) => {
-      const swipeVelocity = info.velocity.x;
-      const swipeDistance = info.offset.x;
-
-      // Check if we should trigger a swipe based on velocity OR distance
-      const shouldSwipe =
-        Math.abs(swipeVelocity) > SWIPE_VELOCITY_THRESHOLD ||
-        Math.abs(swipeDistance) > SWIPE_THRESHOLD;
-
-      if (shouldSwipe) {
-        const direction = swipeDistance > 0 ? "right" : "left";
-        handleSwipe(direction);
-      }
-    },
-    [handleSwipe]
-  );
-
-  if (!isOpen || posts.length === 0) return null;
-
-  const content = (
+  
+  if (!mounted || !isOpen || posts.length === 0) return null;
+  
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className={
-            standalone
-              ? "flex items-center justify-center min-h-screen p-4"
-              : "fixed inset-0 z-50 flex items-center justify-center p-4"
-          }
-          onClick={() => router.push("/dashboard/engage")}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={onClose}
         >
-          {/* Backdrop with enhanced liquid blur - only show if not standalone */}
-          {!standalone && (
-            <div
-              className="absolute inset-0"
-              style={{
-                ...glassStyles.dark,
-              }}
-            />
-          )}
-
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "rgba(0, 0, 0, 0.7)",
+              backdropFilter: "blur(20px)",
+            }}
+          />
+          
           {/* Modal Content */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={
-              standalone ? "w-full max-w-lg" : "relative z-10 w-full max-w-lg"
-            }
-            onClick={(e) => !standalone && e.stopPropagation()}
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 25,
+            }}
+            className="relative z-10 w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div
-                className="h-2 rounded-full overflow-hidden"
-                style={{
-                  ...glassStyles.light,
-                  borderRadius: "9999px",
-                }}
-              >
-                <motion.div
-                  className="h-full relative"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                  style={{
-                    background: liquidGradients.progressBar,
-                    boxShadow: "0 0 15px rgba(168, 85, 247, 0.3)",
-                  }}
-                >
-                  {/* Shimmer effect on progress bar */}
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{
-                      background: liquidGradients.shimmer,
-                    }}
-                    animate={{
-                      x: ["-100%", "200%"],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                  />
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Card Stack */}
-            <div
-              className="relative flex"
-              style={{
-                height: "calc(85vh - 120px)",
-                maxHeight: "900px",
-                perspective: "1000px",
-              }}
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute -top-12 right-0 p-2 rounded-full transition-all hover:bg-white/10"
             >
-              {/* Render background cards */}
-              {[
-                ...Array(
-                  Math.min(VISIBLE_CARDS - 1, posts.length - currentIndex - 1)
-                ),
-              ].map((_, idx) => {
-                const cardPosition = idx + 1;
-                const postIndex = currentIndex + cardPosition;
-
-                if (postIndex >= posts.length) return null;
-
-                const post = posts[postIndex];
-                const targetScale = 1 - cardPosition * 0.05;
-                const targetY = cardPosition * 8;
-                console.debug("[BG] render", {
-                  key: `bg-${post.thing_id}`,
-                  cardPosition,
-                  postIndex,
-                  postId: post.thing_id,
-                  currentIndex,
-                  exitX,
-                  targetScale,
-                  targetY,
-                  zIndex: VISIBLE_CARDS - cardPosition,
-                });
-
-                return (
-                  <motion.div
-                    key={`bg-${post.thing_id}`} // Use post ID instead of index
-                    className="absolute inset-0 pointer-events-none"
-                    initial={false}
-                    animate={{
-                      scale: 1 - cardPosition * 0.05,
-                      y: cardPosition * 8,
-                      opacity: 1,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 220,
-                      damping: 24,
-                      delay: 0,
-                    }}
-                    style={{
-                      zIndex: VISIBLE_CARDS - cardPosition,
-                      transformStyle: "preserve-3d",
-                    }}
-                    layout
-                  >
-                    <ProspectCard post={post} className="h-full" />
-                  </motion.div>
-                );
-              })}
-
-              {/* Active draggable card */}
-              <AnimatePresence mode="wait">
-                {currentPost && exitX === null && (
-                  <motion.div
-                    key={currentPost.thing_id}
-                    className="absolute inset-0 cursor-grab active:cursor-grabbing"
-                    layoutId={`card-${currentPost.thing_id}`}
-                    style={{
-                      x,
-                      y,
-                      rotate,
-                      zIndex: VISIBLE_CARDS + 1,
-                    }}
-                    drag={!isAnimating}
-                    dragSnapToOrigin
-                    dragElastic={0.2}
-                    dragConstraints={{
-                      top: -50,
-                      bottom: 50,
-                      left: -1000,
-                      right: 1000,
-                    }}
-                    onDragEnd={handleDragEnd}
-                    whileDrag={{
-                      cursor: "grabbing",
-                      scale: 1.05,
-                    }}
-                    initial={false} // No initial animation for active card
-                    animate={{
-                      scale: 1,
-                      opacity: 1,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 20,
-                    }}
-                  >
-                    <ProspectCard post={currentPost} className="h-full" />
-
-                    {/* Like Indicator */}
-                    <motion.div
-                      className="absolute top-8 left-8 pointer-events-none"
-                      style={{ opacity: isAnimating ? 0 : likeOpacity }}
-                    >
-                      <div
-                        className="p-4 rounded-full"
-                        style={{
-                          background: "rgba(34, 197, 94, 0.2)",
-                          border: "3px solid #22c55e",
-                          boxShadow: "0 0 20px rgba(34, 197, 94, 0.5)",
-                        }}
-                      >
-                        <svg
-                          className="w-12 h-12 text-emerald-400"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    </motion.div>
-
-                    {/* Ignore Indicator */}
-                    <motion.div
-                      className="absolute top-8 right-8 pointer-events-none"
-                      style={{ opacity: isAnimating ? 0 : nopeOpacity }}
-                    >
-                      <div
-                        className="p-4 rounded-full"
-                        style={{
-                          background: "rgba(239, 68, 68, 0.2)",
-                          border: "3px solid #ef4444",
-                          boxShadow: "0 0 20px rgba(239, 68, 68, 0.5)",
-                        }}
-                      >
-                        <svg
-                          className="w-12 h-12 text-red-400"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={3}
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
-
-                {/* Exit animation card */}
-                {exitingPost && exitX !== null && (
-                  <motion.div
-                    key={`exit-${exitingPost.thing_id}`}
-                    className="absolute inset-0"
-                    initial={{
-                      x: exitStartPosition.x,
-                      y: exitStartPosition.y,
-                      rotate: (exitStartPosition.x / 300) * MAX_ROTATION,
-                      scale: 1,
-                      opacity: 1,
-                    }}
-                    animate={{
-                      x:
-                        exitX === "right"
-                          ? window.innerWidth * 1.5
-                          : -window.innerWidth * 1.5,
-                      y: -200,
-                      opacity: 0,
-                      scale: 0.5,
-                      rotate: exitX === "right" ? 45 : -45,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 0.4,
-                    }}
-                    onAnimationStart={() => {
-                      console.log("[Exit] animation start", {
-                        exitingPostId: exitingPost.thing_id,
-                        exitX,
-                        exitStartPosition,
-                        currentIndex,
-                      });
-                    }}
-                    onAnimationComplete={() => {
-                      console.log("[Exit] animation complete", {
-                        exitingPostId: exitingPost.thing_id,
-                        exitX,
-                        currentIndex,
-                        hasNext,
-                      });
-                      // Reset motion values after exit animation completes
-                      x.set(0);
-                      y.set(0);
-
-                      // Clean up and advance
-                      if (hasNext) {
-                        // Advance index synchronously before clearing exit to avoid flicker
-                        flushSync(() => {
-                          setCurrentIndex((prev) => prev + 1);
-                        });
-                        console.log("[Exit] index advanced", {
-                          newIndex: currentIndex + 1,
-                        });
-                        setExitX(null);
-                        setExitingPost(null);
-                        console.log("[Exit] exitX cleared");
-                        setIsAnimating(false);
-                      } else {
-                        onStackCompleted?.();
-                        onClose();
-                      }
-                    }}
-                    style={{
-                      zIndex: VISIBLE_CARDS + 2,
-                    }}
-                  >
-                    <ProspectCard post={exitingPost} className="h-full" />
-
-                    {/* Exit indicators - show on exiting card */}
-                    {exitX === "right" && (
-                      <div className="absolute top-8 left-8 pointer-events-none">
-                        <div
-                          className="p-4 rounded-full"
-                          style={{
-                            background: "rgba(34, 197, 94, 0.2)",
-                            border: "3px solid #22c55e",
-                            boxShadow: "0 0 20px rgba(34, 197, 94, 0.5)",
-                          }}
-                        >
-                          <svg
-                            className="w-12 h-12 text-emerald-400"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-
-                    {exitX === "left" && (
-                      <div className="absolute top-8 right-8 pointer-events-none">
-                        <div
-                          className="p-4 rounded-full"
-                          style={{
-                            background: "rgba(239, 68, 68, 0.2)",
-                            border: "3px solid #ef4444",
-                            boxShadow: "0 0 20px rgba(239, 68, 68, 0.5)",
-                          }}
-                        >
-                          <svg
-                            className="w-12 h-12 text-red-400"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={3}
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
+              <svg
+                className="w-6 h-6 text-white/60 hover:text-white"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            
+            {/* Progress Indicator */}
+            <ProgressIndicator
+              current={state.currentIndex}
+              total={posts.length}
+            />
+            
+            {/* Card Stack */}
+            {state.currentIndex < posts.length && (
+              <CardStack
+                posts={posts}
+                currentIndex={state.currentIndex}
+                isAnimating={state.isAnimating}
+                swipeDirection={state.swipeDirection}
+                onDrag={handleDrag}
+                onDragEnd={handleDragEnd}
+                onAnimationComplete={handleAnimationComplete}
+              />
+            )}
+            
             {/* Action Buttons */}
-            <div className="mt-6 flex justify-center gap-6">
-              <LiquidButton
-                variant="danger"
-                size="icon"
-                onClick={() => {
-                  console.log("Ignore button clicked");
-                  handleSwipe("left");
-                }}
-                className="p-4 rounded-full"
-                shimmer
-                disabled={isAnimating}
-              >
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </LiquidButton>
-
-              <LiquidButton
-                variant="primary"
-                size="icon"
-                onClick={() => {
-                  console.log("Like button clicked");
-                  handleSwipe("right");
-                }}
-                className="p-4 rounded-full"
-                shimmer
-                disabled={isAnimating}
-              >
-                <svg
-                  className="w-8 h-8"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </LiquidButton>
+            {showActionButtons && (
+              <ActionButtons
+                onSwipe={executeSwipe}
+                disabled={state.isAnimating}
+              />
+            )}
+            
+            {/* Instructions */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-white/40">
+                Swipe right to save • Swipe left to skip
+              </p>
             </div>
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
-
-  // If standalone, render directly. Otherwise, use portal for modal behavior
-  return standalone ? content : createPortal(content, document.body);
 }

@@ -175,13 +175,22 @@ export function useProspectPostAction() {
       }
     },
     onSettled: (data, error, variables) => {
-      // Always refetch after error or success to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["brand", variables.brandId] });
-      queryClient.invalidateQueries({ queryKey: ["brand"] });
-      queryClient.invalidateQueries({ queryKey: ["prospects"] });
-      queryClient.invalidateQueries({
-        queryKey: ["prospect-profiles", variables.brandId],
-      });
+      // Only invalidate on error to ensure consistency
+      // On success, the optimistic update already handled the UI change
+      if (error) {
+        // Rollback happened, need to refetch to get correct state
+        queryClient.invalidateQueries({ queryKey: ["brand", variables.brandId] });
+        queryClient.invalidateQueries({
+          queryKey: ["prospect-profiles", variables.brandId],
+        });
+      } else {
+        // Success - optimistic update worked, only invalidate specific prospect if needed
+        // This is much gentler and won't interrupt animations
+        queryClient.invalidateQueries({ 
+          queryKey: ["prospect-profiles", variables.brandId, variables.prospectId],
+          exact: true 
+        });
+      }
     },
   });
 }
