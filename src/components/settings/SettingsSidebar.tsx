@@ -103,7 +103,7 @@ export default function SettingsSidebar() {
       <div className="p-6">
         <div className="mb-6 pb-6 border-b border-white/10">
           <button
-            onClick={() => router.push("/dashboard/engage")}
+            onClick={() => router.push("/dashboard/leads")}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all font-body text-sm"
           >
             <svg

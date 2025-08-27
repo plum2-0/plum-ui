@@ -7,8 +7,8 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to the engage page by default
-    router.replace("/dashboard/engage");
+    // Redirect to the leads page by default
+    router.replace("/dashboard/leads");
   }, [router]);
 
   return null;

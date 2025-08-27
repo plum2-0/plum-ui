@@ -81,7 +81,7 @@ export async function GET() {
 
     // Determine current step and redirect location
     const currentStep: 1 | 2 | 3 | 4 = 4;
-    const redirectTo: string = `/dashboard/engage`;
+    const redirectTo: string = `/dashboard/leads`;
     const state: OnboardingState = {
       currentStep,
       hasProject: true, // Keep this name for backward compatibility

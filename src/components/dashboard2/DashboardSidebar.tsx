@@ -250,36 +250,36 @@ export default function DashboardSidebar({
             </span>
           </button> */}
 
-          {/* Engaged Section - Right underneath Select */}
+          {/* Leads Section */}
           <button
-            onClick={() => router.push("/dashboard/engage")}
+            onClick={() => router.push("/dashboard/leads")}
             className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 transform-gpu ${
-              pathname === "/dashboard/engage"
+              pathname === "/dashboard/leads"
                 ? "text-white"
                 : "text-white/70 hover:text-white"
             }`}
             style={{
               background:
-                pathname === "/dashboard/engage"
+                pathname === "/dashboard/leads"
                   ? "linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(34, 197, 94, 0.12) 50%, rgba(168, 85, 247, 0.08) 100%)"
                   : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
               backdropFilter: "blur(20px) saturate(1.2)",
               WebkitBackdropFilter: "blur(20px) saturate(1.2)",
               border:
-                pathname === "/dashboard/engage"
+                pathname === "/dashboard/leads"
                   ? "1px solid rgba(168, 85, 247, 0.2)"
                   : "1px solid rgba(255, 255, 255, 0.12)",
               boxShadow:
-                pathname === "/dashboard/engage"
+                pathname === "/dashboard/leads"
                   ? "0 8px 32px rgba(168, 85, 247, 0.15), 0 4px 16px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.1)"
                   : "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
               transform:
-                pathname === "/dashboard/engage"
+                pathname === "/dashboard/leads"
                   ? "translateY(-1px)"
                   : "translateY(0)",
             }}
             onMouseEnter={(e) => {
-              if (pathname !== "/dashboard/engage") {
+              if (pathname !== "/dashboard/leads") {
                 e.currentTarget.style.background =
                   "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
                 e.currentTarget.style.transform = "translateY(-1px)";
@@ -288,7 +288,7 @@ export default function DashboardSidebar({
               }
             }}
             onMouseLeave={(e) => {
-              if (pathname !== "/dashboard/engage") {
+              if (pathname !== "/dashboard/leads") {
                 e.currentTarget.style.background =
                   "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
                 e.currentTarget.style.transform = "translateY(0)";
@@ -302,7 +302,7 @@ export default function DashboardSidebar({
                 "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
             }}
             onMouseUp={(e) => {
-              if (pathname !== "/dashboard/engage") {
+              if (pathname !== "/dashboard/leads") {
                 e.currentTarget.style.transform = "translateY(-1px)";
                 e.currentTarget.style.boxShadow =
                   "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
@@ -325,7 +325,86 @@ export default function DashboardSidebar({
               />
             </svg>
             <span className="flex-1 text-left font-heading font-bold tracking-wide">
-              Engage
+              Leads
+            </span>
+          </button>
+
+          {/* Agents Section */}
+          <button
+            onClick={() => router.push("/dashboard/agent")}
+            className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 transform-gpu ${
+              pathname === "/dashboard/agent"
+                ? "text-white"
+                : "text-white/70 hover:text-white"
+            }`}
+            style={{
+              background:
+                pathname === "/dashboard/agent"
+                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(34, 197, 94, 0.12) 50%, rgba(168, 85, 247, 0.08) 100%)"
+                  : "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+              backdropFilter: "blur(20px) saturate(1.2)",
+              WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+              border:
+                pathname === "/dashboard/agent"
+                  ? "1px solid rgba(168, 85, 247, 0.2)"
+                  : "1px solid rgba(255, 255, 255, 0.12)",
+              boxShadow:
+                pathname === "/dashboard/agent"
+                  ? "0 8px 32px rgba(168, 85, 247, 0.15), 0 4px 16px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.1)"
+                  : "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
+              transform:
+                pathname === "/dashboard/agent"
+                  ? "translateY(-1px)"
+                  : "translateY(0)",
+            }}
+            onMouseEnter={(e) => {
+              if (pathname !== "/dashboard/agent") {
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (pathname !== "/dashboard/agent") {
+                e.currentTarget.style.background =
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.05)";
+              }
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = "translateY(1px)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)";
+            }}
+            onMouseUp={(e) => {
+              if (pathname !== "/dashboard/agent") {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08)";
+              } else {
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }
+            }}
+          >
+            <svg
+              className="w-5 h-5 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            <span className="flex-1 text-left font-heading font-bold tracking-wide">
+              Agents
             </span>
           </button>
 

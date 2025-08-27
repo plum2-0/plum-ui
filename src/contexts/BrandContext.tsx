@@ -30,6 +30,7 @@ interface BrandContextType {
   totalPostsScraped: number;
   totalKeywordsCounts: number;
   postsToReview: RedditPostUI[];
+  allActionedPosts: RedditPostUI[];
   brandAggregates: {
     uniquePendingAuthors: number;
     uniqueActionedAuthors: number;
@@ -165,6 +166,11 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     return prospectsDisplay.flatMap((prospect) => prospect.pendingPosts || []);
   }, [data?.brand]);
 
+  const allActionedPosts = useMemo<RedditPostUI[]>(() => {
+    if (!prospectsDisplay || prospectsDisplay.length === 0) return [];
+    return prospectsDisplay.flatMap((prospect) => prospect.actionedPosts || []);
+  }, [prospectsDisplay]);
+
   const brandAggregates = useMemo(() => {
     const pendingAuthors = new Set<string>();
     const actionedAuthors = new Set<string>();
@@ -198,6 +204,7 @@ export function BrandProvider({ children }: { children: ReactNode }) {
         totalPostsScraped,
         totalKeywordsCounts,
         postsToReview,
+        allActionedPosts,
         brandAggregates,
         isLoading,
         error,

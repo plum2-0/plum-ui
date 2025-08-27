@@ -270,7 +270,7 @@ function CardStack({
     <div
       className="relative"
       style={{
-        height: "600px",
+        height: "min(600px, 80vh)",
         perspective: "1000px",
       }}
     >

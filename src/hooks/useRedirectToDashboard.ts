@@ -31,7 +31,7 @@ export function useRedirectToDashboard(): void {
           const currentPath = window.location.pathname;
           if (!currentPath.startsWith("/dashboard") && !isCancelled) {
             hasRedirectedRef.current = true;
-            router.push("/dashboard/engage");
+            router.push("/dashboard/leads");
           }
         }
       } catch {

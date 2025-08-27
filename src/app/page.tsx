@@ -11,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
-    if (session?.user) redirect("/dashboard/engage");
+    if (session?.user) redirect("/dashboard/leads");
   }, [session, status]);
 
   if (status === "loading") {
@@ -269,7 +269,7 @@ export default function Home() {
               {
                 num: 3,
                 emoji: "📈",
-                title: "Engage",
+                title: "Leads",
                 blurb: "Publish approved posts across your social channels and drive community growth.",
                 gradient: "from-orange-500 to-red-500",
                 glowColor: "rgba(249, 115, 22, 0.5)"

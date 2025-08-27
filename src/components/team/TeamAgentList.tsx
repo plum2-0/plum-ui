@@ -15,10 +15,13 @@ import GlassPanel from "@/components/ui/GlassPanel";
 
 interface TeamAgentListProps {
   onAgentSelect?: (agentId: string) => void;
+  selectedAgentId?: string | null;
 }
 
-export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
-  const router = useRouter();
+export default function TeamAgentList({
+  onAgentSelect,
+  selectedAgentId,
+}: TeamAgentListProps) {
   const { data: brandData } = useBrandQuery();
   const { data, isLoading, error } = useAgents();
 
@@ -34,18 +37,27 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
   const [deletingAgentId, setDeletingAgentId] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const agents = data?.agents || [];
+  const agents = data || [];
+
+  // Auto-select first agent if none selected
+  useEffect(() => {
+    if (agents.length > 0 && !selectedAgentId && onAgentSelect) {
+      console.log("🎯 Auto-selecting first agent:", agents[0].id);
+      onAgentSelect(agents[0].id);
+    }
+  }, [agents, selectedAgentId, onAgentSelect]);
 
   const handleAgentClick = (agentId: string, event: React.MouseEvent) => {
     // Don't navigate if clicking the delete button
     if ((event.target as HTMLElement).closest(".delete-button")) {
       return;
     }
+    // Always use onAgentSelect if provided
     if (onAgentSelect) {
+      console.log("🎯 Selecting agent:", agentId);
       onAgentSelect(agentId);
-    } else {
-      router.push(`/dashboard/team/${agentId}`);
     }
+    // No navigation needed - this component is used within the AgentPage
   };
 
   const handleDeleteAgent = async (
@@ -181,138 +193,147 @@ export default function TeamAgentList({ onAgentSelect }: TeamAgentListProps) {
       {/* Agent Cards Container */}
       <div
         ref={scrollContainerRef}
-        className="flex items-center gap-4 px-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+        className="flex items-center gap-4 py-2 px-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           // Hide scrollbar in WebKit via CSS class if needed
         }}
       >
-        {agents.map((agent) => (
-          <div
-            key={agent.id}
-            onClick={(e) => handleAgentClick(agent.id, e)}
-            onMouseEnter={() => setHoveredAgent(agent.id)}
-            onMouseLeave={() => setHoveredAgent(null)}
-            className="shrink-0 snap-start w-72 h-28 rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-105 relative overflow-hidden"
-            style={{
-              background:
-                hoveredAgent === agent.id
+        {agents.map((agent) => {
+          const isSelected = selectedAgentId === agent.id;
+          const isHovered = hoveredAgent === agent.id;
+
+          return (
+            <div
+              key={agent.id}
+              onClick={(e) => handleAgentClick(agent.id, e)}
+              onMouseEnter={() => setHoveredAgent(agent.id)}
+              onMouseLeave={() => setHoveredAgent(null)}
+              className="shrink-0 snap-start w-72 h-28 rounded-2xl p-4 cursor-pointer transition-all duration-300 hover:scale-105 relative overflow-hidden"
+              style={{
+                background: isSelected
+                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(34, 197, 94, 0.2))"
+                  : isHovered
                   ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(34, 197, 94, 0.15))"
                   : "rgba(255, 255, 255, 0.08)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              boxShadow:
-                hoveredAgent === agent.id
+                backdropFilter: "blur(20px)",
+                border: isSelected
+                  ? "2px solid rgba(168, 85, 247, 0.5)"
+                  : "1px solid rgba(255, 255, 255, 0.2)",
+                boxShadow: isSelected
+                  ? "0 12px 40px rgba(168, 85, 247, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+                  : isHovered
                   ? "0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
                   : "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-              transform:
-                hoveredAgent === agent.id
-                  ? "translateY(-4px)"
-                  : "translateY(0)",
-            }}
-          >
-            {/* Status and Delete Button */}
-            <div className="absolute top-2 right-2 flex items-center gap-2">
-              {agent.isActive && (
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              )}
-              {hoveredAgent === agent.id && (
-                <GlassPanel
-                  as="button"
-                  className="delete-button p-1 rounded-full transition-all duration-200 hover:scale-110"
-                  onClick={(e: any) =>
-                    handleDeleteAgent(agent.id, agent.name, e)
-                  }
-                  disabled={deletingAgentId === agent.id}
-                  variant="light"
-                >
-                  {deletingAgentId === agent.id ? (
-                    <svg
-                      className="w-4 h-4 text-white animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-4 h-4 text-red-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  )}
-                </GlassPanel>
-              )}
-            </div>
-
-            <div className="flex items-start gap-3">
-              {/* Avatar */}
-              {agent.avatar ? (
-                <Image
-                  src={agent.avatar}
-                  alt={agent.name}
-                  width={48}
-                  height={48}
-                  className="rounded-full shrink-0"
-                  style={{
-                    border: "2px solid rgba(255, 255, 255, 0.2)",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-                  }}
-                />
-              ) : (
-                <div
-                  className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-lg"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
-                  }}
-                >
-                  {agent.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-white font-heading font-semibold text-base truncate">
-                  {agent.name}
-                </h3>
-                <p className="text-white/60 text-xs font-body mt-1 line-clamp-2">
-                  {agent.persona.substring(0, 60)}...
-                </p>
-
-                {/* Quick Stats */}
+                transform:
+                  isSelected || isHovered
+                    ? "translateY(-4px)"
+                    : "translateY(0)",
+              }}
+            >
+              {/* Status and Delete Button */}
+              <div className="absolute top-2 right-2 flex items-center gap-2">
+                {agent.isActive && (
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                )}
                 {hoveredAgent === agent.id && (
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="text-white/50 text-xs font-body">
-                      Active conversations: 0
-                    </span>
-                  </div>
+                  <GlassPanel
+                    as="button"
+                    className="delete-button p-1 rounded-full transition-all duration-200 hover:scale-110"
+                    onClick={(e: any) =>
+                      handleDeleteAgent(agent.id, agent.name, e)
+                    }
+                    disabled={deletingAgentId === agent.id}
+                    variant="light"
+                  >
+                    {deletingAgentId === agent.id ? (
+                      <svg
+                        className="w-4 h-4 text-white animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-4 h-4 text-red-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    )}
+                  </GlassPanel>
                 )}
               </div>
+
+              <div className="flex items-start gap-3">
+                {/* Avatar */}
+                {agent.avatar ? (
+                  <Image
+                    src={agent.avatar}
+                    alt={agent.name}
+                    width={48}
+                    height={48}
+                    className="rounded-full shrink-0"
+                    style={{
+                      border: "2px solid rgba(255, 255, 255, 0.2)",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-lg"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(34, 197, 94, 0.8))",
+                    }}
+                  >
+                    {agent.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-heading font-semibold text-base truncate">
+                    {agent.name}
+                  </h3>
+                  <p className="text-white/60 text-xs font-body mt-1 line-clamp-2">
+                    {agent.persona.substring(0, 60)}...
+                  </p>
+
+                  {/* Quick Stats */}
+                  {hoveredAgent === agent.id && (
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-white/50 text-xs font-body">
+                        Active conversations: 0
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Action Buttons */}
         <div className="flex gap-3">

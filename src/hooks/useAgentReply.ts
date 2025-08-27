@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useAgents } from "@/hooks/api/useAgentQueries";
 import type { Agent } from "@/types/agent";
 import type { RedditPost } from "@/types/brand";
@@ -18,10 +18,27 @@ const API_BASE =
 export function useAgentReply(brandId: string) {
   const [isGenerating, setIsGenerating] = useState(false);
   const { data, isLoading, error } = useAgents(brandId);
+  const [brandData, setBrandData] = useState<any>(null);
 
-  const agents: Agent[] = useMemo(() => data?.agents ?? [], [data?.agents]);
+  const agents: Agent[] = useMemo(() => data ?? [], [data]);
 
-  // No mapping needed; UI RedditPost matches backend RedditPost
+  // Fetch brand data once when component mounts
+  useEffect(() => {
+    async function fetchBrand() {
+      try {
+        const response = await fetch(`${API_BASE}/api/brand/${brandId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBrandData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch brand data:", error);
+      }
+    }
+    if (brandId) {
+      fetchBrand();
+    }
+  }, [brandId]);
 
   const generateWithAgent = useCallback(
     async (
@@ -31,20 +48,25 @@ export function useAgentReply(brandId: string) {
     ): Promise<GenerateResult> => {
       setIsGenerating(true);
       try {
-        // Use explicit agent persona/goal fields; keep prompt as tone guidance
         const agent = agents.find((a) => a.id === agentId);
-        const prompt = "Generate a helpful, authentic reply";
+        
+        if (!brandData) {
+          throw new Error("Brand data not loaded");
+        }
 
+        // Build PlumReplyGenerationRequest
         const payload = {
-          post_content: post.content || "",
-          post_title: post.title,
-          post_subreddit: post.subreddit,
-          prompt: prompt,
-          agent_name: agent?.name,
-          agent_persona: agent?.persona,
-          agent_goal: agent?.goal,
-          brand_id: brandId,
-          problem_id: options?.problemId,
+          brand: brandData,
+          agent: agent ? {
+            id: agent.id,
+            name: agent.name,
+            persona: agent.persona,
+            goal: agent.goal,
+            avatar_url: agent.avatar,
+            created_at: agent.createdAt.toISOString(),
+            actions: []
+          } : null,
+          conversation_thread: [post] // Single post as conversation thread
         };
 
         const resp = await fetch(`${API_BASE}/api/agents/generate/reply`, {
@@ -67,7 +89,7 @@ export function useAgentReply(brandId: string) {
         setIsGenerating(false);
       }
     },
-    [agents, brandId]
+    [agents, brandData]
   );
 
   return {

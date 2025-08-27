@@ -7,6 +7,8 @@ import {
   CreateAgentRequest,
   UpdateAgentRequest,
   RedditThreadNode,
+  AgentCategory,
+  AgentStatus,
 } from "@/types/agent";
 import { getBrandIdFromCookie } from "@/lib/cookies";
 
@@ -29,51 +31,82 @@ export const AGENT_QUERY_KEYS = {
 
 // Queries
 export const useAgents = (brandId?: string) =>
-  useQuery<AgentListResponse>({
+  useQuery<Agent[]>({
     queryKey: brandId
       ? [...AGENT_QUERY_KEYS.lists(), brandId]
       : AGENT_QUERY_KEYS.lists(),
     queryFn: async () => {
-      const response = await fetch("/api/agents");
+      // Get brandId from cookie if not provided
+      const effectiveBrandId = brandId || getBrandIdFromCookie();
+      if (!effectiveBrandId) {
+        console.log("ℹ️ No brand ID available, returning empty agents list");
+        return [];
+      }
+
+      const response = await fetch(
+        `${API_BASE}/api/agents/brand/${effectiveBrandId}`
+      );
       if (!response.ok) {
         if (response.status === 404) {
           // User needs onboarding
           console.log("ℹ️ User needs onboarding, returning empty agents list");
-          return { agents: [], totalCount: 0 };
+          return [];
         }
         console.error("❌ Failed to fetch agents:", response.statusText);
         throw new Error("Failed to fetch agents");
       }
+      
+      // Response is a list of PlumAgent objects
       const data = await response.json();
-      return data;
+      
+      // Map PlumAgent (snake_case) to Agent (camelCase)
+      const agents: Agent[] = data.map((agent: any) => ({
+        id: agent.id,
+        name: agent.name,
+        persona: agent.persona,
+        goal: agent.goal,
+        avatar: agent.avatar_url,
+        createdAt: new Date(agent.created_at),
+        updatedAt: new Date(agent.created_at), // Using created_at since PlumAgent doesn't have updated_at
+        isActive: true, // PlumAgent doesn't have status field
+        templateId: undefined, // PlumAgent doesn't have template_id
+      }));
+      
+      return agents;
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
-export const useAgent = (agentId: string) =>
+export const useAgent = (agentId: string, options?: { enabled?: boolean }) =>
   useQuery<AgentDetails>({
     queryKey: AGENT_QUERY_KEYS.detail(agentId),
+    enabled: options?.enabled ?? !!agentId,
     queryFn: async () => {
+      if (!agentId) {
+        throw new Error("Agent ID is required");
+      }
+      
+      // Call FastAPI endpoint directly
       const response = await fetch(`${API_BASE}/api/agents/${agentId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch agent details");
       }
       const data = await response.json();
 
-      // Map backend (snake_case) to UI (camelCase) and normalize Reddit convos
+      // Map PlumAgent (snake_case) to AgentDetails (camelCase)
       const mapped: AgentDetails = {
         id: data.id,
-        brandId: data.brand_id,
+        brandId: getBrandIdFromCookie() || "", // PlumAgent doesn't have brand_id field
         name: data.name,
         persona: data.persona,
         goal: data.goal,
-        isActive: data.status ? data.status === "active" : undefined,
+        isActive: true, // PlumAgent doesn't have status field
         avatarUrl: data.avatar_url ?? undefined,
-        templateId: data.template_id ?? undefined,
-        category: data.category,
-        status: data.status,
-        redditUsername: data.reddit_username ?? undefined,
+        templateId: undefined, // PlumAgent doesn't have template_id
+        category: AgentCategory.CUSTOM, // Default category since PlumAgent doesn't have this
+        status: AgentStatus.ACTIVE, // Default status since PlumAgent doesn't have this
+        redditUsername: undefined, // PlumAgent doesn't have reddit_username
         redditAgentConvos: Array.isArray(data.reddit_agent_convos)
           ? data.reddit_agent_convos.map((c: any) => {
               const parentPost = c.parent_post || {};
@@ -143,9 +176,9 @@ export const useAgent = (agentId: string) =>
               };
             })
           : [],
-        metrics: data.metrics ?? undefined,
+        metrics: undefined, // PlumAgent doesn't have metrics
         createdAt: new Date(data.created_at ?? Date.now()) as unknown as Date,
-        updatedAt: new Date(data.updated_at ?? Date.now()) as unknown as Date,
+        updatedAt: new Date(data.created_at ?? Date.now()) as unknown as Date, // Using created_at since no updated_at
       };
 
       return mapped;
