@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import TagBadge from "./TagBadge";
+import QuickAddKeyword from "./QuickAddKeyword";
+import KeywordSuggest from "./KeywordSuggest";
 import { useBrand } from "@/contexts/BrandContext";
 import {
   useDeleteProspectKeywords,
@@ -394,7 +397,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             Top Keywords
                           </h4>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 items-center">
                           {prospect.keywordCounts
                             .slice(0, 5)
                             .map(
@@ -407,68 +410,35 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                   deletingKeywords.has(deletionKey);
 
                                 return (
-                                  <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.05 * index }}
-                                    className="group relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-body backdrop-blur-md"
-                                    style={{
-                                      background:
-                                        "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.1))",
-                                      border: "1px solid transparent",
-                                      backgroundImage: `
-                                        linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(147, 51, 234, 0.1)),
-                                        linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.3))
-                                      `,
-                                      backgroundOrigin: "border-box",
-                                      backgroundClip: "padding-box, border-box",
-                                      boxShadow:
-                                        "0 2px 8px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-                                      opacity: isDeleting ? 0.5 : 1,
-                                    }}
-                                    whileHover={{
-                                      scale: 1.05,
-                                      boxShadow:
-                                        "0 4px 12px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                                    }}
-                                  >
-                                    <span className="text-purple-300 font-medium">
-                                      {item.keyword}
-                                    </span>
-                                    <span className="text-white/40">
-                                      ({item.count})
-                                    </span>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteKeyword(
-                                          prospect.id,
-                                          item.keyword
-                                        );
-                                      }}
-                                      disabled={isDeleting}
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1 hover:text-red-400 disabled:cursor-not-allowed"
-                                      title={`Remove "${item.keyword}"`}
-                                    >
-                                      <svg
-                                        className="w-3 h-3"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M6 18L18 6M6 6l12 12"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </motion.div>
+                                  <TagBadge
+                                    key={item.keyword}
+                                    label={item.keyword}
+                                    count={item.count}
+                                    variant="keyword"
+                                    showDelete={true}
+                                    disabled={isDeleting}
+                                    animationDelay={0.05 * index}
+                                    onDelete={() =>
+                                      handleDeleteKeyword(
+                                        prospect.id,
+                                        item.keyword
+                                      )
+                                    }
+                                  />
                                 );
                               }
                             )}
+                          <QuickAddKeyword
+                            prospectId={prospect.id}
+                            problemToSolve={prospect.problem_to_solve}
+                            existingKeywords={prospect.keywordCounts.map((item: { keyword: string }) => item.keyword)}
+                          />
+                          <KeywordSuggest
+                            prospectId={prospect.id}
+                            problemToSolve={prospect.problem_to_solve}
+                            existingKeywords={prospect.keywordCounts.map((item: { keyword: string }) => item.keyword)}
+                            insights={prospect.insights}
+                          />
                         </div>
                       </motion.div>
                     )}
@@ -518,38 +488,13 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                 item: { subreddit: string; count: number },
                                 index: number
                               ) => (
-                                <motion.div
-                                  key={index}
-                                  initial={{ opacity: 0, scale: 0.9 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ delay: 0.05 * index }}
-                                  className="px-4 py-2 rounded-full text-sm font-body backdrop-blur-md"
-                                  style={{
-                                    background:
-                                      "linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08))",
-                                    border: "1px solid transparent",
-                                    backgroundImage: `
-                                      linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08)),
-                                      linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2))
-                                    `,
-                                    backgroundOrigin: "border-box",
-                                    backgroundClip: "padding-box, border-box",
-                                    boxShadow:
-                                      "0 2px 8px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-                                  }}
-                                  whileHover={{
-                                    scale: 1.05,
-                                    boxShadow:
-                                      "0 4px 12px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                                  }}
-                                >
-                                  <span className="text-indigo-300 font-medium">
-                                    r/{item.subreddit}
-                                  </span>
-                                  <span className="text-white/40 ml-1.5">
-                                    ({item.count})
-                                  </span>
-                                </motion.div>
+                                <TagBadge
+                                  key={item.subreddit}
+                                  label={`r/${item.subreddit}`}
+                                  count={item.count}
+                                  variant="subreddit"
+                                  animationDelay={0.05 * index}
+                                />
                               )
                             )}
                         </div>

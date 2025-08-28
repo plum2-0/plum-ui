@@ -11,21 +11,14 @@ import {
 import TeamAgentList from "@/components/team/TeamAgentList";
 import AgentTester from "@/components/agent-testing/AgentTester";
 import GlassPanel from "@/components/ui/GlassPanel";
+import { Agent } from "@/types/agent";
 
 export default function AgentPage() {
   const { status } = useSession();
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [agent, setSelectedAgent] = useState<Agent | null>(null);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAgentListExpanded, setIsAgentListExpanded] = useState(false);
-
-  // Fetch selected agent data - always call the hook, use enabled option to control execution
-  const { data: agent, isLoading: agentIsLoading } = useAgent(
-    selectedAgentId || "",
-    {
-      enabled: !!selectedAgentId,
-    }
-  );
 
   // Debug logging for agent data
   const deleteAgent = useDeleteAgent();
@@ -36,7 +29,7 @@ export default function AgentPage() {
   const [localGoal, setLocalGoal] = useState("");
 
   const handleDelete = async () => {
-    if (!selectedAgentId) return;
+    if (!agent) return;
     if (
       !window.confirm(
         "Are you sure you want to delete this agent? This action cannot be undone."
@@ -47,8 +40,8 @@ export default function AgentPage() {
 
     setIsDeleting(true);
     try {
-      await deleteAgent.mutateAsync(selectedAgentId);
-      setSelectedAgentId(null);
+      await deleteAgent.mutateAsync(agent.id);
+      setSelectedAgent(null);
     } catch (error) {
       console.error("Failed to delete agent:", error);
       alert("Failed to delete agent. Please try again.");
@@ -122,14 +115,14 @@ export default function AgentPage() {
             }}
           >
             <TeamAgentList
-              onAgentSelect={setSelectedAgentId}
-              selectedAgentId={selectedAgentId}
+              onAgentSelect={setSelectedAgent}
+              selectedAgentId={agent?.id}
             />
           </div>
         </div>
 
         {/* Agent Detail View */}
-        {selectedAgentId && (agentIsLoading || !agent) ? (
+        {agent?.id && !agent ? (
           <div className="space-y-6">
             {/* Agent Loading Skeleton */}
             <div
@@ -212,7 +205,7 @@ export default function AgentPage() {
               ))}
             </div>
           </div>
-        ) : selectedAgentId && agent ? (
+        ) : agent?.id && agent ? (
           <div className="space-y-6">
             {/* Agent Header - Fluid Design */}
             <div className="relative overflow-hidden rounded-3xl p-8">
@@ -267,42 +260,7 @@ export default function AgentPage() {
                     <h2 className="text-3xl font-heading font-bold text-white mb-2 drop-shadow-lg">
                       {agent?.name ?? "Unknown Agent"}
                     </h2>
-                    <div className="flex items-center gap-4">
-                      <span
-                        className={`px-4 py-1.5 rounded-full text-sm font-body font-medium backdrop-blur-md ${
-                          agent?.isActive
-                            ? "bg-green-500/30 text-green-300 border border-green-400/30"
-                            : "bg-gray-500/30 text-gray-300 border border-gray-400/30"
-                        }`}
-                      >
-                        {agent?.isActive ? "● Active" : "○ Inactive"}
-                      </span>
-                      <span className="text-white/50 text-sm font-body">
-                        Created{" "}
-                        {agent?.createdAt
-                          ? new Date(agent.createdAt).toLocaleDateString()
-                          : "Unknown"}
-                      </span>
-                    </div>
                   </div>
-                </div>
-
-                {/* Actions with glass effect */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="group px-5 py-2.5 rounded-2xl font-body text-red-300 transition-all duration-300 hover:scale-105 disabled:opacity-50 backdrop-blur-md"
-                    style={{
-                      background: "rgba(239, 68, 68, 0.15)",
-                      border: "1px solid rgba(239, 68, 68, 0.3)",
-                      boxShadow: "0 4px 12px rgba(239, 68, 68, 0.1)",
-                    }}
-                  >
-                    <span className="group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -413,7 +371,7 @@ export default function AgentPage() {
             </div>
 
             {/* Testing Section - Moved to bottom */}
-            <AgentTester selectedAgentId={selectedAgentId} />
+            <AgentTester agent={agent} />
           </div>
         ) : null}
       </div>

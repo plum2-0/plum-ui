@@ -55,24 +55,8 @@ export const useAgents = (brandId?: string) =>
         console.error("❌ Failed to fetch agents:", response.statusText);
         throw new Error("Failed to fetch agents");
       }
-      
-      // Response is a list of PlumAgent objects
-      const data = await response.json();
-      
-      // Map PlumAgent (snake_case) to Agent (camelCase)
-      const agents: Agent[] = data.map((agent: any) => ({
-        id: agent.id,
-        name: agent.name,
-        persona: agent.persona,
-        goal: agent.goal,
-        avatar: agent.avatar_url,
-        createdAt: new Date(agent.created_at),
-        updatedAt: new Date(agent.created_at), // Using created_at since PlumAgent doesn't have updated_at
-        isActive: true, // PlumAgent doesn't have status field
-        templateId: undefined, // PlumAgent doesn't have template_id
-      }));
-      
-      return agents;
+
+      return await response.json();
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -86,7 +70,7 @@ export const useAgent = (agentId: string, options?: { enabled?: boolean }) =>
       if (!agentId) {
         throw new Error("Agent ID is required");
       }
-      
+
       // Call FastAPI endpoint directly
       const response = await fetch(`${API_BASE}/api/agents/${agentId}`);
       if (!response.ok) {
@@ -231,20 +215,7 @@ export const useCreateAgent = () => {
       }
       return await response.json();
     },
-    onSuccess: (newAgent) => {
-      // Optimistically update the agents list
-      queryClient.setQueryData<AgentListResponse>(
-        AGENT_QUERY_KEYS.lists(),
-        (old) => {
-          if (!old) return { agents: [newAgent], totalCount: 1 };
-          return {
-            ...old,
-            agents: [...old.agents, newAgent],
-            totalCount: old.totalCount + 1,
-          };
-        }
-      );
-
+    onSuccess: () => {
       // Invalidate to ensure fresh data
       queryClient.invalidateQueries({ queryKey: AGENT_QUERY_KEYS.lists() });
     },
@@ -278,30 +249,7 @@ export const useUpdateAgent = () => {
       }
       return await response.json();
     },
-    onSuccess: (updatedAgent, { agentId }) => {
-      // Update the specific agent in cache
-      queryClient.setQueryData<AgentDetails>(
-        AGENT_QUERY_KEYS.detail(agentId),
-        (old) => {
-          if (!old) return old;
-          return { ...old, agent: updatedAgent };
-        }
-      );
-
-      // Update in the list as well
-      queryClient.setQueryData<AgentListResponse>(
-        AGENT_QUERY_KEYS.lists(),
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            agents: old.agents.map((agent) =>
-              agent.id === agentId ? updatedAgent : agent
-            ),
-          };
-        }
-      );
-
+    onSuccess: (_, { agentId }) => {
       // Invalidate queries
       queryClient.invalidateQueries({
         queryKey: AGENT_QUERY_KEYS.detail(agentId),
@@ -326,23 +274,10 @@ export const useDeleteAgent = () => {
       }
     },
     onSuccess: (_, agentId) => {
-      // Remove from list cache
-      queryClient.setQueryData<AgentListResponse>(
-        AGENT_QUERY_KEYS.lists(),
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            agents: old.agents.filter((agent) => agent.id !== agentId),
-            totalCount: old.totalCount - 1,
-          };
-        }
-      );
-
       // Remove detail cache
       queryClient.removeQueries({ queryKey: AGENT_QUERY_KEYS.detail(agentId) });
 
-      // Invalidate list
+      // Invalidate all agent lists to ensure fresh data
       queryClient.invalidateQueries({ queryKey: AGENT_QUERY_KEYS.lists() });
     },
   });

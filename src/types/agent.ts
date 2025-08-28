@@ -9,6 +9,7 @@ export interface Agent {
   updatedAt: Date;
   isActive: boolean;
   templateId?: string;
+  actions: any[];
 }
 
 export interface AgentTemplate {

@@ -41,11 +41,7 @@ export function useAgentReply(brandId: string) {
   }, [brandId]);
 
   const generateWithAgent = useCallback(
-    async (
-      agentId: string,
-      post: RedditPost,
-      options?: { autoReply?: boolean; problemId?: string }
-    ): Promise<GenerateResult> => {
+    async (agentId: string, post: RedditPost): Promise<GenerateResult> => {
       setIsGenerating(true);
       try {
         const agent = agents.find((a) => a.id === agentId);
@@ -57,17 +53,7 @@ export function useAgentReply(brandId: string) {
         // Build PlumReplyGenerationRequest
         const payload = {
           brand: brandData,
-          agent: agent
-            ? {
-                id: agent.id,
-                name: agent.name,
-                persona: agent.persona,
-                goal: agent.goal,
-                avatar_url: agent.avatar,
-                created_at: agent.createdAt.toISOString(),
-                actions: [],
-              }
-            : null,
+          agent: agent,
           conversation_thread: [post], // Single post as conversation thread
         };
 

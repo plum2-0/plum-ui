@@ -14,7 +14,7 @@ import Image from "next/image";
 import GlassPanel from "@/components/ui/GlassPanel";
 
 interface TeamAgentListProps {
-  onAgentSelect?: (agentId: string) => void;
+  onAgentSelect?: (agent: Agent) => void;
   selectedAgentId?: string | null;
 }
 
@@ -25,10 +25,6 @@ export default function TeamAgentList({
   const { data: brandData } = useBrandQuery();
   const { data, isLoading, error } = useAgents();
 
-  // Debug logging
-  console.log("🔍 TeamAgentList - isLoading:", isLoading);
-  console.log("🔍 TeamAgentList - error:", error);
-  console.log("🔍 TeamAgentList - data:", data);
   const deleteAgent = useDeleteAgent();
   const generateAgent = useGenerateAgent();
   const [hoveredAgent, setHoveredAgent] = useState<string | null>(null);
@@ -42,8 +38,7 @@ export default function TeamAgentList({
   // Auto-select first agent if none selected
   useEffect(() => {
     if (agents.length > 0 && !selectedAgentId && onAgentSelect) {
-      console.log("🎯 Auto-selecting first agent:", agents[0].id);
-      onAgentSelect(agents[0].id);
+      onAgentSelect(agents[0]);
     }
   }, [agents, selectedAgentId, onAgentSelect]);
 
@@ -54,8 +49,10 @@ export default function TeamAgentList({
     }
     // Always use onAgentSelect if provided
     if (onAgentSelect) {
-      console.log("🎯 Selecting agent:", agentId);
-      onAgentSelect(agentId);
+      const agent = agents.find((agent) => agent.id === agentId);
+      if (agent) {
+        onAgentSelect(agent);
+      }
     }
     // No navigation needed - this component is used within the AgentPage
   };
