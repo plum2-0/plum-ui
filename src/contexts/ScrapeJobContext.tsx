@@ -6,7 +6,11 @@ export interface ScrapeJob {
   prospectId: string;
   brandName: string;
   problemToSolve: string;
-  keywords: string[];
+  keywords: string[]; // New keywords to add
+  existingProspectKeywords?: string[]; // Current keywords already on the prospect
+  setKeywords?: string[]; // Keywords with proven engagement (for display)
+  otherKeywords?: string[]; // Additional available keywords (for display)
+  keywordEngagementCounts?: Record<string, number>; // Engagement counts for display
   numPosts: number;
 }
 
@@ -19,6 +23,7 @@ interface ScrapeJobContextType {
   clearAll: () => void;
   openDrawer: (initialJobs?: ScrapeJob[]) => void;
   closeDrawer: () => void;
+  closeDrawerAndClear: () => void;
   getTotalPostsCount: () => number;
 }
 
@@ -74,6 +79,11 @@ export function ScrapeJobProvider({ children }: { children: ReactNode }) {
     setIsOpen(false);
   }, []);
 
+  const closeDrawerAndClear = useCallback(() => {
+    setIsOpen(false);
+    setScrapeJobs(new Map());
+  }, []);
+
   const getTotalPostsCount = useCallback(() => {
     let total = 0;
     scrapeJobs.forEach((job) => {
@@ -93,6 +103,7 @@ export function ScrapeJobProvider({ children }: { children: ReactNode }) {
         clearAll,
         openDrawer,
         closeDrawer,
+        closeDrawerAndClear,
         getTotalPostsCount,
       }}
     >

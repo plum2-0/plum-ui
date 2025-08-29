@@ -187,7 +187,7 @@ export default function ProspectCard({
                 rel="noopener noreferrer"
                 className="group"
               >
-                <h3 className="text-[#d7dadc] font-medium text-base leading-snug line-clamp-2 transition-colors duration-200 group-hover:text-[#8b5cf6] cursor-pointer">
+                <h3 className="text-white font-semibold text-lg leading-snug line-clamp-2 transition-colors duration-200 group-hover:text-[#8b5cf6] cursor-pointer">
                   {post.title}
                 </h3>
               </Link>

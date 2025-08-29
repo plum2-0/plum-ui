@@ -7,11 +7,13 @@ import { useScrapeJob } from "@/contexts/ScrapeJobContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
+import KeywordSuggest from "./KeywordSuggest";
 
 interface QuickAddKeywordProps {
   prospectId: string;
   problemToSolve: string;
   existingKeywords?: string[];
+  insights?: any;
   className?: string;
 }
 
@@ -19,6 +21,7 @@ export default function QuickAddKeyword({
   prospectId,
   problemToSolve,
   existingKeywords = [],
+  insights,
   className,
 }: QuickAddKeywordProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -27,7 +30,7 @@ export default function QuickAddKeyword({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const { addScrapeJob, openDrawer } = useScrapeJob();
+  const { scrapeJobs, addScrapeJob, updateScrapeJob, openDrawer } = useScrapeJob();
   const { brand } = useBrand();
   const { showToast } = useToast();
 
@@ -91,15 +94,26 @@ export default function QuickAddKeyword({
       return;
     }
 
-    const newScrapeJob = {
-      prospectId,
-      brandName: brand.name,
-      problemToSolve,
-      keywords: [trimmedKeyword],
-      numPosts: 50,
-    };
-
-    addScrapeJob(newScrapeJob);
+    // Check if there's an existing job for this prospect
+    const existingJob = scrapeJobs.get(prospectId);
+    
+    if (existingJob) {
+      // Add keyword to existing job
+      const updatedKeywords = [...existingJob.keywords, trimmedKeyword];
+      updateScrapeJob(prospectId, { keywords: updatedKeywords });
+    } else {
+      // Create a new job with all keywords
+      const newScrapeJob = {
+        prospectId,
+        brandName: brand.name,
+        problemToSolve,
+        keywords: [trimmedKeyword],
+        existingProspectKeywords: existingKeywords,
+        numPosts: 100,
+      };
+      addScrapeJob(newScrapeJob);
+    }
+    
     openDrawer();
     
     showToast({
@@ -196,14 +210,14 @@ export default function QuickAddKeyword({
             key="input"
             className="flex items-center gap-2"
             initial={{ width: 32, opacity: 0 }}
-            animate={{ width: 200, opacity: 1 }}
+            animate={{ width: "auto", opacity: 1 }}
             exit={{ width: 32, opacity: 0 }}
             transition={{ 
               width: { duration: 0.3, ease: "easeOut" },
               opacity: { duration: 0.2 }
             }}
           >
-            <div className="relative flex-1">
+            <div className="relative" style={{ width: "200px" }}>
               <GlassInput
                 ref={inputRef as any}
                 type="text"
@@ -284,6 +298,14 @@ export default function QuickAddKeyword({
                 </motion.button>
               </div>
             </div>
+            
+            {/* KeywordSuggest Button - shown when expanded */}
+            <KeywordSuggest
+              prospectId={prospectId}
+              problemToSolve={problemToSolve}
+              existingKeywords={existingKeywords}
+              insights={insights}
+            />
           </motion.div>
         )}
       </AnimatePresence>

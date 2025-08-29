@@ -89,7 +89,7 @@ export default function FetchNewPostsButton({
               />
             </svg>
             <span>
-              Wield Power
+              Scrape Reddit
               {hasQueuedKeywords && ` (${queuedKeywords.length} new)`}
             </span>
           </>

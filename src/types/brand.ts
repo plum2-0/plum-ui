@@ -39,10 +39,12 @@ export interface Prospect {
   agent: any | null;
   problem_to_solve: string;
   keywords: string[];
+  keywords_to_engaged_count?: Record<string, number>;
   insights: UseCaseInsights | null;
   sourced_reddit_posts: RedditPost[];
   prosepect_profiles: any[];
   total_posts_scraped: number;
+  last_refresh_time?: string;
 }
 
 export interface Brand {

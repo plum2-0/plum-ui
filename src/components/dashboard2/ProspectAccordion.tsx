@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TagBadge from "./TagBadge";
 import SubredditsList from "./SubredditsList";
 import QuickAddKeyword from "./QuickAddKeyword";
-import KeywordSuggest from "./KeywordSuggest";
 import { useBrand } from "@/contexts/BrandContext";
 import {
   useDeleteProspectKeywords,
@@ -17,6 +16,30 @@ import { LiquidButton } from "@/components/ui/LiquidButton";
 
 interface ProspectAccordionProps {
   prospects: any;
+}
+
+// Helper function to format the refresh time
+function formatRefreshTime(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60)
+    return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+  if (diffHours < 24)
+    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+
+  // For older dates, show the actual date
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  });
 }
 
 export default function ProspectAccordion({}: ProspectAccordionProps) {
@@ -35,6 +58,20 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
   const [deletingProspects, setDeletingProspects] = useState<Set<string>>(
     new Set()
   );
+
+  // Effect to open the first prospect by default
+  useEffect(() => {
+    if (prospectsDisplay && prospectsDisplay.length > 0) {
+      const firstProspectId = prospectsDisplay[0].id;
+      setExpandedItems((prev) => {
+        // Only add the first prospect if no items are currently expanded
+        if (prev.size === 0) {
+          return new Set([firstProspectId]);
+        }
+        return prev;
+      });
+    }
+  }, [prospectsDisplay]);
 
   const toggleItem = (id: string) => {
     setExpandedItems((prev) => {
@@ -298,15 +335,23 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                     </div>
 
                     {/* Progress percentage and posts analyzed */}
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-green-400/60">
-                        ({Math.round(actionedPercentage)}% complete)
-                      </span>
-                      <span className="text-white/40">•</span>
-                      <span className="text-gray-400">
-                        Analyzed {prospect.totalPostsScraped} posts to find your
-                        ideal customers
-                      </span>
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400/60">
+                          ({Math.round(actionedPercentage)}% complete)
+                        </span>
+                        <span className="text-white/40">•</span>
+                        <span className="text-gray-400">
+                          Analyzed {prospect.totalPostsScraped} posts to find
+                          your ideal customers
+                        </span>
+                      </div>
+                      {prospect.last_refresh_time && (
+                        <span className="text-white/40">
+                          Last refreshed:{" "}
+                          {formatRefreshTime(prospect.last_refresh_time)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -432,12 +477,9 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                           <QuickAddKeyword
                             prospectId={prospect.id}
                             problemToSolve={prospect.problem_to_solve}
-                            existingKeywords={prospect.keywordCounts.map((item: { keyword: string }) => item.keyword)}
-                          />
-                          <KeywordSuggest
-                            prospectId={prospect.id}
-                            problemToSolve={prospect.problem_to_solve}
-                            existingKeywords={prospect.keywordCounts.map((item: { keyword: string }) => item.keyword)}
+                            existingKeywords={prospect.keywordCounts.map(
+                              (item: { keyword: string }) => item.keyword
+                            )}
                             insights={prospect.insights}
                           />
                         </div>
@@ -481,7 +523,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             Top Subreddits
                           </h4>
                         </div>
-                        <SubredditsList 
+                        <SubredditsList
                           subredditCounts={prospect.subredditCounts}
                         />
                       </motion.div>

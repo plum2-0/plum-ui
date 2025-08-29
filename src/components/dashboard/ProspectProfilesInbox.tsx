@@ -379,7 +379,7 @@ export function ProspectProfileCard({
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/5 to-transparent" />
         </div>
-        
+
         {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm z-30 flex items-center justify-center">

@@ -22,7 +22,8 @@ import TagBadge from "./TagBadge";
 // ---------------------------------------------
 // Constants
 // ---------------------------------------------
-const POST_COUNT_OPTIONS = [25, 50, 75, 100];
+const POSTS_PER_KEYWORD = 100;
+const MAX_KEYWORDS_PER_PROSPECT = 5;
 
 const LOADING_MESSAGES = [
   "Channeling the digital realm...",
@@ -80,58 +81,185 @@ function useLoadingProgress(isPending: boolean, isSuccess: boolean) {
 // ---------------------------------------------
 function KeywordsEditor({
   keywords,
+  existingProspectKeywords,
+  setKeywords,
+  otherKeywords,
+  keywordEngagementCounts,
   onChange,
 }: {
   keywords: string[];
+  existingProspectKeywords?: string[];
+  setKeywords?: string[];
+  otherKeywords?: string[];
+  keywordEngagementCounts?: Record<string, number>;
   onChange: (nextKeywords: string[]) => void;
 }) {
   const [newKeyword, setNewKeyword] = useState("");
+  const { showToast } = useToast();
 
   const handleAddKeyword = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && newKeyword.trim()) {
       e.preventDefault();
       const trimmedKeyword = newKeyword.trim().toLowerCase();
       if (!keywords.includes(trimmedKeyword)) {
+        const existingCount = existingProspectKeywords?.length || 0;
+        const currentNewKeywords = keywords.length;
+        const totalIfAdded = existingCount + currentNewKeywords + 1;
+        
+        if (totalIfAdded > MAX_KEYWORDS_PER_PROSPECT) {
+          showToast({
+            type: "error",
+            message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and ${currentNewKeywords} new keyword${currentNewKeywords !== 1 ? 's' : ''} selected. Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT} total.`,
+            duration: 5000,
+          });
+          return;
+        }
         onChange([...keywords, trimmedKeyword]);
       }
       setNewKeyword("");
     }
   };
 
-  const handleRemoveKeyword = (keyword: string) => {
-    onChange(keywords.filter((k) => k !== keyword));
+  const handleToggleKeyword = (keyword: string) => {
+    if (keywords.includes(keyword)) {
+      onChange(keywords.filter((k) => k !== keyword));
+    } else {
+      const existingCount = existingProspectKeywords?.length || 0;
+      const currentNewKeywords = keywords.length;
+      const totalIfAdded = existingCount + currentNewKeywords + 1;
+      
+      if (totalIfAdded > MAX_KEYWORDS_PER_PROSPECT) {
+        showToast({
+          type: "error",
+          message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and ${currentNewKeywords} new keyword${currentNewKeywords !== 1 ? 's' : ''} selected. Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT} total.`,
+          duration: 5000,
+        });
+        return;
+      }
+      onChange([...keywords, keyword]);
+    }
   };
 
+  // Combine all keywords, marking which are proven
+  const provenKeywords = setKeywords || [];
+  const availableKeywords = otherKeywords || [];
+  // If no proven/available keywords, use the current keywords list
+  const allKeywords =
+    provenKeywords.length > 0 || availableKeywords.length > 0
+      ? [...provenKeywords, ...availableKeywords]
+      : keywords;
+
+  // Check if there are any proven keywords with engagement
+  const hasProvenKeywords =
+    provenKeywords.length > 0 &&
+    provenKeywords.some((k) => (keywordEngagementCounts?.[k] || 0) > 0);
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-xs text-white/60">Keywords</label>
-        <span className="text-xs text-white/40">{keywords.length} active</span>
+    <div className="space-y-3">
+      {/* Keywords Section */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs text-white/60">Keywords</label>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-white/40">
+              {keywords.length} new
+            </span>
+            {existingProspectKeywords && existingProspectKeywords.length > 0 && (
+              <>
+                <span className="text-xs text-white/20">•</span>
+                <span className="text-xs text-amber-400/60">
+                  {existingProspectKeywords.length} existing
+                </span>
+              </>
+            )}
+            <span className="text-xs text-white/20">•</span>
+            <span className={`text-xs ${
+              (existingProspectKeywords?.length || 0) + keywords.length > MAX_KEYWORDS_PER_PROSPECT
+                ? "text-red-400"
+                : "text-white/40"
+            }`}>
+              {(existingProspectKeywords?.length || 0) + keywords.length}/{MAX_KEYWORDS_PER_PROSPECT} total
+            </span>
+          </div>
+        </div>
+
+        {/* Helper text for proven keywords */}
+        {hasProvenKeywords && (
+          <p className="text-[10px] text-emerald-400/60 mb-2">
+            ✨ Keywords with green highlight are top performers from existing
+            leads
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-1.5 mb-3 max-h-32 overflow-y-auto">
+          <AnimatePresence mode="popLayout">
+            {allKeywords.map((keyword) => {
+              const isSelected = keywords.includes(keyword);
+              const isProven = provenKeywords.includes(keyword);
+              const engagementCount = keywordEngagementCounts?.[keyword] || 0;
+
+              return (
+                <motion.div
+                  key={keyword}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                >
+                  <div
+                    onClick={() => handleToggleKeyword(keyword)}
+                    className={cn(
+                      "px-2 py-0.5 text-xs rounded-full cursor-pointer transition-all flex items-center gap-1",
+                      isSelected
+                        ? isProven && engagementCount > 0
+                          ? "bg-emerald-500/20 hover:bg-red-500/20 border border-emerald-500/30"
+                          : "bg-white/10 hover:bg-red-500/20 border border-white/20"
+                        : isProven && engagementCount > 0
+                        ? "bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20"
+                        : "bg-white/5 hover:bg-white/10 border border-white/10"
+                    )}
+                  >
+                    <span
+                      className={
+                        isSelected
+                          ? isProven && engagementCount > 0
+                            ? "text-emerald-300"
+                            : "text-white/70"
+                          : isProven && engagementCount > 0
+                          ? "text-emerald-300/70"
+                          : "text-white/50"
+                      }
+                    >
+                      {keyword}
+                    </span>
+                    {isProven && engagementCount > 0 && (
+                      <span className="text-emerald-400/60 text-[10px]">
+                        ×{engagementCount}
+                      </span>
+                    )}
+                    <span
+                      className={
+                        isSelected
+                          ? isProven && engagementCount > 0
+                            ? "text-emerald-300/60"
+                            : "text-white/40"
+                          : "text-white/30"
+                      }
+                    >
+                      {isSelected ? "×" : "+"}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
       </div>
-      <div className="flex flex-wrap gap-1.5 mb-3 max-h-32 overflow-y-auto">
-        <AnimatePresence mode="popLayout">
-          {keywords.map((keyword) => (
-            <motion.div
-              key={keyword}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 25 }}
-            >
-              <div
-                onClick={() => handleRemoveKeyword(keyword)}
-                className="px-2 py-0.5 text-xs rounded-full bg-white/10 hover:bg-red-500/20 cursor-pointer transition-colors flex items-center gap-1"
-              >
-                <span className="text-white/70">{keyword}</span>
-                <span className="text-white/40">×</span>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+
+      {/* Manual Keyword Input */}
       <GlassInput
         type="text"
-        placeholder="Add keyword..."
+        placeholder="Add New Keyword..."
         value={newKeyword}
         onChange={(e) => setNewKeyword(e.target.value)}
         onKeyDown={handleAddKeyword}
@@ -140,62 +268,6 @@ function KeywordsEditor({
         className="text-xs py-2"
       />
     </div>
-  );
-}
-
-function PostsCountSelector({
-  selected,
-  onChange,
-}: {
-  selected: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <div>
-      <label className="text-xs text-white/60 mb-2 block">
-        Number of Posts / Keyword
-      </label>
-      <div className="grid grid-cols-4 gap-2">
-        {POST_COUNT_OPTIONS.map((count) => (
-          <button
-            key={count}
-            onClick={() => onChange(count)}
-            className={cn(
-              "py-2 px-3 text-xs rounded-lg transition-all",
-              selected === count
-                ? "bg-gradient-to-r from-purple-500/30 to-green-500/30 text-white border border-white/20"
-                : "bg-white/5 text-white/60 hover:bg-white/10 border border-white/10"
-            )}
-          >
-            {count}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DeleteJobButton({ onRemove }: { onRemove: () => void }) {
-  return (
-    <button
-      onClick={onRemove}
-      className="w-full py-2 px-3 text-xs rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors flex items-center justify-center gap-2"
-    >
-      <svg
-        className="w-3.5 h-3.5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-        />
-      </svg>
-      Remove Scrape Job
-    </button>
   );
 }
 
@@ -280,7 +352,7 @@ function WieldPowerButtonContent({
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          <span className="font-semibold">Wield Power</span>
+          <span className="font-semibold">Find More Leads</span>
         </motion.div>
       )}
     </AnimatePresence>
@@ -375,16 +447,13 @@ function ScrapeJobAccordion({
   onUpdate,
   onRemove,
 }: ScrapeJobAccordionProps) {
-  const handlePostsCountChange = (value: number) =>
-    onUpdate({ numPosts: value });
-
   return (
     <AccordionItem value={job.prospectId}>
       <AccordionTrigger
         badge={
           <div className="flex gap-1.5">
             <TagBadge
-              label={`+${job.numPosts * job.keywords.length} posts`}
+              label={`+${POSTS_PER_KEYWORD * job.keywords.length} posts`}
               variant="subreddit"
               className="w-24 text-xs"
             />
@@ -398,17 +467,12 @@ function ScrapeJobAccordion({
           {/* Keywords */}
           <KeywordsEditor
             keywords={job.keywords}
+            existingProspectKeywords={job.existingProspectKeywords}
+            setKeywords={job.setKeywords}
+            otherKeywords={job.otherKeywords}
+            keywordEngagementCounts={job.keywordEngagementCounts}
             onChange={(next) => onUpdate({ keywords: next })}
           />
-
-          {/* Posts count */}
-          <PostsCountSelector
-            selected={job.numPosts}
-            onChange={handlePostsCountChange}
-          />
-
-          {/* Delete button */}
-          <DeleteJobButton onRemove={onRemove} />
         </div>
       </AccordionContent>
     </AccordionItem>
@@ -423,7 +487,7 @@ export default function ScrapeJobDrawer() {
     updateScrapeJob,
     removeScrapeJob,
     clearAll,
-    closeDrawer,
+    closeDrawerAndClear,
   } = useScrapeJob();
   const refreshPosts = useProspectRefreshPostsParallel();
   const { showToast } = useToast();
@@ -436,6 +500,22 @@ export default function ScrapeJobDrawer() {
     if (!brand?.id || scrapeJobs.size === 0) return;
     const jobsArray = Array.from(scrapeJobs.values());
 
+    // Check keyword limits for each prospect
+    for (const job of jobsArray) {
+      const existingKeywords = job.existingProspectKeywords?.length || 0;
+      const newKeywords = job.keywords.length;
+      const totalKeywords = existingKeywords + newKeywords;
+      
+      if (totalKeywords > MAX_KEYWORDS_PER_PROSPECT) {
+        showToast({
+          type: "error",
+          message: `Keyword limit exceeded for "${job.problemToSolve}". This prospect already has ${existingKeywords} keyword${existingKeywords !== 1 ? 's' : ''} and you're trying to add ${newKeywords} more (${totalKeywords} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}. Please remove keywords to continue.`,
+          duration: 7000,
+        });
+        return;
+      }
+    }
+
     try {
       await refreshPosts.mutateAsync({
         brandId: brand.id,
@@ -443,10 +523,9 @@ export default function ScrapeJobDrawer() {
         scrapeJobs: jobsArray,
       });
 
-      // Close drawer after showing success
+      // Close drawer and clear after showing success
       setTimeout(() => {
-        closeDrawer();
-        clearAll();
+        closeDrawerAndClear();
         reset();
       }, 1500);
     } catch {
@@ -472,7 +551,7 @@ export default function ScrapeJobDrawer() {
   const totalPosts = useMemo(
     () =>
       jobsArray.reduce(
-        (total, job) => total + job.numPosts * job.keywords.length,
+        (total, job) => total + POSTS_PER_KEYWORD * job.keywords.length,
         0
       ),
     [jobsArray]
@@ -481,7 +560,7 @@ export default function ScrapeJobDrawer() {
   return (
     <RightSidePanel
       isOpen={isOpen}
-      onClose={closeDrawer}
+      onClose={closeDrawerAndClear}
       title="Confirm Scraping Reddit?"
     >
       <div className="flex flex-col h-full">

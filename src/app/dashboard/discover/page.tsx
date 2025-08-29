@@ -450,13 +450,37 @@ function HelpHintSection() {
   const handleScrapeAllProspects = useCallback(() => {
     if (!brandData || !brandData.prospects) return;
 
-    const scrapeJobs: ScrapeJob[] = brandData.prospects.map((prospect) => ({
-      prospectId: prospect.id,
-      brandName: brandData.name,
-      problemToSolve: prospect.problem_to_solve,
-      keywords: prospect.keywords || [],
-      numPosts: 50, // Default number of posts per prospect
-    }));
+    const scrapeJobs: ScrapeJob[] = brandData.prospects.map((prospect) => {
+      // Get top 3 keywords with engagement
+      const keywordEngagements = prospect.keywords_to_engaged_count || {};
+      const sortedEngagedKeywords = Object.entries(keywordEngagements)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+        .map(([keyword]) => keyword);
+      
+      // Get other keywords not in the top engaged list
+      const otherKeywords = prospect.keywords?.filter(
+        k => !sortedEngagedKeywords.includes(k)
+      ) || [];
+      
+      // Default keywords to use: top engaged + remaining up to 3 total
+      const defaultKeywords = [
+        ...sortedEngagedKeywords,
+        ...otherKeywords.slice(0, Math.max(0, 3 - sortedEngagedKeywords.length))
+      ];
+
+      return {
+        prospectId: prospect.id,
+        brandName: brandData.name,
+        problemToSolve: prospect.problem_to_solve,
+        keywords: defaultKeywords,
+        existingProspectKeywords: prospect.keywords || [],
+        setKeywords: sortedEngagedKeywords,
+        otherKeywords: otherKeywords,
+        keywordEngagementCounts: keywordEngagements,
+        numPosts: 50, // Default number of posts per prospect
+      };
+    });
 
     // Open drawer with the jobs
     openDrawer(scrapeJobs);
@@ -480,11 +504,32 @@ function HelpHintSection() {
         );
         if (!prospect) return null;
 
+        // Get top 3 keywords with engagement
+        const keywordEngagements = prospect.keywords_to_engaged_count || {};
+        const sortedEngagedKeywords = Object.entries(keywordEngagements)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3)
+          .map(([keyword]) => keyword);
+        
+        // Get other keywords not in the top engaged list
+        const otherKeywords = prospect.keywords?.filter(
+          k => !sortedEngagedKeywords.includes(k)
+        ) || [];
+        
+        // Default keywords to use: top engaged keywords first
+        const defaultKeywords = sortedEngagedKeywords.length > 0 
+          ? sortedEngagedKeywords
+          : otherKeywords.slice(0, 3); // Fallback to first 3 regular keywords if no engagement data
+
         return {
           prospectId: prospect.id,
           brandName: brandData.name,
           problemToSolve: prospect.problem_to_solve,
-          keywords: prospect.keywords || [],
+          keywords: defaultKeywords,
+          existingProspectKeywords: prospect.keywords || [],
+          setKeywords: sortedEngagedKeywords,
+          otherKeywords: otherKeywords,
+          keywordEngagementCounts: keywordEngagements,
           numPosts: 50, // Default number of posts per prospect
         };
       })
@@ -579,13 +624,9 @@ function HelpHintSection() {
           />
         </svg>
       ),
-      title: "Some Problems Need Research",
-      description: `${
-        prospectsDisplay.filter(
-          (p) => !p.pendingPosts || p.pendingPosts.length === 0
-        ).length
-      } of your defined problems have no posts yet. Search for conversations about these specific problems.`,
-      actionLabel: "Search Missing Problems",
+      title: "Look for more Leads to Engage",
+      description: `You have reviewed all of your leads`,
+      actionLabel: "Set Up Job",
       actionHandler: handleScrapeProspectsWithNoPosts,
     },
   };

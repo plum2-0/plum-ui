@@ -17,6 +17,7 @@ interface ProspectDisplay {
   totalPotentialCustomers: number;
   totalKeywordCounts: number;
   totalPostsScraped: number;
+  last_refresh_time?: string;
 }
 
 interface BrandContextType {
@@ -138,6 +139,7 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
       totalPotentialCustomers,
       totalKeywordCounts,
       totalPostsScraped: prospect.total_posts_scraped || 0,
+      last_refresh_time: prospect.last_refresh_time,
     };
   });
 }

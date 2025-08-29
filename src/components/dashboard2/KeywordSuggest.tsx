@@ -2,12 +2,27 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import { useGenerateKeywords } from "@/hooks/api/useAgentQuery";
 import { useScrapeJob } from "@/contexts/ScrapeJobContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useToast } from "@/components/ui/Toast";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { cn } from "@/lib/utils";
+
+// Portal component for rendering modal
+function Portal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!mounted) return null;
+  
+  return createPortal(children, document.body);
+}
 
 interface KeywordSuggestProps {
   prospectId: string;
@@ -28,9 +43,11 @@ export default function KeywordSuggest({
   const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set());
   const [loadingMessage, setLoadingMessage] = useState("Analyzing your market...");
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const generateKeywordsMutation = useGenerateKeywords();
-  const { addScrapeJob, openDrawer } = useScrapeJob();
+  const { scrapeJobs, addScrapeJob, updateScrapeJob, openDrawer } = useScrapeJob();
   const { brand } = useBrand();
   const { showToast } = useToast();
 
@@ -55,12 +72,15 @@ export default function KeywordSuggest({
     return () => clearInterval(interval);
   }, [generateKeywordsMutation.isPending]);
 
+
   // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
       ) {
         handleClose();
       }
@@ -161,15 +181,26 @@ export default function KeywordSuggest({
       return;
     }
 
-    const newScrapeJob = {
-      prospectId,
-      brandName: brand.name,
-      problemToSolve,
-      keywords: newKeywords,
-      numPosts: 50,
-    };
+    // Check if there's an existing job for this prospect
+    const existingJob = scrapeJobs.get(prospectId);
+    
+    if (existingJob) {
+      // Merge new keywords with existing ones
+      const mergedKeywords = [...new Set([...existingJob.keywords, ...newKeywords])];
+      updateScrapeJob(prospectId, { keywords: mergedKeywords });
+    } else {
+      // Create a new job
+      const newScrapeJob = {
+        prospectId,
+        brandName: brand.name,
+        problemToSolve,
+        keywords: newKeywords,
+        existingProspectKeywords: existingKeywords,
+        numPosts: 100,
+      };
+      addScrapeJob(newScrapeJob);
+    }
 
-    addScrapeJob(newScrapeJob);
     openDrawer();
 
     showToast({
@@ -190,6 +221,7 @@ export default function KeywordSuggest({
         {!isOpen ? (
           // AI Button
           <motion.button
+            ref={buttonRef}
             key="ai-button"
             onClick={handleOpen}
             className="group relative"
@@ -266,18 +298,35 @@ export default function KeywordSuggest({
               </motion.div>
             </motion.div>
           </motion.button>
-        ) : (
-          // Expanded Modal
-          <motion.div
-            key="modal"
-            className="absolute z-50 top-0 left-0"
-            initial={{ opacity: 0, scale: 0.9, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div
-              className="p-6 rounded-2xl min-w-[350px] max-w-[400px]"
+        ) : null}
+      </AnimatePresence>
+      
+      {/* Modal rendered in portal */}
+      <Portal>
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              {/* Semi-transparent backdrop */}
+              <motion.div 
+                className="fixed inset-0 bg-black/50 z-[9998]"
+                onClick={handleClose}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              />
+              
+              {/* Centered modal */}
+              <motion.div
+                ref={modalRef}
+                className="fixed left-1/2 top-1/2 z-[9999] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 max-h-[85vh] overflow-y-auto"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+              <div
+                className="p-6 rounded-2xl"
               style={{
                 background: `linear-gradient(135deg,
                   rgba(20, 20, 25, 0.95) 0%,
@@ -401,7 +450,7 @@ export default function KeywordSuggest({
                       Select keywords to add to your scraping queue:
                     </p>
 
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar">
                       {suggestedKeywords.map((keyword, index) => {
                         const isSelected = selectedKeywords.has(keyword);
                         const isExisting = existingKeywords.includes(keyword);
@@ -540,10 +589,12 @@ export default function KeywordSuggest({
                   </div>
                 )}
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </div>
+            </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </Portal>
     </div>
   );
 }
