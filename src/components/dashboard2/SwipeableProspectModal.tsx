@@ -67,10 +67,10 @@ const SWIPE_CONFIG = {
   SNAP_BACK_DURATION: 180,
 
   // Exit animation targets
-  EXIT_X_DISTANCE: 500, // Throw cards further
-  EXIT_Y_DISTANCE: 80,
-  EXIT_ROTATION: 35,
-  EXIT_SCALE: 0.9,
+  EXIT_X_DISTANCE: window.innerWidth * 0.8 || 600, // Throw cards completely off screen
+  EXIT_Y_DISTANCE: 100,
+  EXIT_ROTATION: 40,
+  EXIT_SCALE: 1.05, // Slightly scale up as it flies away
 
   // Spring configurations for different animations
   DRAG_SPRING: {
@@ -203,26 +203,35 @@ const ActionButtons = memo(function ActionButtons({
 const ProgressIndicator = memo(function ProgressIndicator({
   current,
   total,
+  isAnimating,
 }: {
   current: number;
   total: number;
+  isAnimating: boolean;
 }) {
-  const progress = ((current + 1) / total) * 100;
+  // Calculate progress based on whether we're animating (look ahead)
+  const displayIndex = isAnimating ? Math.min(current + 1, total - 1) : current;
+  const progress = ((displayIndex + 1) / total) * 100;
 
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm text-white/60">
-          {current + 1} of {total}
+          {displayIndex + 1} of {total}
         </span>
         <span className="text-sm text-white/60">{Math.round(progress)}%</span>
       </div>
       <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
         <motion.div
           className="h-full rounded-full"
-          initial={{ width: 0 }}
+          initial={false}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          transition={{ 
+            type: "spring",
+            stiffness: 400,
+            damping: 30,
+            mass: 0.5
+          }}
           style={{
             background: "linear-gradient(90deg, #8b5cf6, #3b82f6)",
           }}
@@ -305,7 +314,7 @@ function CardStack({
         perspective: "1000px",
       }}
     >
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {visiblePosts.map((post, index) => {
           const isTop = index === 0 && !isAnimating;
           const isExiting = index === 0 && isAnimating && swipeDirection;
@@ -313,7 +322,7 @@ function CardStack({
           const absoluteIndex = currentIndex + index; // Use absolute index for keys
 
           // Calculate positioning for stack effect
-          const scale = 1 - cardIndex * SWIPE_CONFIG.CARD_SCALE_OFFSET;
+          const cardScale = 1 - cardIndex * SWIPE_CONFIG.CARD_SCALE_OFFSET;
           const yOffset = cardIndex * SWIPE_CONFIG.CARD_Y_OFFSET;
           const zIndex = SWIPE_CONFIG.VISIBLE_CARDS - cardIndex;
 
@@ -322,40 +331,45 @@ function CardStack({
           const shadowBlur = Math.max(15, 40 - cardIndex * 10);
 
           if (isExiting && swipeDirection) {
-            // Exit animation for swiped card
+            // Exit animation for swiped card - preserve the dragged position
+            const currentX = x.get();
+            const currentY = y.get();
+            const currentRotate = rotate.get();
+            
             return (
               <motion.div
-                key={`${post.thing_id}-exit`}
+                key={post.thing_id}
                 className="absolute inset-0"
                 initial={{
-                  x: x.get(),
-                  y: y.get(),
-                  rotate: rotate.get(),
+                  x: currentX,
+                  y: currentY,
+                  rotate: currentRotate,
                   scale: 1,
                 }}
                 animate={{
                   x:
                     swipeDirection === "right"
-                      ? SWIPE_CONFIG.EXIT_X_DISTANCE
-                      : -SWIPE_CONFIG.EXIT_X_DISTANCE,
+                      ? window.innerWidth
+                      : -window.innerWidth,
                   y:
                     swipeDirection === "right"
-                      ? -SWIPE_CONFIG.EXIT_Y_DISTANCE
-                      : SWIPE_CONFIG.EXIT_Y_DISTANCE,
+                      ? currentY - SWIPE_CONFIG.EXIT_Y_DISTANCE
+                      : currentY + SWIPE_CONFIG.EXIT_Y_DISTANCE,
                   rotate:
                     swipeDirection === "right"
                       ? SWIPE_CONFIG.EXIT_ROTATION
                       : -SWIPE_CONFIG.EXIT_ROTATION,
-                  opacity: 0,
                   scale: SWIPE_CONFIG.EXIT_SCALE,
-                  filter: "blur(4px)", // Add blur for depth effect
                 }}
                 transition={{
                   ...SWIPE_CONFIG.EXIT_SPRING,
                   duration: SWIPE_CONFIG.EXIT_DURATION / 1000,
                 }}
                 onAnimationComplete={onAnimationComplete}
-                style={{ zIndex: zIndex + 10 }}
+                style={{ 
+                  zIndex: zIndex + 10,
+                  willChange: "transform",
+                }}
               >
                 <ProspectCard post={post} className="h-full" />
                 <SwipeStamp
@@ -416,8 +430,8 @@ function CardStack({
 
           // Background cards with scaling animation
           const targetScale = isAnimating
-            ? scale + SWIPE_CONFIG.CARD_SCALE_OFFSET
-            : scale;
+            ? cardScale + SWIPE_CONFIG.CARD_SCALE_OFFSET
+            : cardScale;
           const targetY = isAnimating
             ? yOffset - SWIPE_CONFIG.CARD_Y_OFFSET
             : yOffset;
@@ -429,7 +443,7 @@ function CardStack({
               initial={
                 cardIndex === SWIPE_CONFIG.VISIBLE_CARDS
                   ? {
-                      scale: scale - SWIPE_CONFIG.CARD_SCALE_OFFSET,
+                      scale: cardScale - SWIPE_CONFIG.CARD_SCALE_OFFSET,
                       y: yOffset + SWIPE_CONFIG.CARD_Y_OFFSET,
                       opacity: 0,
                     }
@@ -530,15 +544,18 @@ export default function SwipeableProspectModal({
   // Execute swipe animation and callbacks
   const executeSwipe = useCallback(
     async (direction: "left" | "right") => {
-      if (state.isAnimating || state.currentIndex >= posts.length) return;
+      if (state.currentIndex >= posts.length) return;
 
       const currentPost = posts[state.currentIndex];
 
-      setState((prev) => ({
-        ...prev,
-        isAnimating: true,
-        swipeDirection: direction,
-      }));
+      // Only set animation state if not already animating (for button clicks)
+      if (!state.isAnimating) {
+        setState((prev) => ({
+          ...prev,
+          isAnimating: true,
+          swipeDirection: direction,
+        }));
+      }
 
       // Call onSwipe callback
       if (onSwipe) {
@@ -563,7 +580,14 @@ export default function SwipeableProspectModal({
         swipeVelocity > SWIPE_CONFIG.VELOCITY_THRESHOLD
       ) {
         const direction = info.offset.x > 0 ? "right" : "left";
-        executeSwipe(direction);
+        // Immediately trigger animation state for instant progress bar update
+        setState((prev) => ({
+          ...prev,
+          isAnimating: true,
+          swipeDirection: direction,
+        }));
+        // Then execute the actual swipe with API call
+        setTimeout(() => executeSwipe(direction), 0);
       } else {
         // Snap back
         setState((prev) => ({
@@ -707,6 +731,7 @@ export default function SwipeableProspectModal({
             <ProgressIndicator
               current={state.currentIndex}
               total={posts.length}
+              isAnimating={state.isAnimating}
             />
 
             {/* Card Stack */}

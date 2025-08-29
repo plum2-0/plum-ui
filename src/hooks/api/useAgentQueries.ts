@@ -169,7 +169,6 @@ export const useAgent = (agentId: string, options?: { enabled?: boolean }) =>
     },
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
-    enabled: !!agentId,
   });
 
 // Fetch full Reddit thread (directly from Reddit API)

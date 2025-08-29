@@ -52,7 +52,7 @@ export function ProspectProfilesInbox({
   }, [selectedProfileId, loadingProfileId]);
 
   const handleProfileClick = (profile: ProspectProfile) => {
-    setLoadingProfileId(profile.id);
+    setLoadingProfileId(profile.id || null);
     onProfileSelect(profile);
   };
 
@@ -370,19 +370,10 @@ export function ProspectProfileCard({
         className={cn(
           "p-4 cursor-pointer transition-all duration-300 relative overflow-hidden group border border-white/10",
           isSelected
-            ? "border-l-4 border-l-purple-400/60"
+            ? "border-l-4 border-l-purple-400/60 bg-gradient-to-br from-purple-500/10 to-purple-500/5 backdrop-blur-[40px] backdrop-saturate-[1.4] shadow-purple-500/15"
             : "hover:bg-white/8 hover:translate-x-1 border-l-4 border-l-transparent",
           (hasSuggested || isUnactioned) && "font-medium"
         )}
-        style={{
-          ...(isSelected && {
-            background:
-              "linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%)",
-            backdropFilter: "blur(40px) saturate(1.4)",
-            boxShadow:
-              "0 8px 32px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-          }),
-        }}
       >
         {/* Hover glow effect */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

@@ -61,9 +61,7 @@ export default function AgentReplyBox({
   const handleGenerateWithAgent = async () => {
     if (!agent) return;
     try {
-      const result = await generateWithAgent(agent.id, post, {
-        autoReply: true,
-      });
+      const result = await generateWithAgent(agent.id, post);
       if (result.content) {
         setCustomReply(result.content);
       }
@@ -95,9 +93,7 @@ export default function AgentReplyBox({
   const handleRegenerate = async () => {
     if (!agent) return;
     try {
-      const result = await generateWithAgent(agent.id, post, {
-        autoReply: true,
-      });
+      const result = await generateWithAgent(agent.id, post);
       if (result.content) {
         setCustomReply(result.content);
       }

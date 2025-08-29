@@ -71,9 +71,7 @@ export function InlineReplyBox({
         reply_count: parentPost.reply_count || 0,
       };
       
-      const result = await generateWithAgent(agent.id, postForGeneration, {
-        autoReply: true,
-      });
+      const result = await generateWithAgent(agent.id, postForGeneration);
       
       if (result.content) {
         setReplyText(result.content);
