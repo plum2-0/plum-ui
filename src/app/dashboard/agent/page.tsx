@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import {
   useAgent,
   useDeleteAgent,
   useUpdateAgent,
+  useAgents,
 } from "@/hooks/api/useAgentQueries";
 import TeamAgentList from "@/components/team/TeamAgentList";
 import AgentTester from "@/components/agent-testing/AgentTester";
@@ -15,10 +17,26 @@ import { Agent } from "@/types/agent";
 
 export default function AgentPage() {
   const { status } = useSession();
+  const searchParams = useSearchParams();
+  const selectedAgentId = searchParams.get("selected");
   const [agent, setSelectedAgent] = useState<Agent | null>(null);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAgentListExpanded, setIsAgentListExpanded] = useState(false);
+  
+  // Load agents to find the selected one
+  const { data: agents } = useAgents();
+  
+  // Auto-select agent from URL parameter
+  useEffect(() => {
+    if (selectedAgentId && agents && agents.length > 0) {
+      const foundAgent = agents.find(a => a.id === selectedAgentId);
+      if (foundAgent) {
+        setSelectedAgent(foundAgent);
+        setIsAgentListExpanded(true); // Expand the list to show selection
+      }
+    }
+  }, [selectedAgentId, agents]);
 
   // Debug logging for agent data
   const deleteAgent = useDeleteAgent();

@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, X, Bot, RefreshCw } from "lucide-react";
+import { Send, X, Bot, RefreshCw, Loader2, ExternalLink, User } from "lucide-react";
+import Link from "next/link";
 import { useBrand } from "@/contexts/BrandContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useProspectConvoReply } from "@/hooks/api/useProspectConvoReply";
@@ -22,15 +23,28 @@ export function InlineReplyBox({
 }: InlineReplyBoxProps) {
   const [replyText, setReplyText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasTriedGeneration, setHasTriedGeneration] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { brand: brandData } = useBrand();
   const { activeConvoId, prospectProfileId } = useProfile();
   const replyConvo = useProspectConvoReply();
   const { showToast } = useToast();
   
-  // Use the agent reply hook
-  const { agents, isLoadingAgents, generateWithAgent } = useAgentReply(brandData?.id || "");
+  // Use the agent reply hook with proper brand ID
+  const { agents, isLoadingAgents, generateWithAgent, isBrandLoaded } = useAgentReply(brandData?.id || "");
   const agent = agents[0] || null;
+  
+  // Debug logging
+  useEffect(() => {
+    console.log("InlineReplyBox Debug:", {
+      brandId: brandData?.id,
+      brandName: brandData?.name,
+      agentsCount: agents.length,
+      isLoadingAgents,
+      isBrandLoaded,
+      agent,
+    });
+  }, [brandData, agents, isLoadingAgents, isBrandLoaded, agent]);
   
   // Auto-focus textarea on mount
   useEffect(() => {
@@ -38,6 +52,15 @@ export function InlineReplyBox({
       textareaRef.current.focus();
     }
   }, []);
+  
+  // Auto-generate reply when agents are loaded
+  useEffect(() => {
+    // Only try to generate once, when we have agents and brand data loaded
+    if (!hasTriedGeneration && !isLoadingAgents && isBrandLoaded && agent) {
+      setHasTriedGeneration(true);
+      handleGenerateReply();
+    }
+  }, [hasTriedGeneration, isLoadingAgents, isBrandLoaded, agent]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Auto-resize textarea
   useEffect(() => {
@@ -48,7 +71,23 @@ export function InlineReplyBox({
   }, [replyText]);
   
   const handleGenerateReply = async () => {
+    if (!brandData?.id) {
+      console.error("No brand ID available");
+      showToast({
+        message: "Brand data is still loading. Please try again.",
+        type: "error",
+        duration: 3000,
+      });
+      return;
+    }
+    
+    if (isLoadingAgents) {
+      console.log("Agents are still loading...");
+      return;
+    }
+    
     if (!agent) {
+      console.error("No agent found", { agents, brandId: brandData.id });
       showToast({
         message: "No agent available. Please create an agent first.",
         type: "error",
@@ -144,9 +183,14 @@ export function InlineReplyBox({
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-zinc-400">
-            Replying to <span className="text-blue-400">u/{parentPost.author || "[deleted]"}</span>
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-400">
+              Replying to <span className="text-blue-400">u/{parentPost.author || "[deleted]"}</span>
+            </span>
+            {(isLoadingAgents || (isGenerating && !replyText)) && (
+              <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+            )}
+          </div>
           <button
             onClick={onClose}
             className="text-zinc-500 hover:text-zinc-300 transition-colors"
@@ -155,14 +199,89 @@ export function InlineReplyBox({
           </button>
         </div>
         
+        {/* Agent Info Section */}
+        {agent && (
+          <div className="mb-3 p-2 bg-zinc-900/50 rounded-lg border border-zinc-700/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-green-500 flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-200">
+                      {agent.name}
+                    </span>
+                    <span className="text-xs text-zinc-500">•</span>
+                    <span className="text-xs text-zinc-500">AI Agent</span>
+                  </div>
+                  {agent.persona && (
+                    <div className="text-xs text-zinc-500 truncate max-w-xs" title={agent.persona}>
+                      <span className="text-zinc-600">Persona:</span> {agent.persona.length > 80 ? 
+                        agent.persona.substring(0, 80) + "..." : 
+                        agent.persona}
+                    </div>
+                  )}
+                  {agent.goal && (
+                    <div className="text-xs text-zinc-500 truncate max-w-xs" title={agent.goal}>
+                      <span className="text-zinc-600">Goal:</span> {agent.goal.length > 80 ? 
+                        agent.goal.substring(0, 80) + "..." : 
+                        agent.goal}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Link
+                href={`/dashboard/agent?selected=${agent.id}`}
+                className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-zinc-800 
+                         hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+                title="View and edit agent details"
+              >
+                <span>Manage</span>
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        )}
+        
+        {/* No Agent Warning */}
+        {!agent && !isLoadingAgents && (
+          <div className="mb-3 p-2 bg-yellow-900/20 rounded-lg border border-yellow-600/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-yellow-600" />
+                <span className="text-xs text-yellow-600">
+                  No agent configured for this brand
+                </span>
+              </div>
+              <Link
+                href="/dashboard/agent"
+                className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-yellow-600/20 
+                         hover:bg-yellow-600/30 text-yellow-600 transition-colors"
+              >
+                <span>Create Agent</span>
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        )}
+        
         {/* Textarea */}
         <textarea
           ref={textareaRef}
           value={replyText}
           onChange={(e) => setReplyText(e.target.value)}
-          placeholder="Type your reply..."
+          placeholder={
+            isGenerating 
+              ? "Generating AI reply..." 
+              : isLoadingAgents 
+              ? "Loading agents..." 
+              : "Type your reply..."
+          }
+          disabled={isGenerating || isLoadingAgents}
           className="w-full p-2 bg-zinc-900 border border-zinc-700 rounded text-sm text-zinc-200 
-                     placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-600"
+                     placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-600
+                     disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ minHeight: "80px", maxHeight: "200px" }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.ctrlKey) {
