@@ -8,11 +8,6 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import Link from "next/link";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { LiquidBadge } from "@/components/ui/LiquidBadge";
-import { AttractiveText } from "@/components/ui/AttractiveText";
-import { FloatingOrbGroup } from "@/components/ui/FloatingOrb";
-import { glassStyles } from "@/lib/styles/glassMorphism";
 
 interface ProspectCardProps {
   post: RedditPost;
@@ -51,11 +46,11 @@ export default function ProspectCard({
 
   // Markdown renderers for Reddit-like dark theme
   const markdownComponents: Components = {
-    a: (props) => <a {...props} className="text-blue-400 hover:underline" />,
-    p: (props) => <p {...props} className="mb-2" />,
-    ul: (props) => <ul {...props} className="list-disc pl-6 mb-2" />,
-    ol: (props) => <ol {...props} className="list-decimal pl-6 mb-2" />,
-    li: (props) => <li {...props} className="mb-1" />,
+    a: (props) => <a {...props} className="text-[#4fbcff] hover:underline" />,
+    p: (props) => <p {...props} className="mb-2 text-[#d7dadc]" />,
+    ul: (props) => <ul {...props} className="list-disc pl-5 mb-2 text-[#d7dadc]" />,
+    ol: (props) => <ol {...props} className="list-decimal pl-5 mb-2 text-[#d7dadc]" />,
+    li: (props) => <li {...props} className="mb-0.5" />,
     img: (props) => {
       const { src = "", alt = "" } =
         props as React.ImgHTMLAttributes<HTMLImageElement>;
@@ -64,8 +59,7 @@ export default function ProspectCard({
         (src.startsWith("https://") || src.startsWith("http://"));
       if (!isSafeSrc) return null;
       return (
-        <span className="block my-3 rounded-lg overflow-hidden border border-white/10">
-          {/* Using Next/Image for responsive rendering without fixed dimensions */}
+        <span className="block my-2 rounded overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={src}
@@ -73,7 +67,7 @@ export default function ProspectCard({
             loading="lazy"
             referrerPolicy="no-referrer"
             className="block w-full h-auto object-contain"
-            style={{ maxHeight: 480 }}
+            style={{ maxHeight: 320 }}
           />
         </span>
       );
@@ -81,7 +75,7 @@ export default function ProspectCard({
     blockquote: (props) => (
       <blockquote
         {...props}
-        className="border-l-4 border-white/20 pl-3 text-white/70 italic"
+        className="border-l-4 border-[#343536] pl-3 text-[#818384] italic my-2"
       />
     ),
     code: (props: any) => {
@@ -90,27 +84,26 @@ export default function ProspectCard({
         return (
           <code
             {...rest}
-            className="bg-[#272729] text-white/90 px-1.5 py-0.5 rounded"
+            className="bg-[#272729] text-[#d7dadc] px-1 py-0.5 rounded text-sm"
           >
             {children}
           </code>
         );
       }
-      // Use span with display:block to avoid p > div nesting issue
       return (
-        <span className="block bg-[#272729] text-white/90 p-3 rounded-md overflow-auto mb-3">
+        <span className="block bg-[#161617] text-[#d7dadc] p-2 rounded overflow-auto mb-2 border border-[#343536]">
           <code
             {...rest}
-            className="block whitespace-pre-wrap font-mono text-sm"
+            className="block whitespace-pre-wrap font-mono text-xs"
           >
             {children}
           </code>
         </span>
       );
     },
-    h1: (props) => <h1 {...props} className="text-xl font-semibold mb-2" />,
-    h2: (props) => <h2 {...props} className="text-lg font-semibold mb-2" />,
-    h3: (props) => <h3 {...props} className="text-base font-semibold mb-2" />,
+    h1: (props) => <h1 {...props} className="text-lg font-semibold mb-1.5 text-[#d7dadc]" />,
+    h2: (props) => <h2 {...props} className="text-base font-semibold mb-1.5 text-[#d7dadc]" />,
+    h3: (props) => <h3 {...props} className="text-sm font-semibold mb-1 text-[#d7dadc]" />,
   };
 
   // Sanitize schema allowing safe images and link attributes
@@ -133,80 +126,80 @@ export default function ProspectCard({
         flexDirection: "column",
       }}
     >
-      {/* Simplified Liquid Glass Frame */}
+      {/* Reddit-like card with Plum accent */}
       <div
-        className="absolute inset-0 rounded-3xl"
+        className="absolute inset-0 rounded-xl"
         style={{
-          ...glassStyles.medium,
-          padding: "2px",
-          borderRadius: "24px",
+          background: "#1a1a1b",
+          border: "1px solid rgba(129, 102, 255, 0.15)",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(129, 102, 255, 0.05)",
         }}
       >
-        {/* Simplified Floating Orbs */}
-        <FloatingOrbGroup />
-        {/* Inner Glass Container */}
-        <div className="w-full h-full rounded-3xl relative overflow-hidden">
+        {/* Inner Container */}
+        <div className="w-full h-full rounded-xl relative overflow-hidden">
           <div
-            className="w-full h-full px-6 py-4 flex flex-col rounded-2xl relative overflow-visible"
+            className="w-full h-full px-4 py-3 flex flex-col rounded-xl relative overflow-visible"
             style={{
               height: "100%",
               display: "flex",
               flexDirection: "column",
-              ...glassStyles.dark,
-              background: `
-                  linear-gradient(135deg,
-                    rgba(8, 8, 15, 0.98) 0%,
-                    rgba(15, 12, 25, 0.96) 25%,
-                    rgba(12, 8, 20, 0.98) 50%,
-                    rgba(18, 15, 30, 0.96) 75%,
-                    rgba(10, 8, 18, 0.98) 100%
-                  )
-                `,
             }}
           >
             {/* Header - Fixed */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
+            <div className="mb-3">
+              {/* Meta info bar - Reddit style */}
+              <div className="flex items-center gap-2 text-xs mb-2">
                 <Link
-                  href={`https://reddit.com${post.permalink}`}
+                  href={`https://reddit.com/r/${post.subreddit}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group"
+                  className="font-bold text-[#d7dadc] hover:text-white transition-colors"
                 >
-                  <h3 className="text-white font-heading text-lg font-bold mb-2 line-clamp-2 transition-colors duration-200 group-hover:text-blue-400 cursor-pointer">
-                    {post.title}
-                  </h3>
+                  r/{post.subreddit}
                 </Link>
-                <div className="flex items-center gap-3 text-sm">
-                  {/* Subreddit Badge */}
-                  <LiquidBadge variant="orange" size="md">
-                    r/{post.subreddit}
-                  </LiquidBadge>
-
-                  {/* Author */}
+                <span className="text-[#818384]">•</span>
+                <span className="text-[#818384]">
+                  Posted by{" "}
                   <Link
                     href={`https://reddit.com/user/${post.author}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-white/60 hover:text-white/80 transition-colors duration-200"
+                    className="hover:underline"
                   >
-                    by u/{post.author}
+                    u/{post.author}
                   </Link>
-
-                  {/* Time */}
-                  <span className="text-white/40">{timeAgo}</span>
-                </div>
+                </span>
+                <span className="text-[#818384]">{timeAgo}</span>
+                {/* Link Flair inline */}
+                {post.link_flair && (
+                  <>
+                    <span className="text-[#818384]">•</span>
+                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-[#8b5cf6]/20 text-[#8b5cf6] border border-[#8b5cf6]/30">
+                      {post.link_flair}
+                    </span>
+                  </>
+                )}
               </div>
+              {/* Title */}
+              <Link
+                href={`https://reddit.com${post.permalink}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <h3 className="text-[#d7dadc] font-medium text-base leading-snug line-clamp-2 transition-colors duration-200 group-hover:text-[#8b5cf6] cursor-pointer">
+                  {post.title}
+                </h3>
+              </Link>
             </div>
 
             {/* Content - Scrollable, fills available space */}
             {post.content && (
-              <div className="flex-1 mb-4 relative min-h-0">
+              <div className="flex-1 mb-2 relative min-h-0">
                 <div
                   ref={setContentRef}
-                  className="overflow-y-auto text-white/80 font-body text-sm leading-relaxed rounded-lg h-full"
+                  className="overflow-y-auto text-[#d7dadc] text-sm leading-relaxed h-full pr-2"
                   style={{
-                    paddingRight: "8px", // Space for scrollbar
                     maxHeight: "100%",
                   }}
                 >
@@ -219,99 +212,94 @@ export default function ProspectCard({
                   </ReactMarkdown>
                 </div>
                 {/* Fade gradient indicator at bottom when content is scrollable */}
-                <div
-                  className="rounded-lg absolute bottom-0 left-0 right-0 h-16 pointer-events-none transition-opacity duration-300"
-                  style={{
-                    background:
-                      "linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.1) 20%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 80%, rgba(0, 0, 0, 0.6) 100%)",
-                    opacity: showScrollFade ? 1 : 0,
-                  }}
-                >
-                  {/* Small scroll hint at the bottom */}
-                  {showScrollFade && (
-                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                      <div className="text-white/30 text-xs animate-pulse">
-                        ↓ scroll
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {showScrollFade && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(to bottom, transparent 0%, #1a1a1b 100%)",
+                    }}
+                  />
+                )}
               </div>
             )}
 
-            {/* Metrics - Fixed */}
-            <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/10">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
+            {/* Metrics - Reddit Style Compact */}
+            <div className="flex items-center gap-3 pt-2 border-t border-[#343536]">
+              {/* Upvotes */}
+              <button className="flex items-center gap-1 text-[#818384] hover:text-[#8b5cf6] transition-colors group">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7 11l5-5m0 0l5 5m-5-5v12"
+                  />
+                </svg>
+                <span className="text-xs font-medium">{post.score}</span>
+              </button>
+
+              {/* Comments */}
+              <button className="flex items-center gap-1 text-[#818384] hover:text-[#8b5cf6] transition-colors group">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
+                  />
+                </svg>
+                <span className="text-xs font-medium">{post.reply_count}</span>
+              </button>
+
+              {/* Share */}
+              <button className="flex items-center gap-1 text-[#818384] hover:text-[#8b5cf6] transition-colors group ml-auto">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"
+                  />
+                </svg>
+                <span className="text-xs font-medium">Share</span>
+              </button>
+            </div>
+
+            {/* Suggested Reply (if exists) - Reddit style with Plum accent */}
+            {post.suggested_agent_reply && (
+              <div className="mt-3 p-3 rounded-lg bg-[#8b5cf6]/10 border border-[#8b5cf6]/20">
+                <div className="flex items-center gap-2 mb-1.5">
                   <svg
-                    className="w-4 h-4 text-emerald-400"
+                    className="w-3.5 h-3.5 text-[#8b5cf6]"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
-                    <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-white/70 text-sm">{post.score}</span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <svg
-                    className="w-4 h-4 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <span className="text-white/70 text-sm">
-                    {post.reply_count}
+                  <span className="text-xs font-medium text-[#8b5cf6]">
+                    AI Suggested Reply
                   </span>
                 </div>
-
-                {/* Link Flair */}
-                {post.link_flair && (
-                  <LiquidBadge variant="purple" size="sm">
-                    {post.link_flair}
-                  </LiquidBadge>
-                )}
-              </div>
-            </div>
-
-            {/* Reply box removed - content fills this space now */}
-
-            {/* Suggested Reply (if exists) */}
-            {post.suggested_agent_reply && (
-              <GlassCard
-                blur="medium"
-                border="gradient"
-                className="mt-4 p-3 max-h-[120px] overflow-hidden"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <svg
-                    className="w-4 h-4 text-emerald-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <AttractiveText variant="gradient" size="xs">
-                    Suggested Reply
-                  </AttractiveText>
-                </div>
-                <p className="text-white/70 text-xs font-body leading-relaxed">
+                <p className="text-[#d7dadc] text-xs leading-relaxed line-clamp-3">
                   {post.suggested_agent_reply}
                 </p>
-              </GlassCard>
+              </div>
             )}
           </div>
         </div>

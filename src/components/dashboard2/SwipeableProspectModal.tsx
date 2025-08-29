@@ -143,13 +143,13 @@ const ActionButtons = memo(function ActionButtons({
   disabled: boolean;
 }) {
   return (
-    <div className="flex justify-center gap-8 mt-8">
+    <div className="flex justify-center gap-6 sm:gap-8 mt-4 sm:mt-6">
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => onSwipe("left")}
         disabled={disabled}
-        className="w-16 h-16 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         style={{
           background:
             "linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1))",
@@ -159,7 +159,7 @@ const ActionButtons = memo(function ActionButtons({
         }}
       >
         <svg
-          className="w-8 h-8 text-red-400"
+          className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-red-400"
           fill="none"
           stroke="currentColor"
           strokeWidth={3}
@@ -178,7 +178,7 @@ const ActionButtons = memo(function ActionButtons({
         whileTap={{ scale: 0.95 }}
         onClick={() => onSwipe("right")}
         disabled={disabled}
-        className="w-16 h-16 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         style={{
           background:
             "linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))",
@@ -188,7 +188,7 @@ const ActionButtons = memo(function ActionButtons({
         }}
       >
         <svg
-          className="w-8 h-8 text-emerald-400"
+          className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-emerald-400"
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -199,8 +199,8 @@ const ActionButtons = memo(function ActionButtons({
   );
 });
 
-// Component: ProgressIndicator - Memoized for performance
-const ProgressIndicator = memo(function ProgressIndicator({
+// Component: Counter - Memoized for performance
+const Counter = memo(function Counter({
   current,
   total,
   isAnimating,
@@ -211,32 +211,12 @@ const ProgressIndicator = memo(function ProgressIndicator({
 }) {
   // Calculate progress based on whether we're animating (look ahead)
   const displayIndex = isAnimating ? Math.min(current + 1, total - 1) : current;
-  const progress = ((displayIndex + 1) / total) * 100;
 
   return (
-    <div className="mb-6">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm text-white/60">
-          {displayIndex + 1} of {total}
-        </span>
-        <span className="text-sm text-white/60">{Math.round(progress)}%</span>
-      </div>
-      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-        <motion.div
-          className="h-full rounded-full"
-          initial={false}
-          animate={{ width: `${progress}%` }}
-          transition={{ 
-            type: "spring",
-            stiffness: 400,
-            damping: 30,
-            mass: 0.5
-          }}
-          style={{
-            background: "linear-gradient(90deg, #8b5cf6, #3b82f6)",
-          }}
-        />
-      </div>
+    <div className="absolute top-4 left-4 z-20">
+      <span className="text-sm sm:text-base text-white/80 font-medium">
+        {displayIndex + 1} of {total}
+      </span>
     </div>
   );
 });
@@ -310,7 +290,7 @@ function CardStack({
     <div
       className="relative"
       style={{
-        height: "min(600px, 80vh)",
+        height: "min(500px, 60vh)",
         perspective: "1000px",
       }}
     >
@@ -335,7 +315,7 @@ function CardStack({
             const currentX = x.get();
             const currentY = y.get();
             const currentRotate = rotate.get();
-            
+
             return (
               <motion.div
                 key={post.thing_id}
@@ -366,7 +346,7 @@ function CardStack({
                   duration: SWIPE_CONFIG.EXIT_DURATION / 1000,
                 }}
                 onAnimationComplete={onAnimationComplete}
-                style={{ 
+                style={{
                   zIndex: zIndex + 10,
                   willChange: "transform",
                 }}
@@ -666,7 +646,7 @@ export default function SwipeableProspectModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
           onClick={onClose}
         >
           {/* Backdrop */}
@@ -688,13 +668,13 @@ export default function SwipeableProspectModal({
               stiffness: 300,
               damping: 25,
             }}
-            className="relative z-10 w-full max-w-lg"
+            className="relative z-10 w-full max-w-xl lg:max-w-2xl flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute -top-12 right-0 p-2 rounded-full transition-all hover:bg-white/10"
+              className="absolute top-2 right-2 z-20 p-2 rounded-full transition-all hover:bg-white/10"
             >
               <svg
                 className="w-6 h-6 text-white/60 hover:text-white"
@@ -712,23 +692,23 @@ export default function SwipeableProspectModal({
             </button>
 
             {/* Fun Header Text */}
-            <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold">
+            <div className="text-center mb-2 sm:mb-4 pt-2">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
                 <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
                   Match
                 </span>
-                <span className="text-white mx-2">with your</span>
+                <span className="text-white mx-1 sm:mx-2">with your</span>
                 <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
                   Ideal Customers
                 </span>
               </h2>
-              <p className="text-sm text-white/50 mt-1">
-                Help us Understand your Target Market
+              <p className="text-xs sm:text-sm text-white/50 mt-1">
+                Swipe Right to Engage with Leads
               </p>
             </div>
 
-            {/* Progress Indicator */}
-            <ProgressIndicator
+            {/* Counter */}
+            <Counter
               current={state.currentIndex}
               total={posts.length}
               isAnimating={state.isAnimating}
@@ -756,8 +736,8 @@ export default function SwipeableProspectModal({
             )}
 
             {/* Instructions */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-white/40">
+            <div className="mt-4 sm:mt-6 text-center">
+              <p className="text-xs sm:text-sm text-white/40">
                 Swipe left to skip • Swipe right to save
               </p>
             </div>

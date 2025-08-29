@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TagBadge from "./TagBadge";
+import SubredditsList from "./SubredditsList";
 import QuickAddKeyword from "./QuickAddKeyword";
 import KeywordSuggest from "./KeywordSuggest";
 import { useBrand } from "@/contexts/BrandContext";
@@ -480,24 +481,9 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             Top Subreddits
                           </h4>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {prospect.subredditCounts
-                            .slice(0, 5)
-                            .map(
-                              (
-                                item: { subreddit: string; count: number },
-                                index: number
-                              ) => (
-                                <TagBadge
-                                  key={item.subreddit}
-                                  label={`r/${item.subreddit}`}
-                                  count={item.count}
-                                  variant="subreddit"
-                                  animationDelay={0.05 * index}
-                                />
-                              )
-                            )}
-                        </div>
+                        <SubredditsList 
+                          subredditCounts={prospect.subredditCounts}
+                        />
                       </motion.div>
                     )}
 

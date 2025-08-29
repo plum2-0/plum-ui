@@ -11,12 +11,13 @@ interface BrandOffering {
 }
 
 interface OnboardRequest {
-  brandName: string;
-  website: string;
-  brandDescription?: string;
+  brand_name: string;
+  brand_website?: string;
+  brand_description?: string;
   problems?: string[];
-  targetProblems?: string[];
   offerings?: BrandOffering[];
+  keywords?: string[];
+  user_id: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,41 +39,45 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields
-    if (!body.brandName?.trim()) {
+    if (!body.brand_name?.trim()) {
       return NextResponse.json(
         { error: "Brand name is required" },
         { status: 400 }
       );
     }
 
-    // Handle new structure with brandDescription, problems/targetProblems, offerings
-    const payload: any = {
-      brand_name: body.brandName.trim(),
-      brand_website: body.website?.trim() || null,
-      user_id: userId,
-    };
+    if (!body.user_id?.trim()) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
 
-    // Check if this is the new structure
-    if (
-      body.brandDescription ||
-      body.targetProblems ||
-      body.problems ||
-      body.offerings
-    ) {
-      payload.brand_description = body.brandDescription?.trim();
-      const requestProblems = (body.problems || body.targetProblems) ?? [];
-      payload.problems = requestProblems.filter((p: string) => p?.trim());
-      payload.offerings =
+    // Validate that we have problems
+    if (!body.problems || body.problems.length === 0) {
+      return NextResponse.json(
+        { error: "At least one problem is required" },
+        { status: 400 }
+      );
+    }
+
+    // Build the payload - the request is already in the correct snake_case format
+    const payload: any = {
+      brand_name: body.brand_name.trim(),
+      brand_website: body.brand_website?.trim() || null,
+      brand_description: body.brand_description?.trim() || null,
+      problems: body.problems.filter((p: string) => p?.trim()),
+      offerings:
         body.offerings?.filter(
           (o: BrandOffering) => o.title?.trim() && o.description?.trim()
-        ) || [];
-      payload.brand_detail = body.brandDescription?.trim(); // Also set brand_detail for backward compatibility
-      if (!payload.problems || payload.problems.length === 0) {
-        return NextResponse.json(
-          { error: "At least one valid problem is required" },
-          { status: 400 }
-        );
-      }
+        ) || [],
+      keywords: body.keywords?.filter((k: string) => k?.trim()) || [],
+      user_id: body.user_id.trim(),
+    };
+
+    // Set brand_detail for backward compatibility if needed
+    if (payload.brand_description) {
+      payload.brand_detail = payload.brand_description;
     }
 
     // Call the backend API

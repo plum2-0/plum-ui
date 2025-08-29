@@ -15,7 +15,9 @@ interface BrandOffering {
 interface BrandGenerationResponse {
   brand_description: string;
   target_problems: string[];
-  offerings: BrandOffering[];
+  brand_offerings: BrandOffering[];
+  target_keywords: string[];
+  target_demographics: string[];
 }
 
 function OnboardingContent() {
@@ -30,8 +32,10 @@ function OnboardingContent() {
   const [formData, setFormData] = useState({
     brandName: "",
     brandDescription: "",
-    problems: [""],
+    problems: "",
     offerings: [] as BrandOffering[],
+    keywords: [""],
+    demographics: [""],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
@@ -101,10 +105,14 @@ function OnboardingContent() {
   const handleWebsiteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateUrl(websiteUrl)) {
-      setGenerationError(
-        "Please enter a valid URL (e.g., https://example.com)"
-      );
+    // Prepend https:// if no protocol is specified
+    let normalizedUrl = websiteUrl.trim();
+    if (normalizedUrl && !normalizedUrl.match(/^https?:\/\//i)) {
+      normalizedUrl = `https://${normalizedUrl}`;
+    }
+
+    if (!validateUrl(normalizedUrl)) {
+      setGenerationError("Please enter a valid URL");
       return;
     }
 
@@ -114,7 +122,7 @@ function OnboardingContent() {
     try {
       // Call the brand generation API
       const response = await fetch(
-        `/api/brand/generate/web?web_url=${encodeURIComponent(websiteUrl)}`,
+        `/api/brand/generate/web?web_url=${encodeURIComponent(normalizedUrl)}`,
         {
           method: "GET",
           headers: {
@@ -131,7 +139,7 @@ function OnboardingContent() {
       const data: BrandGenerationResponse = await response.json();
 
       // Extract brand name from URL
-      const url = new URL(websiteUrl);
+      const url = new URL(normalizedUrl);
       const brandName =
         url.hostname
           .replace(/^www\./, "")
@@ -147,10 +155,21 @@ function OnboardingContent() {
       setFormData({
         brandName: brandName,
         brandDescription: data.brand_description,
-        problems: data.target_problems.length > 0 ? data.target_problems : [""],
-        offerings: data.offerings || [{ title: "", description: "" }],
+        problems:
+          data.target_problems.length > 0
+            ? data.target_problems.join("\n")
+            : "",
+        offerings: data.brand_offerings || [{ title: "", description: "" }],
+        keywords:
+          data.target_keywords?.length > 0 ? data.target_keywords : [""],
+        demographics:
+          data.target_demographics?.length > 0
+            ? data.target_demographics
+            : [""],
       });
 
+      // Update the websiteUrl with the normalized version
+      setWebsiteUrl(normalizedUrl);
       setPhase("details");
     } catch (error) {
       console.error("Failed to generate brand info:", error);
@@ -170,8 +189,10 @@ function OnboardingContent() {
     setFormData({
       brandName: "",
       brandDescription: "",
-      problems: [""],
+      problems: "",
       offerings: [],
+      keywords: [""],
+      demographics: [""],
     });
     setPhase("details");
   };
@@ -186,27 +207,52 @@ function OnboardingContent() {
     }));
   };
 
-  const handleProblemChange = (index: number, value: string) => {
+  const handleKeywordChange = (index: number, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      problems: prev.problems.map((problem, i) =>
-        i === index ? value : problem
+      keywords: prev.keywords.map((keyword, i) =>
+        i === index ? value : keyword
       ),
     }));
   };
 
-  const addProblem = () => {
+  const addKeyword = () => {
     setFormData((prev) => ({
       ...prev,
-      problems: [...prev.problems, ""],
+      keywords: [...prev.keywords, ""],
     }));
   };
 
-  const removeProblem = (index: number) => {
-    if (formData.problems.length > 1) {
+  const removeKeyword = (index: number) => {
+    if (formData.keywords.length > 1) {
       setFormData((prev) => ({
         ...prev,
-        problems: prev.problems.filter((_, i) => i !== index),
+        keywords: prev.keywords.filter((_, i) => i !== index),
+      }));
+    }
+  };
+
+  const handleDemographicChange = (index: number, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      demographics: prev.demographics.map((demographic, i) =>
+        i === index ? value : demographic
+      ),
+    }));
+  };
+
+  const addDemographic = () => {
+    setFormData((prev) => ({
+      ...prev,
+      demographics: [...prev.demographics, ""],
+    }));
+  };
+
+  const removeDemographic = (index: number) => {
+    if (formData.demographics.length > 1) {
+      setFormData((prev) => ({
+        ...prev,
+        demographics: prev.demographics.filter((_, i) => i !== index),
       }));
     }
   };
@@ -243,20 +289,30 @@ function OnboardingContent() {
     setIsSubmitting(true);
 
     try {
-      // Call the onboard API with the new structure
+      // Ensure user is authenticated
+      if (!session?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      // Call the onboard API with the correct structure matching BrandOnboardingRequest
       const response = await fetch("/api/onboard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          brandName: formData.brandName,
-          website: websiteUrl || null,
-          brandDescription: formData.brandDescription,
-          problems: formData.problems.filter((p) => p.trim()),
+          brand_name: formData.brandName,
+          brand_website: websiteUrl || null,
+          brand_description: formData.brandDescription,
+          problems: formData.problems
+            .split("\n")
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0),
           offerings: formData.offerings.filter(
             (o) => o.title.trim() && o.description.trim()
           ),
+          keywords: formData.keywords.filter((k) => k.trim()),
+          user_id: session.user.id,
         }),
       });
 
@@ -298,7 +354,7 @@ function OnboardingContent() {
   const isFormValid =
     formData.brandName.trim() &&
     formData.brandDescription.trim() &&
-    formData.problems.some((p) => p.trim());
+    formData.problems.trim();
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -486,11 +542,11 @@ function OnboardingContent() {
                     Enter your website URL 🌐
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     id="website"
                     value={websiteUrl}
                     onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="https://your-awesome-site.com"
+                    placeholder="your-awesome-site.com"
                     className="w-full px-8 py-6 glass-input rounded-2xl text-white placeholder-white/60 focus:outline-none font-body text-xl text-center"
                     required
                   />
@@ -586,26 +642,52 @@ function OnboardingContent() {
 
                 {/* Target Problems */}
                 <div className="mb-8">
-                  <label className="block text-white font-heading text-lg font-bold mb-6 tracking-wide">
+                  <label
+                    htmlFor="problems"
+                    className="block text-white font-heading text-lg font-bold mb-3 tracking-wide"
+                  >
                     Problems You Solve 🎯
                   </label>
+                  <p className="text-white/60 text-sm font-body mb-4">
+                    List the problems your brand solves (one per line)
+                  </p>
+                  <textarea
+                    id="problems"
+                    value={formData.problems}
+                    onChange={(e) =>
+                      handleInputChange("problems", e.target.value)
+                    }
+                    placeholder="Example:
+Small businesses struggle with social media management
+Marketing teams need better analytics tools
+Entrepreneurs lack time for content creation"
+                    rows={5}
+                    className="w-full px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body resize-none"
+                  />
+                </div>
+
+                {/* Target Keywords */}
+                <div className="mb-8">
+                  <label className="block text-white font-heading text-lg font-bold mb-6 tracking-wide">
+                    Target Keywords 🔍
+                  </label>
                   <div className="space-y-4">
-                    {formData.problems.map((problem, index) => (
+                    {formData.keywords.map((keyword, index) => (
                       <div key={index} className="glass-card rounded-xl p-4">
                         <div className="flex items-center gap-3">
                           <input
                             type="text"
-                            value={problem}
+                            value={keyword}
                             onChange={(e) =>
-                              handleProblemChange(index, e.target.value)
+                              handleKeywordChange(index, e.target.value)
                             }
-                            placeholder={`Problem #${index + 1}`}
+                            placeholder={`Keyword #${index + 1}`}
                             className="flex-1 px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body"
                           />
-                          {formData.problems.length > 1 && (
+                          {formData.keywords.length > 1 && (
                             <button
                               type="button"
-                              onClick={() => removeProblem(index)}
+                              onClick={() => removeKeyword(index)}
                               className="px-4 py-2 text-red-300 hover:text-red-200 transition-colors font-medium text-lg"
                             >
                               ✕
@@ -617,8 +699,47 @@ function OnboardingContent() {
                   </div>
 
                   <div className="mt-4">
-                    <SecondaryButton type="button" onClick={addProblem}>
-                      + Add Another Problem
+                    <SecondaryButton type="button" onClick={addKeyword}>
+                      + Add Another Keyword
+                    </SecondaryButton>
+                  </div>
+                </div>
+
+                {/* Target Demographics */}
+                <div className="mb-8">
+                  <label className="block text-white font-heading text-lg font-bold mb-6 tracking-wide">
+                    Target Demographics 👥
+                  </label>
+                  <div className="space-y-4">
+                    {formData.demographics.map((demographic, index) => (
+                      <div key={index} className="glass-card rounded-xl p-4">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="text"
+                            value={demographic}
+                            onChange={(e) =>
+                              handleDemographicChange(index, e.target.value)
+                            }
+                            placeholder={`Demographic #${index + 1}`}
+                            className="flex-1 px-6 py-4 glass-input rounded-xl text-white placeholder-white/60 focus:outline-none font-body"
+                          />
+                          {formData.demographics.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeDemographic(index)}
+                              className="px-4 py-2 text-red-300 hover:text-red-200 transition-colors font-medium text-lg"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4">
+                    <SecondaryButton type="button" onClick={addDemographic}>
+                      + Add Another Demographic
                     </SecondaryButton>
                   </div>
                 </div>

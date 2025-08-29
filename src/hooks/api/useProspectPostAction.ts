@@ -65,43 +65,46 @@ export function useProspectPostAction() {
 
       // Optimistically update the cache
       if (previousBrandData?.brand) {
-        queryClient.setQueryData<{ brand: Brand }>(["brand", brandId], (old) => {
-          if (!old?.brand) return old;
+        queryClient.setQueryData<{ brand: Brand }>(
+          ["brand", brandId],
+          (old) => {
+            if (!old?.brand) return old;
 
-          // Create a deep copy of the brand data
-          const updatedBrand = JSON.parse(JSON.stringify(old.brand));
+            // Create a deep copy of the brand data
+            const updatedBrand = JSON.parse(JSON.stringify(old.brand));
 
-          // Find and update the post status based on action
-          if (action === "queue") {
-            // Update post status to QUEUED or remove from available posts
-            // This depends on your data structure
-            if (updatedBrand.prospect_profiles) {
-              updatedBrand.prospect_profiles.forEach((profile: any) => {
-                if (profile.reddit_posts) {
-                  profile.reddit_posts = profile.reddit_posts.filter(
-                    (p: RedditPost) => p.thing_id !== post.thing_id
-                  );
-                }
-              });
+            // Find and update the post status based on action
+            if (action === "queue") {
+              // Update post status to QUEUED or remove from available posts
+              // This depends on your data structure
+              if (updatedBrand.prospect_profiles) {
+                updatedBrand.prospect_profiles.forEach((profile: any) => {
+                  if (profile.reddit_posts) {
+                    profile.reddit_posts = profile.reddit_posts.filter(
+                      (p: RedditPost) => p.thing_id !== post.thing_id
+                    );
+                  }
+                });
+              }
+            } else if (action === "ignore") {
+              // Remove the post from available posts when ignored
+              if (updatedBrand.prospect_profiles) {
+                updatedBrand.prospect_profiles.forEach((profile: any) => {
+                  if (profile.reddit_posts) {
+                    profile.reddit_posts = profile.reddit_posts.filter(
+                      (p: RedditPost) => p.thing_id !== post.thing_id
+                    );
+                  }
+                });
+              }
             }
-          } else if (action === "ignore") {
-            // Remove the post from available posts when ignored
-            if (updatedBrand.prospect_profiles) {
-              updatedBrand.prospect_profiles.forEach((profile: any) => {
-                if (profile.reddit_posts) {
-                  profile.reddit_posts = profile.reddit_posts.filter(
-                    (p: RedditPost) => p.thing_id !== post.thing_id
-                  );
-                }
-              });
-            }
+
+            return {
+              ...old,
+              brand: updatedBrand,
+            };
           }
-
-          return {
-            ...old,
-            brand: updatedBrand,
-          };
-        });
+        );
       }
 
       // Return context with previous data for rollback
@@ -123,23 +126,7 @@ export function useProspectPostAction() {
         brand_name: brandName,
         brand_detail: brandDetail,
         problem: problem,
-        reddit_post: {
-          thing_id: post.thing_id,
-          title: post.title,
-          content: post.content || '',
-          author: post.author,
-          subreddit: post.subreddit,
-          permalink: post.permalink,
-          created_utc: post.created_utc,
-          score: post.score,
-          upvotes: post.upvotes,
-          downvotes: post.downvotes,
-          reply_count: post.reply_count,
-          thumbnail: post.thumbnail,
-          link_flair: post.link_flair,
-          suggested_agent_reply: post.suggested_agent_reply,
-          status: post.status,
-        },
+        reddit_post: post,
         reply_content: replyContent,
         agent_id: agentId,
         brand_id: brandId,
@@ -165,7 +152,7 @@ export function useProspectPostAction() {
     },
     onError: (error, variables, context) => {
       console.error("Error performing prospect post action:", error);
-      
+
       // Rollback optimistic update on error
       if (context?.previousBrandData) {
         queryClient.setQueryData(
@@ -179,21 +166,23 @@ export function useProspectPostAction() {
       // On success, the optimistic update already handled the UI change
       if (error) {
         // Rollback happened, need to refetch to get correct state
-        queryClient.invalidateQueries({ queryKey: ["brand", variables.brandId] });
+        queryClient.invalidateQueries({
+          queryKey: ["brand", variables.brandId],
+        });
         queryClient.invalidateQueries({
           queryKey: ["prospect-profiles", variables.brandId],
         });
       } else {
         // Success - invalidate queries to refresh the data
         // Invalidate the main prospect profiles list to update the inbox
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ["prospect-profiles", variables.brandId],
-          exact: false 
+          exact: false,
         });
         // Also invalidate the specific prospect detail if needed
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ["prospect-profile-detail", variables.prospectId],
-          exact: false 
+          exact: false,
         });
       }
     },
