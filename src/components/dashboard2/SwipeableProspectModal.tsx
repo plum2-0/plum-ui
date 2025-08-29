@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
 import {
   motion,
@@ -46,39 +46,58 @@ interface SwipeableProspectModalProps {
 
 const SWIPE_CONFIG = {
   // Swipe thresholds
-  DISTANCE_THRESHOLD: 80, // Lower threshold for easier swiping
-  VELOCITY_THRESHOLD: 300, // Lower velocity threshold
+  DISTANCE_THRESHOLD: 100, // Responsive threshold
+  VELOCITY_THRESHOLD: 200, // Lower for more responsive swipes
 
   // Visual configuration
-  MAX_ROTATION: 25,
-  STAMP_OPACITY_START: 30, // Show stamps earlier
-  STAMP_OPACITY_FULL: 100, // Full opacity at lower distance
+  MAX_ROTATION: 30, // More dramatic rotation
+  STAMP_OPACITY_START: 40,
+  STAMP_OPACITY_FULL: 120,
 
   // Card stack
   VISIBLE_CARDS: 3,
-  CARD_SCALE_OFFSET: 0.05,
-  CARD_Y_OFFSET: 10,
+  CARD_SCALE_OFFSET: 0.04, // Slightly less scaling for smoother transitions
+  CARD_Y_OFFSET: 8, // Tighter stack
 
-  // Animation durations (ms)
-  EXIT_DURATION: 300,
-  NEXT_CARD_DURATION: 250,
-  THIRD_CARD_DURATION: 200,
-  NEW_CARD_DURATION: 150,
-  SNAP_BACK_DURATION: 200,
+  // Animation durations (ms) - Faster for snappier feel
+  EXIT_DURATION: 250,
+  NEXT_CARD_DURATION: 200,
+  THIRD_CARD_DURATION: 180,
+  NEW_CARD_DURATION: 160,
+  SNAP_BACK_DURATION: 180,
 
   // Exit animation targets
-  EXIT_X_DISTANCE: 400,
-  EXIT_Y_DISTANCE: 100,
-  EXIT_ROTATION: 45,
-  EXIT_SCALE: 0.8,
+  EXIT_X_DISTANCE: 500, // Throw cards further
+  EXIT_Y_DISTANCE: 80,
+  EXIT_ROTATION: 35,
+  EXIT_SCALE: 0.9,
+
+  // Spring configurations for different animations
+  DRAG_SPRING: {
+    type: "spring" as const,
+    stiffness: 260,
+    damping: 20,
+    mass: 0.8,
+  },
+  SNAP_SPRING: {
+    type: "spring" as const,
+    stiffness: 500,
+    damping: 35,
+  },
+  EXIT_SPRING: {
+    type: "spring" as const,
+    stiffness: 200,
+    damping: 25,
+    mass: 0.5,
+  },
 };
 
 // ============================================================================
 // COMPONENTS
 // ============================================================================
 
-// Component: SwipeStamp
-function SwipeStamp({
+// Component: SwipeStamp - Memoized for performance
+const SwipeStamp = memo(function SwipeStamp({
   type,
   opacity,
 }: {
@@ -113,10 +132,10 @@ function SwipeStamp({
       </div>
     </motion.div>
   );
-}
+});
 
-// Component: ActionButtons
-function ActionButtons({
+// Component: ActionButtons - Memoized for performance
+const ActionButtons = memo(function ActionButtons({
   onSwipe,
   disabled,
 }: {
@@ -178,10 +197,10 @@ function ActionButtons({
       </motion.button>
     </div>
   );
-}
+});
 
-// Component: ProgressIndicator
-function ProgressIndicator({
+// Component: ProgressIndicator - Memoized for performance
+const ProgressIndicator = memo(function ProgressIndicator({
   current,
   total,
 }: {
@@ -211,7 +230,7 @@ function ProgressIndicator({
       </div>
     </div>
   );
-}
+});
 
 // Component: CardStack
 function CardStack({
@@ -235,65 +254,47 @@ function CardStack({
   const y = useMotionValue(0);
   const rotate = useTransform(
     x,
-    [-200, 0, 200],
-    [-SWIPE_CONFIG.MAX_ROTATION, 0, SWIPE_CONFIG.MAX_ROTATION]
+    [-150, 0, 150],
+    [-SWIPE_CONFIG.MAX_ROTATION, 0, SWIPE_CONFIG.MAX_ROTATION],
+    { clamp: false } // Allow overshoot for more natural feel
   );
+
+  // Add subtle scale based on drag for depth
+  const scale = useTransform(x, [-200, 0, 200], [0.98, 1, 0.98], {
+    clamp: true,
+  });
 
   // Reset motion values when animation completes and new card becomes top
   useEffect(() => {
     // Only reset when we're not animating and we have a new top card
     if (!isAnimating && !swipeDirection) {
-      console.log(
-        `[Motion Reset] Resetting x and y to 0 for new top card at index ${currentIndex}`
-      );
       x.set(0);
       y.set(0);
     }
   }, [currentIndex, isAnimating, swipeDirection, x, y]);
 
-  // DEBUG: Log motion value states
-  useEffect(() => {
-    console.log(
-      `[CardStack Re-render] currentIndex=${currentIndex}, isAnimating=${isAnimating}, swipeDirection=${swipeDirection}`
-    );
-    console.log(
-      `[MotionValues] x=${x.get()}, y=${y.get()}, rotate=${rotate.get()}`
-    );
-
-    // Monitor motion value changes
-    const unsubX = x.on("change", (latest) => {
-      console.log(
-        `[X Changed] value=${latest}, currentIndex=${currentIndex}, isAnimating=${isAnimating}`
-      );
-    });
-    const unsubY = y.on("change", (latest) => {
-      console.log(
-        `[Y Changed] value=${latest}, currentIndex=${currentIndex}, isAnimating=${isAnimating}`
-      );
-    });
-
-    return () => {
-      unsubX();
-      unsubY();
-    };
-  }, [currentIndex, isAnimating, rotate, swipeDirection, x, y]);
-
-  // Calculate stamp opacity based on drag distance
+  // Calculate stamp opacity based on drag distance - with clamp for performance
   const likeOpacity = useTransform(
     x,
     [SWIPE_CONFIG.STAMP_OPACITY_START, SWIPE_CONFIG.STAMP_OPACITY_FULL],
-    [0, 1]
+    [0, 1],
+    { clamp: true }
   );
   const nopeOpacity = useTransform(
     x,
     [-SWIPE_CONFIG.STAMP_OPACITY_FULL, -SWIPE_CONFIG.STAMP_OPACITY_START],
-    [1, 0]
+    [1, 0],
+    { clamp: true }
   );
 
-  // Get the cards to display - using currentIndex to slice from full posts array
-  const visiblePosts = posts.slice(
-    currentIndex,
-    Math.min(currentIndex + SWIPE_CONFIG.VISIBLE_CARDS + 1, posts.length)
+  // Get the cards to display - memoized for performance
+  const visiblePosts = useMemo(
+    () =>
+      posts.slice(
+        currentIndex,
+        Math.min(currentIndex + SWIPE_CONFIG.VISIBLE_CARDS + 1, posts.length)
+      ),
+    [posts, currentIndex]
   );
 
   return (
@@ -304,20 +305,12 @@ function CardStack({
         perspective: "1000px",
       }}
     >
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence>
         {visiblePosts.map((post, index) => {
           const isTop = index === 0 && !isAnimating;
           const isExiting = index === 0 && isAnimating && swipeDirection;
           const cardIndex = index;
           const absoluteIndex = currentIndex + index; // Use absolute index for keys
-
-          // DEBUG: Log card state
-          console.log(
-            `[Card ${absoluteIndex}] isTop=${isTop}, isExiting=${isExiting}, cardIndex=${cardIndex}, post=${post?.thing_id.slice(
-              0,
-              8
-            )}`
-          );
 
           // Calculate positioning for stack effect
           const scale = 1 - cardIndex * SWIPE_CONFIG.CARD_SCALE_OFFSET;
@@ -325,14 +318,14 @@ function CardStack({
           const zIndex = SWIPE_CONFIG.VISIBLE_CARDS - cardIndex;
 
           // Shadow intensity based on position
-          const shadowOpacity = 0.3 - cardIndex * 0.1;
-          const shadowBlur = 40 - cardIndex * 10;
+          const shadowOpacity = Math.max(0.1, 0.3 - cardIndex * 0.08);
+          const shadowBlur = Math.max(15, 40 - cardIndex * 10);
 
           if (isExiting && swipeDirection) {
             // Exit animation for swiped card
             return (
               <motion.div
-                key={`card-${absoluteIndex}-exit`}
+                key={`${post.thing_id}-exit`}
                 className="absolute inset-0"
                 initial={{
                   x: x.get(),
@@ -355,17 +348,13 @@ function CardStack({
                       : -SWIPE_CONFIG.EXIT_ROTATION,
                   opacity: 0,
                   scale: SWIPE_CONFIG.EXIT_SCALE,
+                  filter: "blur(4px)", // Add blur for depth effect
                 }}
                 transition={{
+                  ...SWIPE_CONFIG.EXIT_SPRING,
                   duration: SWIPE_CONFIG.EXIT_DURATION / 1000,
-                  ease: "easeOut",
                 }}
-                onAnimationComplete={() => {
-                  console.log(
-                    `[EXIT Animation Complete] Card ${absoluteIndex}, x=${x.get()}, y=${y.get()}`
-                  );
-                  onAnimationComplete();
-                }}
+                onAnimationComplete={onAnimationComplete}
                 style={{ zIndex: zIndex + 10 }}
               >
                 <ProspectCard post={post} className="h-full" />
@@ -379,58 +368,44 @@ function CardStack({
 
           if (isTop) {
             // Top draggable card
-            console.log(
-              `[TOP CARD] Creating draggable card ${absoluteIndex}, key=card-${absoluteIndex}, x=${x.get()}, y=${y.get()}`
-            );
             return (
               <motion.div
-                key={`card-${absoluteIndex}`}
+                key={post.thing_id}
                 className="absolute inset-0 cursor-grab active:cursor-grabbing"
                 initial={{
-                  x: 0,
-                  y: 0,
-                  rotate: 0,
+                  scale: 1,
                 }}
                 style={{
                   x,
                   y,
                   rotate,
+                  scale,
                   zIndex,
                   boxShadow: `0 ${shadowBlur}px ${
                     shadowBlur * 2
                   }px rgba(0, 0, 0, ${shadowOpacity})`,
-                  touchAction: "pan-y",
+                  willChange: "transform",
+                  transform: "translateZ(0)", // Force GPU acceleration
                 }}
-                drag={isAnimating ? false : "x"}
+                drag={isAnimating ? false : true}
                 dragSnapToOrigin={true}
-                dragElastic={0.2}
+                dragElastic={0.15}
                 dragConstraints={{
                   left: -300,
                   right: 300,
+                  top: -50,
+                  bottom: 50,
                 }}
-                onDrag={(event, info) => {
-                  onDrag(event, info);
+                dragTransition={{
+                  bounceStiffness: 300,
+                  bounceDamping: 20,
                 }}
-                onDragEnd={(event, info) => {
-                  onDragEnd(event, info);
-                  // Reset motion values when snap back occurs
-                  if (
-                    Math.abs(info.offset.x) < SWIPE_CONFIG.DISTANCE_THRESHOLD
-                  ) {
-                    setTimeout(() => {
-                      x.set(0);
-                      y.set(0);
-                    }, 50);
-                  }
-                }}
+                onDrag={onDrag}
+                onDragEnd={onDragEnd}
                 whileDrag={{
-                  scale: 1.05,
+                  cursor: "grabbing",
                 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 30,
-                }}
+                transition={SWIPE_CONFIG.DRAG_SPRING}
               >
                 <ProspectCard post={post} className="h-full" />
                 <SwipeStamp type="like" opacity={likeOpacity} />
@@ -449,7 +424,7 @@ function CardStack({
 
           return (
             <motion.div
-              key={`card-${absoluteIndex}`}
+              key={post.thing_id}
               className="absolute inset-0 pointer-events-none"
               initial={
                 cardIndex === SWIPE_CONFIG.VISIBLE_CARDS
@@ -466,19 +441,23 @@ function CardStack({
                 opacity: 1,
               }}
               transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
                 duration:
                   (cardIndex === 1
                     ? SWIPE_CONFIG.NEXT_CARD_DURATION
                     : cardIndex === 2
                     ? SWIPE_CONFIG.THIRD_CARD_DURATION
                     : SWIPE_CONFIG.NEW_CARD_DURATION) / 1000,
-                ease: "easeOut",
               }}
               style={{
                 zIndex,
                 boxShadow: `0 ${shadowBlur}px ${
                   shadowBlur * 2
                 }px rgba(0, 0, 0, ${shadowOpacity})`,
+                willChange: "transform",
+                transform: "translateZ(0)", // Force GPU acceleration
               }}
             >
               <ProspectCard post={post} className="h-full" />
@@ -535,14 +514,17 @@ export default function SwipeableProspectModal({
     }
   }, [isOpen]);
 
-  // Handle drag events
+  // Handle drag events - optimized to reduce state updates
   const handleDrag = useCallback((event: any, info: PanInfo) => {
-    setState((prev) => ({
-      ...prev,
-      isDragging: true,
-      dragOffset: info.offset,
-      rotation: info.offset.x * 0.15,
-    }));
+    // Only update state if significantly different
+    if (Math.abs(info.offset.x) > 5) {
+      setState((prev) => ({
+        ...prev,
+        isDragging: true,
+        dragOffset: info.offset,
+        rotation: info.offset.x * 0.15,
+      }));
+    }
   }, []);
 
   // Execute swipe animation and callbacks
@@ -597,16 +579,9 @@ export default function SwipeableProspectModal({
 
   // Handle animation completion
   const handleAnimationComplete = useCallback(() => {
-    console.log(
-      `[handleAnimationComplete] Called, currentIndex=${state.currentIndex}`
-    );
     setState((prev) => {
       const nextIndex = prev.currentIndex + 1;
       const isComplete = nextIndex >= posts.length;
-
-      console.log(
-        `[State Transition] currentIndex ${prev.currentIndex} -> ${nextIndex}, isAnimating: true -> false`
-      );
 
       if (isComplete) {
         setTimeout(() => {
@@ -758,7 +733,7 @@ export default function SwipeableProspectModal({
             {/* Instructions */}
             <div className="mt-6 text-center">
               <p className="text-sm text-white/40">
-                Swipe right to save • Swipe left to skip
+                Swipe left to skip • Swipe right to save
               </p>
             </div>
           </motion.div>

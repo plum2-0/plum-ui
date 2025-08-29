@@ -24,7 +24,6 @@ export default function ProspectCard({
   post,
   className = "",
 }: ProspectCardProps) {
-  console.log(" - - -  -post", post);
   const [showScrollFade, setShowScrollFade] = useState(true);
   const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
 

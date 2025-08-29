@@ -709,7 +709,7 @@ function OnboardingContent() {
                   >
                     {isSubmitting
                       ? "Setting up your account..."
-                      : "Let's Get Started! 🎉"}
+                      : "Let's Find Customers! 🎉"}
                   </button>
                 </div>
               </form>
