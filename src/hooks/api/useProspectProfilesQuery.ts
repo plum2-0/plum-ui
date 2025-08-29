@@ -49,6 +49,7 @@ export interface ProspectProfile {
 export interface Conversation {
   id?: string;
   reddit_conversations: RedditPost[];
+  comment_tree?: any; // Tree structure from Reddit API
 }
 
 export interface RedditPost {

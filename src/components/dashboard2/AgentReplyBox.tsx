@@ -13,6 +13,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/components/ui/Toast";
 import { useReply } from "@/contexts/ReplyContext";
+import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
 
 type AgentReplyBoxProps = {
   customReply: string;
@@ -34,6 +35,7 @@ export default function AgentReplyBox({
   const { brand: brandData } = useBrand();
   const { activeConvoId, prospectProfileId } = useProfile();
   const replyConvo = useProspectConvoReply();
+  const postActionMutation = useProspectPostAction();
   const [isCheckingReddit, setIsCheckingReddit] = useState(false);
   const { showToast } = useToast();
   const { onReplySuccess } = useReply();
@@ -112,7 +114,7 @@ export default function AgentReplyBox({
   };
 
   // Check if submission is in progress
-  const isSubmittingAction = replyConvo.isPending;
+  const isSubmittingAction = replyConvo.isPending || postActionMutation.isPending;
 
   // Handle reply submission with Reddit auth check
   const handleSendReply = async () => {
@@ -346,7 +348,65 @@ export default function AgentReplyBox({
         )}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <motion.button
+          onClick={async () => {
+            if (!brandData?.id || !prospectProfileId) {
+              showToast({
+                message: "Missing required context for ignoring post",
+                type: "error",
+                duration: 3000,
+              });
+              return;
+            }
+            
+            try {
+              await postActionMutation.mutateAsync({
+                post,
+                action: "ignore",
+                brandId: brandData.id,
+                brandName: brandData.name,
+                brandDetail: brandData.detail || undefined,
+                prospectId: prospectProfileId,
+              });
+              
+              showToast({
+                message: "Post ignored",
+                type: "success",
+                duration: 2000,
+              });
+              
+              // Close reply box after ignoring
+              if (onClose) {
+                onClose();
+              }
+              
+              // Trigger success callback for auto-navigation
+              if (onReplySuccess) {
+                onReplySuccess();
+              }
+            } catch (error) {
+              console.error("Error ignoring post:", error);
+              showToast({
+                message: "Failed to ignore post",
+                type: "error",
+                duration: 3000,
+              });
+            }
+          }}
+          disabled={isSubmittingAction}
+          className="px-4 py-2 rounded-xl font-body font-medium text-sm transition-all duration-300 hover:scale-105"
+          style={{
+            background: "rgba(255, 255, 255, 0.05)",
+            color: "rgba(255, 255, 255, 0.7)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {postActionMutation.isPending ? "Ignoring..." : "Ignore"}
+        </motion.button>
+        
         <motion.button
           onClick={handleSendReply}
           disabled={
@@ -373,7 +433,7 @@ export default function AgentReplyBox({
         >
           {isCheckingReddit
             ? "Connecting to Reddit..."
-            : isSubmittingAction
+            : isSubmittingAction && !postActionMutation.isPending
             ? "Submitting..."
             : replySent
             ? "Sent!"

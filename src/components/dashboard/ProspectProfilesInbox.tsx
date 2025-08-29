@@ -32,6 +32,7 @@ export function ProspectProfilesInbox({
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("your-move");
   const [sortType, setSortType] = useState<SortType>("last-contact");
+  const [loadingProfileId, setLoadingProfileId] = useState<string | null>(null);
 
   // Debug logging
   console.log("📦 [ProspectProfilesInbox] Profiles data:", profiles);
@@ -43,6 +44,18 @@ export function ProspectProfilesInbox({
   );
 
   // Filter and sort profiles
+  // Clear loading state when selected profile changes
+  React.useEffect(() => {
+    if (selectedProfileId && loadingProfileId === selectedProfileId) {
+      setLoadingProfileId(null);
+    }
+  }, [selectedProfileId, loadingProfileId]);
+
+  const handleProfileClick = (profile: ProspectProfile) => {
+    setLoadingProfileId(profile.id);
+    onProfileSelect(profile);
+  };
+
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
 
@@ -252,6 +265,7 @@ export function ProspectProfilesInbox({
           <AnimatePresence mode="popLayout">
             {filteredProfiles.map((profile, index) => {
               const isSelected = profile.id === selectedProfileId;
+              const isLoading = profile.id === loadingProfileId;
 
               return (
                 <ProspectProfileCard
@@ -259,7 +273,8 @@ export function ProspectProfilesInbox({
                   profile={profile}
                   index={index}
                   isSelected={isSelected}
-                  onProfileSelect={onProfileSelect}
+                  isLoading={isLoading}
+                  onProfileSelect={handleProfileClick}
                   onMarkAsRead={handleMarkAsRead}
                   onArchive={handleArchive}
                 />
@@ -295,6 +310,7 @@ interface ProspectProfileCardProps {
   profile: ProspectProfile;
   index: number;
   isSelected: boolean;
+  isLoading?: boolean;
   onProfileSelect: (profile: ProspectProfile) => void;
   onMarkAsRead?: (profileId: string) => void;
   onArchive?: (profileId: string) => void;
@@ -304,6 +320,7 @@ export function ProspectProfileCard({
   profile,
   index,
   isSelected,
+  isLoading,
   onProfileSelect,
 }: ProspectProfileCardProps) {
   // const latestPost = profile.active_convos?.reddit_conversations[0];
@@ -371,6 +388,38 @@ export function ProspectProfileCard({
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/5 to-transparent" />
         </div>
+        
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm z-30 flex items-center justify-center">
+            <motion.div
+              className="flex items-center gap-2"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex gap-1">
+                {[0, 0.1, 0.2].map((delay, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 bg-purple-400 rounded-full"
+                    animate={{
+                      scale: [1, 1.5, 1],
+                      opacity: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      repeat: Infinity,
+                      delay,
+                      ease: "easeInOut",
+                    }}
+                  />
+                ))}
+              </div>
+              <span className="text-white/80 text-sm font-medium">Loading...</span>
+            </motion.div>
+          </div>
+        )}
         {profile.inbox_status && (
           <div className="absolute top-1 right-1 z-20">
             <LiquidBadge

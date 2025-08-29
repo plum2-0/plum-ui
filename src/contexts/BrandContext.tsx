@@ -1,12 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode, useMemo } from "react";
-import {
-  Brand,
-  RedditPost,
-  RedditPostUI,
-  UseCaseInsights,
-} from "@/types/brand";
+import { Brand, RedditPostUI, UseCaseInsights } from "@/types/brand";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 
 interface ProspectDisplay {
@@ -93,6 +88,15 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
           ...post,
           prospect_id: prospect.id,
         };
+      })
+      .sort((a, b) => {
+        const aTime =
+          (typeof a.created_utc === "number" ? a.created_utc * 1000 : 0) ||
+          (a.insert_timestamp ? Date.parse(a.insert_timestamp) || 0 : 0);
+        const bTime =
+          (typeof b.created_utc === "number" ? b.created_utc * 1000 : 0) ||
+          (b.insert_timestamp ? Date.parse(b.insert_timestamp) || 0 : 0);
+        return bTime - aTime;
       });
     const actionedPosts = filteredPosts
       .filter((post) => post.status === "ACTIONED" || post.status === "REPLY")
@@ -162,9 +166,19 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   }, [prospectsDisplay]);
 
   const postsToReview = useMemo<RedditPostUI[]>(() => {
-    if (!data?.brand || !data.brand.prospects) return [];
-    return prospectsDisplay.flatMap((prospect) => prospect.pendingPosts || []);
-  }, [data?.brand]);
+    if (!prospectsDisplay || prospectsDisplay.length === 0) return [];
+    return prospectsDisplay
+      .flatMap((prospect) => prospect.pendingPosts || [])
+      .sort((a, b) => {
+        const aTime =
+          (typeof a.created_utc === "number" ? a.created_utc * 1000 : 0) ||
+          (a.insert_timestamp ? Date.parse(a.insert_timestamp) || 0 : 0);
+        const bTime =
+          (typeof b.created_utc === "number" ? b.created_utc * 1000 : 0) ||
+          (b.insert_timestamp ? Date.parse(b.insert_timestamp) || 0 : 0);
+        return bTime - aTime;
+      });
+  }, [prospectsDisplay]);
 
   const allActionedPosts = useMemo<RedditPostUI[]>(() => {
     if (!prospectsDisplay || prospectsDisplay.length === 0) return [];

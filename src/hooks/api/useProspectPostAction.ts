@@ -184,11 +184,16 @@ export function useProspectPostAction() {
           queryKey: ["prospect-profiles", variables.brandId],
         });
       } else {
-        // Success - optimistic update worked, only invalidate specific prospect if needed
-        // This is much gentler and won't interrupt animations
+        // Success - invalidate queries to refresh the data
+        // Invalidate the main prospect profiles list to update the inbox
         queryClient.invalidateQueries({ 
-          queryKey: ["prospect-profiles", variables.brandId, variables.prospectId],
-          exact: true 
+          queryKey: ["prospect-profiles", variables.brandId],
+          exact: false 
+        });
+        // Also invalidate the specific prospect detail if needed
+        queryClient.invalidateQueries({ 
+          queryKey: ["prospect-profile-detail", variables.prospectId],
+          exact: false 
         });
       }
     },

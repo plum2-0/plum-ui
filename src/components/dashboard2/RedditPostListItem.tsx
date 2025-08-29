@@ -6,6 +6,7 @@ import AgentReplyBox from "./AgentReplyBox";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { useBrand } from "@/contexts/BrandContext";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
 import {
   formatTimeAgo,
   RedditPostHeader,
@@ -29,6 +30,8 @@ export default function RedditPostListItem({
   const { brand } = useBrand();
   // Get profile data from context
   const { activeConvoId, prospectProfileId } = useProfile();
+  // Get the post action mutation
+  const postActionMutation = useProspectPostAction();
 
   // Derived fields
   const postId = post.thing_id;
@@ -97,7 +100,22 @@ export default function RedditPostListItem({
     setIsSubmittingAction(true);
     try {
       if (onIgnore) {
+        // Use custom onIgnore if provided
         await onIgnore(post);
+      } else if (brand && prospectProfileId) {
+        // Otherwise use the built-in mutation
+        await postActionMutation.mutateAsync({
+          post,
+          action: "ignore",
+          brandId: brand.id,
+          brandName: brand.name,
+          brandDetail: brand.detail || undefined,
+          prospectId: prospectProfileId,
+          problem: brand.prospects?.[0]?.problem_to_solve, // You may need to adjust this based on your data structure
+        });
+      } else {
+        console.error("Missing required data for ignore action");
+        alert("Unable to ignore post. Missing brand or profile information.");
       }
     } catch (error) {
       console.error("Error ignoring post:", error);

@@ -16,6 +16,7 @@ import { useProspectProfilesQuery } from "@/hooks/api/useProspectProfilesQuery";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ReplyProvider } from "@/contexts/ReplyContext";
 import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
+import { PlumSproutLoader } from "@/components/ui/PlumSproutLoader";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -155,6 +156,10 @@ export default function DashboardPage() {
                     setSelectedProfile={setSelectedProfile}
                     isLoadingProfile={isLoadingProfile}
                   />
+                ) : selectedProfile && isLoadingProfile ? (
+                  <div className="flex items-center justify-center h-full">
+                    <PlumSproutLoader show={true} />
+                  </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-white/60 text-xl font-body">

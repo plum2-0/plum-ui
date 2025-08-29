@@ -1,17 +1,18 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
-import RedditPostListItem from "@/components/dashboard2/RedditPostListItem";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { CommentTreeContainer } from "./CommentTree";
 import type { Conversation } from "@/hooks/api/useProspectProfilesQuery";
+import type { RedditPost } from "@/types/brand";
 
 interface RedditConvoProps {
   conversation: Conversation;
   isLoading?: boolean;
+  onIgnore?: (post: RedditPost) => Promise<void>;
 }
 
-export function RedditConvo({ conversation, isLoading }: RedditConvoProps) {
+export function RedditConvo({ conversation, isLoading, onIgnore }: RedditConvoProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -23,8 +24,12 @@ export function RedditConvo({ conversation, isLoading }: RedditConvoProps) {
   }
 
   const posts = conversation.reddit_conversations || [];
+  const commentTree = (conversation as any).comment_tree || null;
+  
+  // Get the parent post (last item in reddit_conversations)
+  const parentPost = posts.length > 0 ? posts[posts.length - 1] : null;
 
-  if (posts.length === 0) {
+  if (!commentTree && posts.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <GlassCard blur="ultra" className="p-6 text-center">
@@ -35,18 +40,14 @@ export function RedditConvo({ conversation, isLoading }: RedditConvoProps) {
   }
 
   return (
-    <div className="border-2 border-purple-500/40 rounded-lg p-4 bg-black/20 backdrop-blur-sm">
-      <div className="space-y-4">
-        {posts.map((post, index) => (
-          <motion.div
-            key={post.thing_id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <RedditPostListItem post={post} />
-          </motion.div>
-        ))}
+    <div className="border-2 border-purple-500/40 rounded-lg bg-black/20 backdrop-blur-sm">
+      <div className="m-4">
+        <CommentTreeContainer 
+          tree={commentTree} 
+          parentPost={parentPost} 
+          isLoading={false} 
+          onIgnore={onIgnore}
+        />
       </div>
     </div>
   );
