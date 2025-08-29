@@ -102,14 +102,16 @@ function KeywordsEditor({
       e.preventDefault();
       const trimmedKeyword = newKeyword.trim().toLowerCase();
       if (!keywords.includes(trimmedKeyword)) {
+        // Calculate truly new keywords (not already in existing)
+        const existingSet = new Set(existingProspectKeywords?.map(k => k.toLowerCase()) || []);
+        const newUniqueKeywords = [...keywords, trimmedKeyword].filter(k => !existingSet.has(k.toLowerCase()));
         const existingCount = existingProspectKeywords?.length || 0;
-        const currentNewKeywords = keywords.length;
-        const totalIfAdded = existingCount + currentNewKeywords + 1;
+        const totalIfAdded = existingCount + newUniqueKeywords.length;
         
         if (totalIfAdded > MAX_KEYWORDS_PER_PROSPECT) {
           showToast({
             type: "error",
-            message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and ${currentNewKeywords} new keyword${currentNewKeywords !== 1 ? 's' : ''} selected. Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT} total.`,
+            message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and would have ${newUniqueKeywords.length} new keyword${newUniqueKeywords.length !== 1 ? 's' : ''} (${totalIfAdded} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}.`,
             duration: 5000,
           });
           return;
@@ -124,14 +126,16 @@ function KeywordsEditor({
     if (keywords.includes(keyword)) {
       onChange(keywords.filter((k) => k !== keyword));
     } else {
+      // Calculate truly new keywords (not already in existing)
+      const existingSet = new Set(existingProspectKeywords?.map(k => k.toLowerCase()) || []);
+      const newUniqueKeywords = [...keywords, keyword].filter(k => !existingSet.has(k.toLowerCase()));
       const existingCount = existingProspectKeywords?.length || 0;
-      const currentNewKeywords = keywords.length;
-      const totalIfAdded = existingCount + currentNewKeywords + 1;
+      const totalIfAdded = existingCount + newUniqueKeywords.length;
       
       if (totalIfAdded > MAX_KEYWORDS_PER_PROSPECT) {
         showToast({
           type: "error",
-          message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and ${currentNewKeywords} new keyword${currentNewKeywords !== 1 ? 's' : ''} selected. Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT} total.`,
+          message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and would have ${newUniqueKeywords.length} new keyword${newUniqueKeywords.length !== 1 ? 's' : ''} (${totalIfAdded} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}.`,
           duration: 5000,
         });
         return;
@@ -154,6 +158,11 @@ function KeywordsEditor({
     provenKeywords.length > 0 &&
     provenKeywords.some((k) => (keywordEngagementCounts?.[k] || 0) > 0);
 
+  // Calculate truly new keywords (not already in existing)
+  const existingSet = new Set(existingProspectKeywords?.map(k => k.toLowerCase()) || []);
+  const newUniqueKeywords = keywords.filter(k => !existingSet.has(k.toLowerCase()));
+  const totalKeywords = (existingProspectKeywords?.length || 0) + newUniqueKeywords.length;
+
   return (
     <div className="space-y-3">
       {/* Keywords Section */}
@@ -162,7 +171,7 @@ function KeywordsEditor({
           <label className="text-xs text-white/60">Keywords</label>
           <div className="flex items-center gap-2">
             <span className="text-xs text-white/40">
-              {keywords.length} new
+              {newUniqueKeywords.length} new
             </span>
             {existingProspectKeywords && existingProspectKeywords.length > 0 && (
               <>
@@ -174,11 +183,11 @@ function KeywordsEditor({
             )}
             <span className="text-xs text-white/20">•</span>
             <span className={`text-xs ${
-              (existingProspectKeywords?.length || 0) + keywords.length > MAX_KEYWORDS_PER_PROSPECT
+              totalKeywords > MAX_KEYWORDS_PER_PROSPECT
                 ? "text-red-400"
                 : "text-white/40"
             }`}>
-              {(existingProspectKeywords?.length || 0) + keywords.length}/{MAX_KEYWORDS_PER_PROSPECT} total
+              {totalKeywords}/{MAX_KEYWORDS_PER_PROSPECT} total
             </span>
           </div>
         </div>
@@ -503,13 +512,15 @@ export default function ScrapeJobDrawer() {
     // Check keyword limits for each prospect
     for (const job of jobsArray) {
       const existingKeywords = job.existingProspectKeywords?.length || 0;
-      const newKeywords = job.keywords.length;
-      const totalKeywords = existingKeywords + newKeywords;
+      // Filter out keywords that already exist in the prospect
+      const existingSet = new Set(job.existingProspectKeywords?.map(k => k.toLowerCase()) || []);
+      const newUniqueKeywords = job.keywords.filter(k => !existingSet.has(k.toLowerCase()));
+      const totalKeywords = existingKeywords + newUniqueKeywords.length;
       
       if (totalKeywords > MAX_KEYWORDS_PER_PROSPECT) {
         showToast({
           type: "error",
-          message: `Keyword limit exceeded for "${job.problemToSolve}". This prospect already has ${existingKeywords} keyword${existingKeywords !== 1 ? 's' : ''} and you're trying to add ${newKeywords} more (${totalKeywords} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}. Please remove keywords to continue.`,
+          message: `Keyword limit exceeded for "${job.problemToSolve}". This prospect already has ${existingKeywords} keyword${existingKeywords !== 1 ? 's' : ''} and you're trying to add ${newUniqueKeywords.length} new unique keyword${newUniqueKeywords.length !== 1 ? 's' : ''} (${totalKeywords} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}. Please remove keywords to continue.`,
           duration: 7000,
         });
         return;

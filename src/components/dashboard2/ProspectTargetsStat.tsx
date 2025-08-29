@@ -62,6 +62,7 @@ export default function ProspectTargetStat({
         <GlassPanel
           className="cursor-pointer relative group w-full max-w-md px-8 py-6 rounded-2xl transition-all duration-300 hover:scale-[1.02]"
           variant="medium"
+          data-tour="prospect-target-stat"
           style={{
             background:
               "linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)",

@@ -39,6 +39,9 @@ function OnboardingContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
+  
+  // Maximum number of prospects allowed
+  const MAX_PROSPECTS = 3;
 
   useEffect(() => {
     if (isSubmitting || isGenerating) {
@@ -294,6 +297,21 @@ function OnboardingContent() {
         throw new Error("User not authenticated");
       }
 
+      // Parse and validate problems (prospects)
+      const problems = formData.problems
+        .split("\n")
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+      
+      // Check prospect limit
+      if (problems.length > MAX_PROSPECTS) {
+        alert(
+          `Error: You can only create ${MAX_PROSPECTS} prospects at a time. You have entered ${problems.length} problems. Please reduce to ${MAX_PROSPECTS} problems.`
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       // Call the onboard API with the correct structure matching BrandOnboardingRequest
       const response = await fetch("/api/onboard", {
         method: "POST",
@@ -304,10 +322,7 @@ function OnboardingContent() {
           brand_name: formData.brandName,
           brand_website: websiteUrl || null,
           brand_description: formData.brandDescription,
-          problems: formData.problems
-            .split("\n")
-            .map((p) => p.trim())
-            .filter((p) => p.length > 0),
+          problems: problems,
           offerings: formData.offerings.filter(
             (o) => o.title.trim() && o.description.trim()
           ),
@@ -649,8 +664,21 @@ function OnboardingContent() {
                     Problems You Solve 🎯
                   </label>
                   <p className="text-white/60 text-sm font-body mb-4">
-                    List the problems your brand solves (one per line)
+                    Enter the problems your brand solves (one per line, maximum {MAX_PROSPECTS} problems)
                   </p>
+                  {(() => {
+                    const problemCount = formData.problems
+                      .split("\n")
+                      .filter((p) => p.trim().length > 0).length;
+                    return problemCount > MAX_PROSPECTS ? (
+                      <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                        <p className="text-red-400 text-sm font-medium">
+                          ⚠️ You have entered {problemCount} problems but only {MAX_PROSPECTS} are allowed. 
+                          Please reduce to {MAX_PROSPECTS} problems to continue.
+                        </p>
+                      </div>
+                    ) : null;
+                  })()}
                   <textarea
                     id="problems"
                     value={formData.problems}

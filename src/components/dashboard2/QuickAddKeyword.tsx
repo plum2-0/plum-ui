@@ -134,7 +134,7 @@ export default function QuickAddKeyword({
   };
 
   return (
-    <div ref={containerRef} className={cn("relative inline-block", className)}>
+    <div ref={containerRef} className={cn("relative inline-block", className)} data-tour="quick-add-keyword">
       <AnimatePresence mode="wait">
         {!isExpanded ? (
           <motion.button

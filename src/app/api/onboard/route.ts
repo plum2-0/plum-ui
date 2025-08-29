@@ -61,6 +61,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate prospect limit
+    const MAX_PROSPECTS = 3;
+    if (body.problems.length > MAX_PROSPECTS) {
+      return NextResponse.json(
+        { error: `Prospect limit exceeded. Maximum ${MAX_PROSPECTS} prospects allowed, but ${body.problems.length} problems provided. Please reduce to ${MAX_PROSPECTS} problems.` },
+        { status: 400 }
+      );
+    }
+
     // Build the payload - the request is already in the correct snake_case format
     const payload: any = {
       brand_name: body.brand_name.trim(),

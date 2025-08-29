@@ -253,6 +253,7 @@ export default function DashboardSidebar({
           {/* Leads Section */}
           <button
             onClick={() => router.push("/dashboard/leads")}
+            data-tour="sidebar-leads"
             className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all duration-300 transform-gpu ${
               pathname === "/dashboard/leads"
                 ? "text-white"

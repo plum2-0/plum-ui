@@ -15,6 +15,8 @@ import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
 import { useAddBrandProspect } from "@/hooks/api/useBrandQuery";
 import { GlassInput } from "@/components/ui/GlassInput";
 import { useToast } from "@/components/ui/Toast";
+import { useAppTour } from "@/contexts/TourContext";
+import { Info } from "lucide-react";
 
 interface BrandHeaderProps {
   name: string;
@@ -63,6 +65,19 @@ function BrandSummary() {
     refetch,
   } = useBrand();
   const postActionMutation = useProspectPostAction();
+  const { startTour, hasSeenTour } = useAppTour();
+
+  // Auto-trigger tour for new users when they reach the discover page
+  useEffect(() => {
+    if (!hasSeenTour && brandData) {
+      // Small delay to let the page fully render
+      const timer = setTimeout(() => {
+        startTour();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasSeenTour, brandData, startTour]);
+
   const handleSwipe = useCallback(
     ({ direction, post }: { direction: "left" | "right"; post: any }) => {
       if (!brandData) return;
@@ -100,7 +115,24 @@ function BrandSummary() {
     >
       <div className="flex items-start gap-4">
         <div className="flex-1">
-          <BrandHeader name={brandData.name} website={brandData.website} />
+          <div className="flex items-center justify-between mb-2">
+            <BrandHeader name={brandData.name} website={brandData.website} />
+            {/* Tour Help Button */}
+            <button
+              onClick={startTour}
+              className="p-2 rounded-lg transition-all hover:transform hover:-translate-y-0.5 group"
+              style={{
+                background:
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                boxShadow:
+                  "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+              }}
+              title="Start app tour"
+            >
+              <Info className="w-5 h-5 text-white/60 group-hover:text-white/80 transition-colors" />
+            </button>
+          </div>
           <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent backdrop-blur-sm mt-2 mb-6" />
 
           <div className="space-y-8">
@@ -185,6 +217,10 @@ function AddProspectButton({ brandId }: AddProspectButtonProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const addProspectMutation = useAddBrandProspect();
   const { showToast } = useToast();
+  const { brand: brandData } = useBrand();
+
+  // Maximum number of prospects allowed
+  const MAX_PROSPECTS = 3;
 
   // Auto-focus input when expanded
   useEffect(() => {
@@ -198,6 +234,19 @@ function AddProspectButton({ brandId }: AddProspectButtonProps) {
       showToast({
         message: "Please enter a problem description",
         type: "error",
+      });
+      return;
+    }
+
+    // Check prospect limit
+    const currentProspectCount = brandData?.prospects?.length || 0;
+    if (currentProspectCount >= MAX_PROSPECTS) {
+      showToast({
+        message: `Prospect limit exceeded. You already have ${currentProspectCount} prospect${
+          currentProspectCount > 1 ? "s" : ""
+        }. Maximum ${MAX_PROSPECTS} prospects allowed. Please delete an existing prospect to add a new one.`,
+        type: "error",
+        duration: 7000,
       });
       return;
     }
@@ -234,19 +283,37 @@ function AddProspectButton({ brandId }: AddProspectButtonProps) {
     }
   };
 
+  // Check if we've reached the prospect limit
+  const currentProspectCount = brandData?.prospects?.length || 0;
+  const isAtLimit = currentProspectCount >= MAX_PROSPECTS;
+
   return (
     <AnimatePresence mode="wait">
       {!isExpanded ? (
         <motion.button
           key="button"
-          onClick={() => setIsExpanded(true)}
-          className="group relative"
+          onClick={() => {
+            if (isAtLimit) {
+              showToast({
+                message: `Problem Research limit reached. You already have ${currentProspectCount} prospect${
+                  currentProspectCount > 1 ? "s" : ""
+                }. Maximum ${MAX_PROSPECTS} prospects allowed. Please delete an existing prospect to add a new one.`,
+                type: "error",
+                duration: 7000,
+              });
+            } else {
+              setIsExpanded(true);
+            }
+          }}
+          className={`group relative ${
+            isAtLimit ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.2 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={!isAtLimit ? { scale: 1.05 } : {}}
+          whileTap={!isAtLimit ? { scale: 0.95 } : {}}
         >
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -281,7 +348,7 @@ function AddProspectButton({ brandId }: AddProspectButtonProps) {
           {/* Hover tooltip */}
           <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             <span className="text-xs text-white/60 whitespace-nowrap">
-              Add Problem
+              {isAtLimit ? "Problem Research Limit Reached" : "Add Problem"}
             </span>
           </div>
         </motion.button>
@@ -457,16 +524,19 @@ function HelpHintSection() {
         .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
         .map(([keyword]) => keyword);
-      
+
       // Get other keywords not in the top engaged list
-      const otherKeywords = prospect.keywords?.filter(
-        k => !sortedEngagedKeywords.includes(k)
-      ) || [];
-      
+      const otherKeywords =
+        prospect.keywords?.filter((k) => !sortedEngagedKeywords.includes(k)) ||
+        [];
+
       // Default keywords to use: top engaged + remaining up to 3 total
       const defaultKeywords = [
         ...sortedEngagedKeywords,
-        ...otherKeywords.slice(0, Math.max(0, 3 - sortedEngagedKeywords.length))
+        ...otherKeywords.slice(
+          0,
+          Math.max(0, 3 - sortedEngagedKeywords.length)
+        ),
       ];
 
       return {
@@ -510,16 +580,18 @@ function HelpHintSection() {
           .sort(([, a], [, b]) => b - a)
           .slice(0, 3)
           .map(([keyword]) => keyword);
-        
+
         // Get other keywords not in the top engaged list
-        const otherKeywords = prospect.keywords?.filter(
-          k => !sortedEngagedKeywords.includes(k)
-        ) || [];
-        
+        const otherKeywords =
+          prospect.keywords?.filter(
+            (k) => !sortedEngagedKeywords.includes(k)
+          ) || [];
+
         // Default keywords to use: top engaged keywords first
-        const defaultKeywords = sortedEngagedKeywords.length > 0 
-          ? sortedEngagedKeywords
-          : otherKeywords.slice(0, 3); // Fallback to first 3 regular keywords if no engagement data
+        const defaultKeywords =
+          sortedEngagedKeywords.length > 0
+            ? sortedEngagedKeywords
+            : otherKeywords.slice(0, 3); // Fallback to first 3 regular keywords if no engagement data
 
         return {
           prospectId: prospect.id,

@@ -7,6 +7,8 @@ import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { ScrapeJobProvider } from "@/contexts/ScrapeJobContext";
 import ScrapeJobDrawer from "@/components/dashboard2/ScrapeJobDrawer";
+import { TourProvider } from "@/contexts/TourContext";
+import AppTour from "@/components/tour/AppTour";
 
 export default function DashboardLayout({
   children,
@@ -118,17 +120,21 @@ export default function DashboardLayout({
       `}</style>
 
       {/* Main Content Area */}
-      <BrandProvider>
-        <ScrapeJobProvider>
-          <div className="flex-1 overflow-hidden relative z-10 flex">
-            <DashboardSidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {children}
-            </div>
-          </div>
-          <ScrapeJobDrawer />
-        </ScrapeJobProvider>
-      </BrandProvider>
+      <TourProvider>
+        <BrandProvider>
+          <ScrapeJobProvider>
+            <AppTour>
+              <div className="flex-1 overflow-hidden relative z-10 flex">
+                <DashboardSidebar />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {children}
+                </div>
+              </div>
+              <ScrapeJobDrawer />
+            </AppTour>
+          </ScrapeJobProvider>
+        </BrandProvider>
+      </TourProvider>
     </div>
   );
 }
