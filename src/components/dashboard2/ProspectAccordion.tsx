@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import TagBadge from "./TagBadge";
-import SubredditsList from "./SubredditsList";
+import TagListWithMore from "./TagListWithMore";
 import QuickAddKeyword from "./QuickAddKeyword";
 import { useBrand } from "@/contexts/BrandContext";
 import {
@@ -444,43 +443,33 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                           </h4>
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                          {prospect.keywordCounts
-                            .slice(0, 5)
-                            .map(
-                              (
-                                item: { keyword: string; count: number },
-                                index: number
-                              ) => {
-                                const deletionKey = `${prospect.id}-${item.keyword}`;
-                                const isDeleting =
-                                  deletingKeywords.has(deletionKey);
-
-                                return (
-                                  <TagBadge
-                                    key={item.keyword}
-                                    label={item.keyword}
-                                    count={item.count}
-                                    variant="keyword"
-                                    showDelete={true}
-                                    disabled={isDeleting}
-                                    animationDelay={0.05 * index}
-                                    onDelete={() =>
-                                      handleDeleteKeyword(
-                                        prospect.id,
-                                        item.keyword
-                                      )
-                                    }
-                                  />
-                                );
-                              }
+                          <TagListWithMore
+                            items={prospect.keywordCounts.map(
+                              (item: { keyword: string; count: number }) => ({
+                                key: `${prospect.id}-${item.keyword}`,
+                                label: item.keyword,
+                                count: item.count,
+                                disabled: deletingKeywords.has(
+                                  `${prospect.id}-${item.keyword}`
+                                ),
+                              })
                             )}
-                          <QuickAddKeyword
-                            prospectId={prospect.id}
-                            problemToSolve={prospect.problem_to_solve}
-                            existingKeywords={prospect.keywordCounts.map(
-                              (item: { keyword: string }) => item.keyword
-                            )}
-                            insights={prospect.insights}
+                            initialVisible={5}
+                            variant="keyword"
+                            showDelete={true}
+                            onDeleteItem={(item) =>
+                              handleDeleteKeyword(prospect.id, item.label)
+                            }
+                            trailingNode={
+                              <QuickAddKeyword
+                                prospectId={prospect.id}
+                                problemToSolve={prospect.problem_to_solve}
+                                existingKeywords={prospect.keywordCounts.map(
+                                  (item: { keyword: string }) => item.keyword
+                                )}
+                                insights={prospect.insights}
+                              />
+                            }
                           />
                         </div>
                       </motion.div>
@@ -523,8 +512,16 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             Top Subreddits
                           </h4>
                         </div>
-                        <SubredditsList
-                          subredditCounts={prospect.subredditCounts}
+                        <TagListWithMore
+                          items={prospect.subredditCounts.map(
+                            (item: { subreddit: string; count: number }) => ({
+                              key: `${prospect.id}-r/${item.subreddit}`,
+                              label: `r/${item.subreddit}`,
+                              count: item.count,
+                            })
+                          )}
+                          initialVisible={5}
+                          variant="subreddit"
                         />
                       </motion.div>
                     )}

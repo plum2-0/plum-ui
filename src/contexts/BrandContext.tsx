@@ -48,9 +48,14 @@ function createProspectsDisplay(brand: Brand | null): ProspectDisplay[] {
       (post) => post.status !== "IGNORE"
     );
 
-    // Calculate keyword counts (only for prospect.keywords)
+    // Calculate keyword counts (include all prospect.keywords; zero if no hits)
     const keywordMap = new Map<string, number>();
     const allowedKeywords = new Set((prospect.keywords || []).filter(Boolean));
+    // Initialize all prospect keywords with zero counts so they appear in the UI
+    for (const keyword of allowedKeywords) {
+      keywordMap.set(keyword, 0);
+    }
+    // Tally counts from filtered posts, restricted to prospect keywords
     filteredPosts.forEach((post) => {
       const sourceKeyword = post.source_keywords;
       if (sourceKeyword && allowedKeywords.has(sourceKeyword)) {

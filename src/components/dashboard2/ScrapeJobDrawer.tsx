@@ -23,7 +23,7 @@ import TagBadge from "./TagBadge";
 // Constants
 // ---------------------------------------------
 const POSTS_PER_KEYWORD = 100;
-const MAX_KEYWORDS_PER_PROSPECT = 5;
+const MAX_KEYWORDS_PER_PROSPECT = 10;
 
 const LOADING_MESSAGES = [
   "Channeling the digital realm...",
@@ -103,15 +103,23 @@ function KeywordsEditor({
       const trimmedKeyword = newKeyword.trim().toLowerCase();
       if (!keywords.includes(trimmedKeyword)) {
         // Calculate truly new keywords (not already in existing)
-        const existingSet = new Set(existingProspectKeywords?.map(k => k.toLowerCase()) || []);
-        const newUniqueKeywords = [...keywords, trimmedKeyword].filter(k => !existingSet.has(k.toLowerCase()));
+        const existingSet = new Set(
+          existingProspectKeywords?.map((k) => k.toLowerCase()) || []
+        );
+        const newUniqueKeywords = [...keywords, trimmedKeyword].filter(
+          (k) => !existingSet.has(k.toLowerCase())
+        );
         const existingCount = existingProspectKeywords?.length || 0;
         const totalIfAdded = existingCount + newUniqueKeywords.length;
-        
+
         if (totalIfAdded > MAX_KEYWORDS_PER_PROSPECT) {
           showToast({
             type: "error",
-            message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and would have ${newUniqueKeywords.length} new keyword${newUniqueKeywords.length !== 1 ? 's' : ''} (${totalIfAdded} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}.`,
+            message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${
+              existingCount !== 1 ? "s" : ""
+            } and would have ${newUniqueKeywords.length} new keyword${
+              newUniqueKeywords.length !== 1 ? "s" : ""
+            } (${totalIfAdded} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}.`,
             duration: 5000,
           });
           return;
@@ -127,15 +135,23 @@ function KeywordsEditor({
       onChange(keywords.filter((k) => k !== keyword));
     } else {
       // Calculate truly new keywords (not already in existing)
-      const existingSet = new Set(existingProspectKeywords?.map(k => k.toLowerCase()) || []);
-      const newUniqueKeywords = [...keywords, keyword].filter(k => !existingSet.has(k.toLowerCase()));
+      const existingSet = new Set(
+        existingProspectKeywords?.map((k) => k.toLowerCase()) || []
+      );
+      const newUniqueKeywords = [...keywords, keyword].filter(
+        (k) => !existingSet.has(k.toLowerCase())
+      );
       const existingCount = existingProspectKeywords?.length || 0;
       const totalIfAdded = existingCount + newUniqueKeywords.length;
-      
+
       if (totalIfAdded > MAX_KEYWORDS_PER_PROSPECT) {
         showToast({
           type: "error",
-          message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${existingCount !== 1 ? 's' : ''} and would have ${newUniqueKeywords.length} new keyword${newUniqueKeywords.length !== 1 ? 's' : ''} (${totalIfAdded} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}.`,
+          message: `Cannot add more keywords. This prospect has ${existingCount} existing keyword${
+            existingCount !== 1 ? "s" : ""
+          } and would have ${newUniqueKeywords.length} new keyword${
+            newUniqueKeywords.length !== 1 ? "s" : ""
+          } (${totalIfAdded} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}.`,
           duration: 5000,
         });
         return;
@@ -159,9 +175,14 @@ function KeywordsEditor({
     provenKeywords.some((k) => (keywordEngagementCounts?.[k] || 0) > 0);
 
   // Calculate truly new keywords (not already in existing)
-  const existingSet = new Set(existingProspectKeywords?.map(k => k.toLowerCase()) || []);
-  const newUniqueKeywords = keywords.filter(k => !existingSet.has(k.toLowerCase()));
-  const totalKeywords = (existingProspectKeywords?.length || 0) + newUniqueKeywords.length;
+  const existingSet = new Set(
+    existingProspectKeywords?.map((k) => k.toLowerCase()) || []
+  );
+  const newUniqueKeywords = keywords.filter(
+    (k) => !existingSet.has(k.toLowerCase())
+  );
+  const totalKeywords =
+    (existingProspectKeywords?.length || 0) + newUniqueKeywords.length;
 
   return (
     <div className="space-y-3">
@@ -173,20 +194,23 @@ function KeywordsEditor({
             <span className="text-xs text-white/40">
               {newUniqueKeywords.length} new
             </span>
-            {existingProspectKeywords && existingProspectKeywords.length > 0 && (
-              <>
-                <span className="text-xs text-white/20">•</span>
-                <span className="text-xs text-amber-400/60">
-                  {existingProspectKeywords.length} existing
-                </span>
-              </>
-            )}
+            {existingProspectKeywords &&
+              existingProspectKeywords.length > 0 && (
+                <>
+                  <span className="text-xs text-white/20">•</span>
+                  <span className="text-xs text-amber-400/60">
+                    {existingProspectKeywords.length} existing
+                  </span>
+                </>
+              )}
             <span className="text-xs text-white/20">•</span>
-            <span className={`text-xs ${
-              totalKeywords > MAX_KEYWORDS_PER_PROSPECT
-                ? "text-red-400"
-                : "text-white/40"
-            }`}>
+            <span
+              className={`text-xs ${
+                totalKeywords > MAX_KEYWORDS_PER_PROSPECT
+                  ? "text-red-400"
+                  : "text-white/40"
+              }`}
+            >
               {totalKeywords}/{MAX_KEYWORDS_PER_PROSPECT} total
             </span>
           </div>
@@ -218,42 +242,73 @@ function KeywordsEditor({
                   <div
                     onClick={() => handleToggleKeyword(keyword)}
                     className={cn(
-                      "px-2 py-0.5 text-xs rounded-full cursor-pointer transition-all flex items-center gap-1",
+                      "px-2 py-0.5 text-xs rounded-full cursor-pointer transition-all flex items-center gap-1 relative overflow-hidden group",
                       isSelected
                         ? isProven && engagementCount > 0
-                          ? "bg-emerald-500/20 hover:bg-red-500/20 border border-emerald-500/30"
-                          : "bg-white/10 hover:bg-red-500/20 border border-white/20"
+                          ? "border text-emerald-400/60 border-emerald-500/40 hover:border-red-500/50"
+                          : "border hover:border-red-500/50"
                         : isProven && engagementCount > 0
                         ? "bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20"
                         : "bg-white/5 hover:bg-white/10 border border-white/10"
                     )}
+                    style={
+                      isSelected
+                        ? {
+                            background:
+                              isProven && engagementCount > 0
+                                ? "linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(168, 85, 247, 0.25))"
+                                : "linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(34, 197, 94, 0.3))",
+                            borderColor:
+                              isProven && engagementCount > 0
+                                ? "rgba(34, 197, 94, 0.4)"
+                                : "rgba(168, 85, 247, 0.5)",
+                            boxShadow:
+                              isProven && engagementCount > 0
+                                ? "0 0 12px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+                                : "0 0 15px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+                            backdropFilter: "blur(10px)",
+                          }
+                        : undefined
+                    }
+                    onMouseEnter={(e) => {
+                      if (isSelected) {
+                        e.currentTarget.style.boxShadow =
+                          isProven && engagementCount > 0
+                            ? "0 0 20px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)"
+                            : "0 0 25px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (isSelected) {
+                        e.currentTarget.style.boxShadow =
+                          isProven && engagementCount > 0
+                            ? "0 0 12px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+                            : "0 0 15px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)";
+                      }
+                    }}
                   >
                     <span
                       className={
                         isSelected
                           ? isProven && engagementCount > 0
-                            ? "text-emerald-300"
-                            : "text-white/70"
+                            ? "text-emerald-400/60 font-medium"
+                            : "text-white font-medium"
                           : isProven && engagementCount > 0
                           ? "text-emerald-300/70"
                           : "text-white/50"
                       }
+                      style={
+                        isSelected
+                          ? {
+                              textShadow: "0 0 8px rgba(255, 255, 255, 0.3)",
+                            }
+                          : undefined
+                      }
                     >
                       {keyword}
                     </span>
-                    {isProven && engagementCount > 0 && (
-                      <span className="text-emerald-400/60 text-[10px]">
-                        ×{engagementCount}
-                      </span>
-                    )}
                     <span
-                      className={
-                        isSelected
-                          ? isProven && engagementCount > 0
-                            ? "text-emerald-300/60"
-                            : "text-white/40"
-                          : "text-white/30"
-                      }
+                      className={isSelected ? "text-white/60" : "text-white/30"}
                     >
                       {isSelected ? "×" : "+"}
                     </span>
@@ -513,14 +568,26 @@ export default function ScrapeJobDrawer() {
     for (const job of jobsArray) {
       const existingKeywords = job.existingProspectKeywords?.length || 0;
       // Filter out keywords that already exist in the prospect
-      const existingSet = new Set(job.existingProspectKeywords?.map(k => k.toLowerCase()) || []);
-      const newUniqueKeywords = job.keywords.filter(k => !existingSet.has(k.toLowerCase()));
+      const existingSet = new Set(
+        job.existingProspectKeywords?.map((k) => k.toLowerCase()) || []
+      );
+      const newUniqueKeywords = job.keywords.filter(
+        (k) => !existingSet.has(k.toLowerCase())
+      );
       const totalKeywords = existingKeywords + newUniqueKeywords.length;
-      
+
       if (totalKeywords > MAX_KEYWORDS_PER_PROSPECT) {
         showToast({
           type: "error",
-          message: `Keyword limit exceeded for "${job.problemToSolve}". This prospect already has ${existingKeywords} keyword${existingKeywords !== 1 ? 's' : ''} and you're trying to add ${newUniqueKeywords.length} new unique keyword${newUniqueKeywords.length !== 1 ? 's' : ''} (${totalKeywords} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}. Please remove keywords to continue.`,
+          message: `Keyword limit exceeded for "${
+            job.problemToSolve
+          }". This prospect already has ${existingKeywords} keyword${
+            existingKeywords !== 1 ? "s" : ""
+          } and you're trying to add ${
+            newUniqueKeywords.length
+          } new unique keyword${
+            newUniqueKeywords.length !== 1 ? "s" : ""
+          } (${totalKeywords} total). Maximum allowed is ${MAX_KEYWORDS_PER_PROSPECT}. Please remove keywords to continue.`,
           duration: 7000,
         });
         return;

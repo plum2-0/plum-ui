@@ -7,7 +7,7 @@ import { useScrapeJob } from "@/contexts/ScrapeJobContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
-import KeywordSuggest from "./KeywordSuggest";
+import KeywordSuggest from "./KeywordSuggestSimple";
 
 interface QuickAddKeywordProps {
   prospectId: string;

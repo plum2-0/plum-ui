@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useGenerateKeywords } from "@/hooks/api/useAgentQuery";
@@ -9,20 +9,6 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useToast } from "@/components/ui/Toast";
 import { LiquidButton } from "@/components/ui/LiquidButton";
 import { cn } from "@/lib/utils";
-
-// Portal component for rendering modal
-function Portal({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  if (!mounted) return null;
-  
-  return createPortal(children, document.body);
-}
 
 interface KeywordSuggestProps {
   prospectId: string;
@@ -40,11 +26,11 @@ export default function KeywordSuggest({
   className,
 }: KeywordSuggestProps) {
   const [isOpen, setIsOpen] = useState(false);
+  
   const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set());
   const [loadingMessage, setLoadingMessage] = useState("Analyzing your market...");
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
 
   const generateKeywordsMutation = useGenerateKeywords();
   const { scrapeJobs, addScrapeJob, updateScrapeJob, openDrawer } = useScrapeJob();
@@ -73,27 +59,7 @@ export default function KeywordSuggest({
   }, [generateKeywordsMutation.isPending]);
 
 
-  // Click outside handler
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        handleClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
+  // No click outside handler needed - we use the backdrop for that
 
   const handleOpen = async () => {
     setIsOpen(true);
@@ -302,8 +268,8 @@ export default function KeywordSuggest({
       </AnimatePresence>
       
       {/* Modal rendered in portal */}
-      <Portal>
-        <AnimatePresence>
+      {typeof window !== 'undefined' && createPortal(
+        <AnimatePresence mode="wait">
           {isOpen && (
             <>
               {/* Semi-transparent backdrop */}
@@ -318,12 +284,13 @@ export default function KeywordSuggest({
               
               {/* Centered modal */}
               <motion.div
-                ref={modalRef}
+                data-portal-id="keyword-modal"
                 className="fixed left-1/2 top-1/2 z-[9999] w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 max-h-[85vh] overflow-y-auto"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
+                onClick={(e) => e.stopPropagation()}
               >
               <div
                 className="p-6 rounded-2xl"
@@ -463,7 +430,12 @@ export default function KeywordSuggest({
                             transition={{ delay: index * 0.1 }}
                           >
                             <button
-                              onClick={() => !isExisting && toggleKeyword(keyword)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isExisting) {
+                                  toggleKeyword(keyword);
+                                }
+                              }}
                               disabled={isExisting}
                               className={cn(
                                 "w-full p-3 rounded-xl flex items-center gap-3 transition-all",
@@ -591,10 +563,11 @@ export default function KeywordSuggest({
               </div>
               </div>
             </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </Portal>
+          </>
+        )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
