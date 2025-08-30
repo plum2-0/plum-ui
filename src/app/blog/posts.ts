@@ -17,6 +17,12 @@ export const posts: BlogPostMeta[] = [
     title: "What is Product Concept Validation (and how to do it right)?",
     date: "2025-02-15",
     image: "/blog/pcv.png",
+  },
+  {
+    slug: "agency-marketing-on-reddit",
+    title: "Why to Run Your Agency Marketing Strategy on Reddit",
+    date: "2025-02-16",
+    image: "/blog/plum_hug_reddit.png",
   }
 ];
 
