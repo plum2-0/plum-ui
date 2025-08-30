@@ -12,13 +12,17 @@ interface PaywallModalProps {
   onClose: () => void;
   onSuccess: () => void;
   remainingJobs?: number;
+  usedJobs?: number;
+  monthlyLimit?: number;
 }
 
 export function PaywallModal({ 
   isOpen, 
   onClose, 
   onSuccess, 
-  remainingJobs = 0 
+  remainingJobs = 0,
+  usedJobs = 0,
+  monthlyLimit = 0
 }: PaywallModalProps) {
   const [loading, setLoading] = useState(false);
   const [showCodeInput, setShowCodeInput] = useState(false);
@@ -141,10 +145,16 @@ export function PaywallModal({
               </span>
             </h2>
             <p className="text-gray-400">
-              {remainingJobs > 0 
-                ? `You have ${remainingJobs} scrape job${remainingJobs === 1 ? '' : 's'} remaining this month`
-                : 'Upgrade to Pro to continue discovering prospects'
-              }
+              {monthlyLimit > 0 ? (
+                <>
+                  Your brand has used <span className="text-purple-400 font-semibold">{usedJobs}</span> of{' '}
+                  <span className="text-purple-400 font-semibold">{monthlyLimit}</span> scrape jobs this month
+                </>
+              ) : remainingJobs > 0 ? (
+                `You have ${remainingJobs} scrape job${remainingJobs === 1 ? '' : 's'} remaining this month`
+              ) : (
+                'Upgrade to Pro to continue discovering prospects'
+              )}
             </p>
           </div>
           

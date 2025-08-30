@@ -25,10 +25,42 @@ export async function GET(request: NextRequest) {
     
     // Check various access methods
     const now = Timestamp.now();
-    const scrapeJobsThisMonth = userData?.scrapeJobsThisMonth || 0;
+    
+    // Get scrape jobs from brand level instead of user level
+    let scrapeJobsThisMonth = 0;
     
     // Get user's brand_id
     const userBrandId = userData?.brand_id;
+    
+    // NEW: Check if any brand member has a subscription
+    let brandHasActiveSubscription = false;
+    let subscriptionTier = 'free';
+    let brandData: any = null;
+    
+    if (userBrandId) {
+      // Get the brand document to find all user_ids and usage
+      const brandDoc = await db
+        .collection('brands')
+        .doc(userBrandId)
+        .get();
+      
+      if (brandDoc.exists) {
+        brandData = brandDoc.data();
+        
+        // Get brand's scrape job usage
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+        const lastResetMonth = brandData?.lastUsageReset ? 
+          new Date(brandData.lastUsageReset.toDate()).toISOString().slice(0, 7) : null;
+        
+        // Use brand's scrape job count, reset if new month
+        if (lastResetMonth !== currentMonth) {
+          scrapeJobsThisMonth = 0;
+        } else {
+          scrapeJobsThisMonth = brandData?.scrapeJobsThisMonth || 0;
+        }
+      }
+    }
     
     console.log('Subscription Check Debug:', {
       userId: session.user.id,
@@ -49,40 +81,28 @@ export async function GET(request: NextRequest) {
       userData?.testerAccessExpiry && 
       userData.testerAccessExpiry.toMillis() > now.toMillis();
     
-    // NEW: Check if any brand member has a subscription
-    let brandHasActiveSubscription = false;
-    let subscriptionTier = 'free';
-    
-    if (userBrandId) {
-      // Get the brand document to find all user_ids
-      const brandDoc = await db
-        .collection('brands')
-        .doc(userBrandId)
-        .get();
+    // Check if any brand member has a subscription (using brandData we already fetched)
+    if (userBrandId && brandData) {
+      const brandUserIds = brandData?.user_ids || [];
       
-      if (brandDoc.exists) {
-        const brandData = brandDoc.data();
-        const brandUserIds = brandData?.user_ids || [];
+      console.log('Brand users:', brandUserIds);
+      
+      // Check if ANY user in the brand has an active subscription
+      for (const brandUserId of brandUserIds) {
+        const brandUserDoc = await db
+          .collection('users')
+          .doc(brandUserId)
+          .get();
         
-        console.log('Brand users:', brandUserIds);
-        
-        // Check if ANY user in the brand has an active subscription
-        for (const brandUserId of brandUserIds) {
-          const brandUserDoc = await db
-            .collection('users')
-            .doc(brandUserId)
-            .get();
+        if (brandUserDoc.exists) {
+          const brandUserData = brandUserDoc.data();
+          const userSubscriptionStatus = brandUserData?.subscriptionStatus;
           
-          if (brandUserDoc.exists) {
-            const brandUserData = brandUserDoc.data();
-            const userSubscriptionStatus = brandUserData?.subscriptionStatus;
-            
-            if (userSubscriptionStatus === 'active' || userSubscriptionStatus === 'trialing') {
-              brandHasActiveSubscription = true;
-              subscriptionTier = brandUserData?.subscriptionTier || 'pro';
-              console.log(`Found paying user in brand: ${brandUserId} with status: ${userSubscriptionStatus}`);
-              break; // Found at least one paying user, no need to check others
-            }
+          if (userSubscriptionStatus === 'active' || userSubscriptionStatus === 'trialing') {
+            brandHasActiveSubscription = true;
+            subscriptionTier = brandUserData?.subscriptionTier || 'pro';
+            console.log(`Found paying user in brand: ${brandUserId} with status: ${userSubscriptionStatus}`);
+            break; // Found at least one paying user, no need to check others
           }
         }
       }

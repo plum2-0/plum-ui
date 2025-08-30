@@ -65,6 +65,9 @@ export interface Brand {
   source?: {
     reddit?: RedditSource;
   };
+  scrapeJobsThisMonth?: number;
+  lifetimeScrapeJobs?: number;
+  lastUsageReset?: string;
 }
 
 export interface UseCaseInsights {

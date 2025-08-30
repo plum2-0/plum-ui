@@ -26,6 +26,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 // ---------------------------------------------
 const POSTS_PER_KEYWORD = 100;
 const MAX_KEYWORDS_PER_PROSPECT = 8;
+const MONTHLY_SCRAPE_LIMIT = 100; // Pro tier monthly limit
 
 const LOADING_MESSAGES = [
   "Channeling the digital realm...",
@@ -623,7 +624,7 @@ function ScrapeJobAccordion({
 }
 
 export default function ScrapeJobDrawer() {
-  const { brand } = useBrand();
+  const { brand, scrapeJobsThisMonth } = useBrand();
   const {
     isOpen,
     scrapeJobs,
@@ -639,27 +640,26 @@ export default function ScrapeJobDrawer() {
     refreshPosts.isSuccess
   );
   const [showPaywall, setShowPaywall] = useState(false);
-  const { checkAccess, remainingJobs, incrementUsage } = useSubscription();
+  const { checkAccess, remainingJobs } = useSubscription();
 
   const handleRunAllJobs = async () => {
     if (!brand?.id || scrapeJobs.size === 0) return;
-    
+
     // Check subscription status first
-    console.log('Checking subscription access for scraping...');
+    console.log("Checking subscription access for scraping...");
     const hasAccess = await checkAccess();
-    console.log('Has access:', hasAccess);
-    console.log('Remaining jobs:', remainingJobs);
-    
+    console.log("Has access:", hasAccess);
+    console.log("Remaining jobs:", remainingJobs);
+
     if (!hasAccess) {
-      console.log('User does not have access, showing paywall...');
+      console.log("User does not have access, showing paywall...");
       setShowPaywall(true);
       return;
     }
-    
-    // Increment usage when accessing scraping functionality
-    console.log('User has access, incrementing usage...');
-    await incrementUsage();
-    
+
+    // Usage will be incremented by the Python API when it processes the refresh request
+    console.log("User has access, proceeding with scraping...");
+
     const jobsArray = Array.from(scrapeJobs.values());
 
     // Check keyword limits for each prospect
@@ -821,7 +821,7 @@ export default function ScrapeJobDrawer() {
           </div>
         </div>
       </RightSidePanel>
-      
+
       {/* Paywall Modal */}
       <PaywallModal
         isOpen={showPaywall}
@@ -832,6 +832,8 @@ export default function ScrapeJobDrawer() {
           await handleRunAllJobs();
         }}
         remainingJobs={remainingJobs}
+        usedJobs={scrapeJobsThisMonth}
+        monthlyLimit={MONTHLY_SCRAPE_LIMIT}
       />
     </>
   );

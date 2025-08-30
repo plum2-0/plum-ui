@@ -32,6 +32,7 @@ interface BrandContextType {
     uniqueActionedAuthors: number;
     totalPotentialCustomers: number;
   };
+  scrapeJobsThisMonth: number;
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -217,6 +218,24 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     };
   }, [prospectsDisplay]);
 
+  const scrapeJobsThisMonth = useMemo(() => {
+    // Check if we need to reset based on the current month
+    if (!data?.brand) return 0;
+    
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+    
+    if (data.brand.lastUsageReset) {
+      const lastResetMonth = new Date(data.brand.lastUsageReset).toISOString().slice(0, 7);
+      if (lastResetMonth !== currentMonth) {
+        // Different month, so usage should be reset to 0
+        return 0;
+      }
+    }
+    
+    return data.brand.scrapeJobsThisMonth || 0;
+  }, [data?.brand]);
+
   return (
     <BrandContext.Provider
       value={{
@@ -227,6 +246,7 @@ export function BrandProvider({ children }: { children: ReactNode }) {
         postsToReview,
         allActionedPosts,
         brandAggregates,
+        scrapeJobsThisMonth,
         isLoading,
         error,
         refetch,
