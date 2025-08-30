@@ -204,56 +204,59 @@ export default function Home() {
       </header>
 
       {/* -------------- HERO -------------- */}
-      <section className="flex-1 flex items-center justify-center py-8 lg:py-12 relative z-10">
+      <section className="flex-1 flex items-start justify-center pt-6 pb-4 lg:pt-10 lg:pb-6 relative z-10">
         <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-8 items-center px-6">
           {/* TAGLINE + CTA */}
-          <div className="text-left space-y-6">
+          <div className="text-center space-y-6 lg:col-span-2">
             <div className="space-y-4">
-              <h1 className="font-heading font-extrabold text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight text-white drop-shadow-2xl tracking-tight">
-                <span className="block">
-                  <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent">
-                    Validate and Grow
-                  </span>
+              <h1 className="font-heading font-extrabold text-3xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight text-white drop-shadow-2xl tracking-tight">
+                <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent">
+                  Validate and Grow Your Business
                 </span>
-                <span className="block">Your Business</span>
               </h1>
-              <p className="font-body font-medium text-lg md:text-xl max-w-2xl text-white/90 leading-relaxed tracking-wide">
-                Engage Reddit communities talking about relevant problems your company can help solve to validate your product
-              </p>
-            </div>
-
-            <Link
-              href="/auth/signin"
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-heading font-semibold text-xl tracking-wide text-white transition-all duration-500 hover:scale-105 glass-button group"
-              style={{ animation: "glow 3s ease-in-out infinite" }}
-            >
-              <span>Get Started</span>
-              <svg
-                className="w-6 h-6 group-hover:translate-x-1 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+              <div className="flex flex-col">
+                <p className="font-body font-medium text-lg md:text-xl max-w-3xl mx-auto text-white/90 leading-relaxed tracking-wide md:mb-0 lg:whitespace-nowrap">
+                  Engage Reddit communities to find leads and validate your product.
+                </p>
+              </div>
+              <div className="mt-6 flex justify-center">
+                <video
+                  className="w-full max-w-4xl lg:max-w-5xl max-h-[55vh] lg:max-h-[60vh] rounded-2xl glass-card"
+                  src="/plum2.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
                 />
-              </svg>
-            </Link>
+              </div>
+              <div className="mt-4 flex justify-center">
+                <Link
+                  href="/auth/signin"
+                  className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-heading font-semibold text-lg tracking-wide text-white transition-all duration-500 hover:scale-105 glass-button group"
+                  style={{ animation: "glow 3s ease-in-out infinite" }}
+                >
+                  <span>Get Started</span>
+                  <svg
+                    className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* DEMO FLOW */}
+          {/*
           <div className="flex justify-center lg:justify-end">
             <div className="glass-card rounded-3xl p-6 w-full max-w-lg space-y-4 relative">
-              {/* Floating particles inside card */}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-4 right-6 w-2 h-2 bg-purple-400 rounded-full opacity-60 animate-ping"></div>
                 <div className="absolute bottom-8 left-8 w-1 h-1 bg-green-400 rounded-full opacity-40 animate-pulse"></div>
               </div>
-
-              {/* Reddit mention */}
               <div className="glass-card rounded-2xl p-4 space-y-2">
                 <p className="text-sm text-white/70">
                   Mention of{" "}
@@ -264,59 +267,32 @@ export default function Home() {
                   "I wish I had a cool way to listen in Reddit threads…"
                 </p>
               </div>
-
-              {/* Animated arrow */}
               <div className="flex justify-center py-2">
                 <div className="p-3 rounded-full glass-card">
-                  <svg
-                    className="w-6 h-6 text-green-400 animate-bounce"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
+                  <svg className="w-6 h-6 text-green-400 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 4v12m0 0l-4-4m4 4l4-4" />
                   </svg>
                 </div>
               </div>
-
-              {/* Notification */}
               <div className="glass-card rounded-2xl p-4 space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🍑</span>
-                  <span className="text-sm text-white/80">
-                    1 new mention of "Plum"
-                  </span>
+                  <span className="text-sm text-white/80">1 new mention of "Plum"</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-300">
-                    High relevance – potential user looking for a service like
-                    Plum
-                  </span>
+                  <span className="text-green-300">High relevance – potential user looking for a service like Plum</span>
                 </div>
-                <Link
-                  href="#"
-                  className="inline-flex items-center gap-2 text-sm text-purple-300 hover:text-purple-200 transition-colors group"
-                >
+                <Link href="#" className="inline-flex items-center gap-2 text-sm text-purple-300 hover:text-purple-200 transition-colors group">
                   <span>See post</span>
-                  <svg
-                    className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </Link>
               </div>
             </div>
           </div>
+          */}
         </div>
       </section>
 

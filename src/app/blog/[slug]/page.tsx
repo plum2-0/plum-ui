@@ -149,96 +149,38 @@ Numbers are heuristics—direction matters more than precision.
 
 ---
 
-## 7) A 14-Day Operating Cadence (Minimal but Powerful)
+## 7) A 14-Day Operating Cadence for Agencies
 
-**Days 1–2: Discover**
-- Select 6–10 target subs and log 40–60 recent posts/comments.
-
-**Days 3–4: Synthesize**
-- Code themes, draft 3–5 crisp hypotheses.
-
-**Days 5–7: Engage**
-- Post 6–10 thoughtful comments across threads.
-- Offer one mini-prototype (screenshot or text mock).
-
-**Days 8–10: Experiment**
-- Ship a one-screen landing page for your top hypothesis.
-- Invite opt-ins only when contextually relevant.
-
-**Days 11–14: Decide**
-- Review signals vs. thresholds.
-- Double down on 1 hypothesis, pivot, or pause.
-
-Repeat the cycle weekly until a single hypothesis clearly outperforms.
+- **Days 1–2: Discover** → shortlist 8–12 subreddits by ICP and service line
+- **Days 3–4: Synthesize** → create 3 value props per service (copy + proof)
+- **Days 5–7: Engage** → 10 thoughtful comments; 2 case‑study teardowns
+- **Days 8–10: Experiment** → one‑screen CTA per service; book calls
+- **Days 11–14: Decide** → double‑down on the highest‑intent thread styles
 
 ---
 
-## 8) Example Walkthrough: “Passive Time Tracking for Freelancers”
+## Proven playbooks that win on Reddit (for agencies)
 
-**Discovery:** In r/freelance and r/consulting, 17 threads in 90 days mention “forgetting to log hours” and “manual time sheets.”  
-**Hypothesis:** If time is captured passively and is easy to edit, freelancers will export invoices weekly.
-
-**Experiments & signals**
-- Concept comment reply rate: **26%** (green).  
-- Figma mock posted with mod permission: **14 comments**, 6 specific UX requests.  
-- Landing page: 22% opt-in from Reddit traffic (n=213).  
-- Concierge test: 4 users emailed CSV exports two weeks in a row.
-
-**Decision:** Build Wizard-of-Oz MVP; focus on the edit flow (users feared “false positives” in tracking).
+- **Problem teardown**: deconstruct a post and share the 3‑step fix (no links)
+- **Side‑by‑side comparison**: neutral rubric for tools/approaches, invite DMs
+- **Before/after audit**: show 3 screenshots of a micro‑improvement (on request)
+- **Office hours**: offer 20‑min async advice in a thread, gather patterns
 
 ---
 
-## 9) Tooling That Works in the Real World
+## Example calendar (B2B lead‑gen agency)
 
-- **Listening:** Saved searches, subreddit filters, keyword variants, flair patterns.
-- **Coding & synthesis:** Spreadsheet/Notion with the schema above.
-- **Lightweight experiments:** Figma/Canva for mocks; simple landing page (one headline, one benefit, one CTA).
-- **Automation (when ready):** Use a Reddit listening tool to centralize keywords, surface high-intent threads, and track outcomes (comments, replies, waitlist sign-ups).  
-  *If you’d rather not stitch this by hand, our platform bundles listening + outreach workflows built for exactly this use case.*
-
----
-
-## 10) Comment & DM Scripts (Ethical, High-Signal)
-
-**Clarifier (public):**  
-> Thanks for sharing this—what breaks first for you: capturing time, editing, or invoicing? If a tool auto-captured and let you bulk-edit in 2 minutes, helpful or risky?
-
-**Opt-in (public):**  
-> I’m prototyping a simple version of this. Happy to share a 1-pager mock if mods/users are interested—no links unless ok with mods.
-
-**DM (only after explicit opt-in):**  
-> As promised—here’s the 1-pager with 3 screenshots. If any of this feels useful, I can set up a manual export for your next invoice to see if it saves time.
-
----
-
-## 11) The 5-Slide Validation Brief (for your team or investors)
-
-1. **Users & moments:** who they are, when the pain spikes.  
-2. **Top 3 problems (verbatim):** quotes from Reddit.  
-3. **What they hire a tool to do:** the job, not features.  
-4. **Experiments & signals:** what we tested, what we saw.  
-5. **Decision & next bet:** what we’ll build/measure next 14 days.
-
-If a stakeholder can’t understand your case in five slides, your evidence isn’t tight enough yet.
-
----
-
-## 12) Decision Tree (Persevere / Pivot / Pause)
-
-- **Persevere** if two or more green signals show up within 14–28 days.  
-- **Pivot** if resonance is high but intent is low → refine job or audience.  
-- **Pause** if after two cycles you only see red/yellow—ship a different hypothesis.
+| Day | Thread type | Goal |
+|---|---|---|
+| Tue | Problem teardown | Earn trust; get specifics |
+| Thu | Comparison rubric | Identify high‑intent buyers |
+| Sat | Audit preview | Book 2 intro calls |
 
 ---
 
 ## TL;DR
 
-Use Reddit to validate *problems*, not just *solutions*. Code conversations, climb the validation ladder with tiny experiments, measure intent over vanity, and operate in 14-day loops. When the same users keep coming back—even to a concierge workflow—you’ve got a live signal worth building around.
-
----
-
-*Want to automate the listening, shortlist high-intent threads, and run ethical outreach from one place? That’s exactly what our platform does—purpose-built for product validation on Reddit.*
----
+Reddit can be your highest‑signal channel if you play long‑game trust: log problems, respond with useful specifics, and test tiny offers that lead to booked calls.
 `;
 
 const PCV_CONTENT = `
@@ -336,13 +278,96 @@ Ignore vanity signals like likes or generic “cool idea” comments—they rare
 Concept validation = fast learning about real problems and real intent. Keep it lightweight, measure signals, and only graduate to build when users vote with time or access—not just opinions.
 `;
 
+const AGENCY_CONTENT = `
+   # Why to Run Your Agency Marketing Strategy on Reddit
+ 
+Reddit has quietly become one of the most durable places on the internet where real buyers narrate their problems, compare options, and report back on what actually worked. For agencies, that makes Reddit less of a “social channel” and more of a market sensor plus an earned‑media engine. This piece lays out why Reddit matters now, how it complements your current services, and practical ways to package it inside your offering.
+ 
+---
+ 
+## Why Reddit, and why now
+ 
+- **Search is changing**: more queries start with “reddit” appended, and Google surfaces Reddit threads directly. Winning conversations on Reddit increasingly shows up in search, long after the thread cools.
+- **Trust tax on ads**: audiences discount polished ads but reward specific, peer‑level answers. Reddit is built around that expectation of specificity.
+- **Community as distribution**: category communities (and micro‑niches) form the closest thing to “owned attention” that brands don’t own. Agencies can broker access ethically.
+- **Signal density**: comments reveal the language, objections, and alternatives people actually use—gold for creative, SEO, and positioning.
+ 
+---
+ 
+## What makes Reddit different from social and search
+ 
+- **Intent without keywords**: people narrate situations (“migrating from X,” “stuck at Y”), not just type queries. This exposes problems earlier in the funnel.
+- **Long half‑life**: valuable answers are upvoted and rediscovered for months. A single authoritative comment can return compounding brand impressions.
+- **Opinionated governance**: moderators enforce norms. Done right, this becomes a moat—competitors who spam will get removed; helpful contributors are welcomed.
+ 
+---
+ 
+## Where Reddit fits inside an agency offering
+ 
+Think of Reddit as a horizontal capability that powers existing service lines:
+ 
+- **Strategy and research**: capture the client’s category language, objections, and comparison sets directly from threads. Feed this into positioning, SEO, CRO, and creative briefs.
+- **Thought leadership and brand voice**: turn SMEs into credible contributors. Helpful, specifics‑first participation builds authority faster than polished blog posts.
+- **Influencer and partner discovery**: identify super‑contributors and adjacent product advocates; collaborate on AMAs or co‑created guides.
+- **Crisis and reputation**: monitor sentiment around launches, pricing, or outages; respond with context not corporate boilerplate.
+- **SEO assist**: comments and guides that win upvotes become durable search artifacts; mine threads for long‑tail content and FAQs.
+ 
+---
+ 
+## Packaging and pricing (examples)
+ 
+- **Listening & Insights Retainer** (lightweight): weekly digest of top threads, emerging pains, language to steal, and competitor mentions. Feeds the content calendar and ad testing. 
+- **Community Thought‑Leadership** (executional): represent the brand (or ghostwrite for SMEs) in priority subs; publish 2–4 authoritative comments and 1 mini‑guide per week; coordinate mod‑approved AMAs.
+- **Launch Companion** (campaign): 4‑week spike during product/feature launch—pre‑brief mods, seed comparison checklists, staff office‑hours thread, capture objections into landing pages.
+ 
+Deliverables map naturally to existing artifacts: research memos, creative briefs, SEO clusters, and case‑study fodder.
+ 
+---
+ 
+## How to talk outcomes (executive‑friendly)
+ 
+- **Category share of voice on Reddit** (mentions, upvotes, comment velocity)
+- **Qualified conversation capture** (threads where the brand gave/received a credible answer)
+- **Language lift‑through** (terms from Reddit reused in ads/LPs that improve CTR or CVR)
+- **Search echo** (threads ranking for target queries; referral traffic from Reddit to owned assets)
+- **Pipeline assists** (sales anecdotes and attribution notes tied to threads)
+ 
+These aren’t vanity metrics; they are leading indicators for lower CAC and faster creative iteration.
+ 
+---
+ 
+## Guardrails and ethics (your brand moat)
+ 
+- Get mod guidance first; show you’ve read the sidebar. 
+- Lead with specifics; avoid “DM me” as a first move.
+- Disclose affiliations; offer summaries before links.
+- Treat sub rules as creative constraints, not obstacles.
+ 
+Agencies that operate this way quickly become “the trusted helper,” not a vendor.
+ 
+---
+ 
+## What “good” looks like
+ 
+- A CMO comment that becomes the canonical answer linked by others.
+- An AMA that surfaces three killer objections you turn into a high‑performing FAQ page.
+- A contributor partnership that yields a co‑authored rubric shared across the sub every time newcomers ask the same question.
+ 
+---
+ 
+## TL;DR
+ 
+Reddit is where unfiltered demand, objections, and success stories live in public. Agencies can turn that into research, creative, authority, search lift, and lower CAC—without acting like advertisers. Package it as listening + thought leadership + launch support, measure share‑of‑voice and language lift‑through, and you’ve added a durable new lever to your client growth stack.
+ `;
+
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const meta = getPostBySlug(params.slug);
   if (!meta) return notFound();
 
   const isPMF = meta.slug === "validating-product-market-fit-on-reddit";
   const isPCV = meta.slug === "what-is-product-concept-validation";
-  const content = isPMF ? PMF_CONTENT : isPCV ? PCV_CONTENT : "Coming soon.";
+  const isAgency = meta.slug === "agency-marketing-on-reddit";
+  const content = isPMF ? PMF_CONTENT : isPCV ? PCV_CONTENT : isAgency ? AGENCY_CONTENT : "Coming soon.";
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
