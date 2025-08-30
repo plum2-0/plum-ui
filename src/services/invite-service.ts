@@ -69,12 +69,23 @@ export class InviteService {
    * Resolves user ID from session, with email fallback
    */
   async resolveUserId(session: any): Promise<string> {
+    console.log("[INVITE_DEBUG] resolveUserId - input session:", {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      email: session?.user?.email,
+      sessionKeys: session ? Object.keys(session) : [],
+      userKeys: session?.user ? Object.keys(session.user) : []
+    });
+    
     let userId = session?.user?.id as string | undefined;
 
     if (!userId) {
+      console.log("[INVITE_DEBUG] No userId in session, attempting email fallback");
       // Fallback: resolve userId by email from NextAuth users collection
       try {
         const email = session?.user?.email as string | undefined;
+        console.log("[INVITE_DEBUG] Email for fallback:", email);
         if (email) {
           const snap = await this.firestore
             .collection("users")
@@ -82,12 +93,20 @@ export class InviteService {
             .limit(1)
             .get();
 
+          console.log("[INVITE_DEBUG] Email query result:", {
+            empty: snap.empty,
+            docCount: snap.docs.length,
+            firstDocId: !snap.empty ? snap.docs[0].id : null
+          });
+          
           if (!snap.empty) {
             userId = snap.docs[0].id;
             console.warn("[InviteService] Resolved userId by email fallback", {
               email,
               userId,
             });
+          } else {
+            console.log("[INVITE_DEBUG] No user found with email:", email);
           }
         }
       } catch (e) {
@@ -96,6 +115,7 @@ export class InviteService {
     }
 
     if (!userId) {
+      console.error("[INVITE_DEBUG] Failed to resolve userId - throwing error");
       throw new InviteError("Unauthorized", 401);
     }
 
@@ -126,13 +146,20 @@ export class InviteService {
       userId,
       brandId,
     });
-    await this.firestore.runTransaction(async (tx) => {
+    
+    try {
+      await this.firestore.runTransaction(async (tx) => {
+        console.log("[INVITE_DEBUG] Inside transaction");
       const userRef = this.firestore.collection("users").doc(userId);
       const brandRef = this.firestore.collection("brands").doc(brandId);
       const inviteRef = this.firestore.collection("brand_invites").doc(token);
 
       // 1. Check if brand exists
       const brandSnap = await tx.get(brandRef);
+      console.log("[INVITE_DEBUG] Brand check:", {
+        brandId,
+        exists: brandSnap.exists
+      });
       if (!brandSnap.exists) {
         throw new InviteError("Brand not found", 404);
       }
@@ -140,25 +167,33 @@ export class InviteService {
       // 2. Check if user already linked to a different brand
       const userSnap = await tx.get(userRef);
       const existing = userSnap.exists ? userSnap.data()?.brand_id : null;
+      console.log("[INVITE_DEBUG] User check:", {
+        userId,
+        exists: userSnap.exists,
+        existingBrandId: existing,
+        userData: userSnap.exists ? userSnap.data() : null
+      });
 
       if (existing && existing !== brandId) {
         throw new InviteError("User already linked to another brand", 409);
       }
 
       // 3. Update user document with brand_id and profile info
-      tx.set(
-        userRef,
-        {
-          brand_id: brandId,
-          name: userProfile.name,
-          image: userProfile.image,
-          auth_type: userProfile.auth_type,
-          updated_at: new Date(),
-        },
-        { merge: true }
-      );
+      const updateData = {
+        brand_id: brandId,
+        name: userProfile.name,
+        image: userProfile.image,
+        auth_type: userProfile.auth_type,
+        updated_at: new Date(),
+      };
+      console.log("[INVITE_DEBUG] Setting user data:", {
+        userId,
+        updateData
+      });
+      tx.set(userRef, updateData, { merge: true });
 
       // 4. Add user to brand's user_ids array (automatically deduplicates)
+      console.log("[INVITE_DEBUG] Adding user to brand's user_ids:", userId);
       tx.update(brandRef, {
         user_ids: FieldValue.arrayUnion(userId),
         updated_at: new Date(),
@@ -181,7 +216,15 @@ export class InviteService {
         usedCount: newUsedBy.length,
         status: newStatus,
       });
-    });
+      });
+    } catch (txError: any) {
+      console.error("[INVITE_DEBUG] Transaction failed:", {
+        error: txError,
+        message: txError?.message,
+        stack: txError?.stack
+      });
+      throw txError;
+    }
 
     console.log("[InviteService] Transaction committed, verifying data...");
 

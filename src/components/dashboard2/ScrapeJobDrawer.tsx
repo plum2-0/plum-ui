@@ -18,12 +18,14 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import TagBadge from "./TagBadge";
+import { PaywallModal } from "@/components/paywall/PaywallModal";
+import { useSubscription } from "@/hooks/useSubscription";
 
 // ---------------------------------------------
 // Constants
 // ---------------------------------------------
 const POSTS_PER_KEYWORD = 100;
-const MAX_KEYWORDS_PER_PROSPECT = 10;
+const MAX_KEYWORDS_PER_PROSPECT = 8;
 
 const LOADING_MESSAGES = [
   "Channeling the digital realm...",
@@ -163,11 +165,14 @@ function KeywordsEditor({
   // Combine all keywords, marking which are proven
   const provenKeywords = setKeywords || [];
   const availableKeywords = otherKeywords || [];
-  // If no proven/available keywords, use the current keywords list
-  const allKeywords =
-    provenKeywords.length > 0 || availableKeywords.length > 0
-      ? [...provenKeywords, ...availableKeywords]
-      : keywords;
+  // Always include current keywords, plus proven and available keywords
+  const allKeywords = [
+    ...new Set([
+      ...keywords, // Always include currently selected keywords
+      ...provenKeywords,
+      ...availableKeywords,
+    ]),
+  ];
 
   // Check if there are any proven keywords with engagement
   const hasProvenKeywords =
@@ -333,72 +338,78 @@ function KeywordsEditor({
       />
 
       {/* Show existing keywords if user hasn't selected any yet */}
-      {existingProspectKeywords && existingProspectKeywords.length > 0 && keywords.length === 0 && (
-        <div className="mt-3">
-          <label className="text-xs text-white/40 block mb-2">
-            Quick add from existing keywords:
-          </label>
-          <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-            {/* First show proven keywords with engagement */}
-            {setKeywords && setKeywords.length > 0 && setKeywords.map((keyword) => {
-              const engagementCount = keywordEngagementCounts?.[keyword] || 0;
-              if (engagementCount === 0) return null;
-              
-              return (
-                <motion.button
-                  key={keyword}
-                  onClick={() => handleToggleKeyword(keyword)}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-2.5 py-1 text-xs rounded-full cursor-pointer transition-all bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300/70"
-                  style={{
-                    boxShadow: "0 0 8px rgba(34, 197, 94, 0.2)",
-                  }}
-                >
-                  <span className="flex items-center gap-1">
-                    ✨ {keyword}
-                    <span className="text-[10px] opacity-60">
-                      ({engagementCount})
+      {existingProspectKeywords &&
+        existingProspectKeywords.length > 0 &&
+        keywords.length === 0 && (
+          <div className="mt-3">
+            <label className="text-xs text-white/40 block mb-2">
+              Quick add from existing keywords:
+            </label>
+            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+              {/* First show proven keywords with engagement */}
+              {setKeywords &&
+                setKeywords.length > 0 &&
+                setKeywords.map((keyword) => {
+                  const engagementCount =
+                    keywordEngagementCounts?.[keyword] || 0;
+                  if (engagementCount === 0) return null;
+
+                  return (
+                    <motion.button
+                      key={keyword}
+                      onClick={() => handleToggleKeyword(keyword)}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-2.5 py-1 text-xs rounded-full cursor-pointer transition-all bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300/70"
+                      style={{
+                        boxShadow: "0 0 8px rgba(34, 197, 94, 0.2)",
+                      }}
+                    >
+                      <span className="flex items-center gap-1">
+                        ✨ {keyword}
+                        <span className="text-[10px] opacity-60">
+                          ({engagementCount})
+                        </span>
+                        <span className="text-white/40">+</span>
+                      </span>
+                    </motion.button>
+                  );
+                })}
+
+              {/* Then show other existing keywords */}
+              {existingProspectKeywords.map((keyword) => {
+                const engagementCount = keywordEngagementCounts?.[keyword] || 0;
+                const isProven =
+                  setKeywords?.includes(keyword) && engagementCount > 0;
+
+                // Skip if already shown above as proven
+                if (isProven) return null;
+
+                return (
+                  <motion.button
+                    key={keyword}
+                    onClick={() => handleToggleKeyword(keyword)}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-2.5 py-1 text-xs rounded-full cursor-pointer transition-all bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400/60"
+                    style={{
+                      boxShadow: "0 0 8px rgba(251, 191, 36, 0.15)",
+                    }}
+                  >
+                    <span className="flex items-center gap-1">
+                      {keyword}
+                      <span className="text-white/40">+</span>
                     </span>
-                    <span className="text-white/40">+</span>
-                  </span>
-                </motion.button>
-              );
-            })}
-            
-            {/* Then show other existing keywords */}
-            {existingProspectKeywords.map((keyword) => {
-              const engagementCount = keywordEngagementCounts?.[keyword] || 0;
-              const isProven = setKeywords?.includes(keyword) && engagementCount > 0;
-              
-              // Skip if already shown above as proven
-              if (isProven) return null;
-              
-              return (
-                <motion.button
-                  key={keyword}
-                  onClick={() => handleToggleKeyword(keyword)}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-2.5 py-1 text-xs rounded-full cursor-pointer transition-all bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400/60"
-                  style={{
-                    boxShadow: "0 0 8px rgba(251, 191, 36, 0.15)",
-                  }}
-                >
-                  <span className="flex items-center gap-1">
-                    {keyword}
-                    <span className="text-white/40">+</span>
-                  </span>
-                </motion.button>
-              );
-            })}
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
@@ -627,9 +638,28 @@ export default function ScrapeJobDrawer() {
     refreshPosts.isPending,
     refreshPosts.isSuccess
   );
+  const [showPaywall, setShowPaywall] = useState(false);
+  const { checkAccess, remainingJobs, incrementUsage } = useSubscription();
 
   const handleRunAllJobs = async () => {
     if (!brand?.id || scrapeJobs.size === 0) return;
+    
+    // Check subscription status first
+    console.log('Checking subscription access for scraping...');
+    const hasAccess = await checkAccess();
+    console.log('Has access:', hasAccess);
+    console.log('Remaining jobs:', remainingJobs);
+    
+    if (!hasAccess) {
+      console.log('User does not have access, showing paywall...');
+      setShowPaywall(true);
+      return;
+    }
+    
+    // Increment usage when accessing scraping functionality
+    console.log('User has access, incrementing usage...');
+    await incrementUsage();
+    
     const jobsArray = Array.from(scrapeJobs.values());
 
     // Check keyword limits for each prospect
@@ -704,91 +734,105 @@ export default function ScrapeJobDrawer() {
   );
 
   return (
-    <RightSidePanel
-      isOpen={isOpen}
-      onClose={closeDrawerAndClear}
-      title="Confirm Scraping Reddit?"
-    >
-      <div className="flex flex-col h-full">
-        {/* Top Action Section with Wield Power */}
-        <div className="px-6 py-4 border-b border-white/10">
-          <GlassPanel variant="medium" className="p-4">
-            <StatsHeader
-              hasJobs={scrapeJobs.size > 0}
-              totalNewKeywords={totalNewKeywords}
-              totalPosts={totalPosts}
-            />
+    <>
+      <RightSidePanel
+        isOpen={isOpen}
+        onClose={closeDrawerAndClear}
+        title="Confirm Scraping Reddit?"
+      >
+        <div className="flex flex-col h-full">
+          {/* Top Action Section with Wield Power */}
+          <div className="px-6 py-4 border-b border-white/10">
+            <GlassPanel variant="medium" className="p-4">
+              <StatsHeader
+                hasJobs={scrapeJobs.size > 0}
+                totalNewKeywords={totalNewKeywords}
+                totalPosts={totalPosts}
+              />
 
-            {/* Description */}
-            <p className="text-xs text-white/60 mb-4">
-              {scrapeJobs.size > 0
-                ? "Configure keywords and post counts for each prospect below. Ready to discover fresh opportunities!"
-                : "Add prospects and configure their scrape jobs to harness AI-powered content discovery."}
-            </p>
+              {/* Description */}
+              <p className="text-xs text-white/60 mb-4">
+                {scrapeJobs.size > 0
+                  ? "Configure keywords and post counts for each prospect below. Ready to discover fresh opportunities!"
+                  : "Add prospects and configure their scrape jobs to harness AI-powered content discovery."}
+              </p>
 
-            {/* Action buttons */}
-            <div className="flex gap-2">
-              <LiquidButton
-                onClick={handleRunAllJobs}
-                variant="primary"
-                size="md"
-                shimmer={scrapeJobs.size > 0 && !refreshPosts.isPending}
-                liquid={!refreshPosts.isPending}
-                disabled={scrapeJobs.size === 0 || refreshPosts.isPending}
-                className="flex-1 relative overflow-hidden"
-              >
-                <WieldPowerButtonContent
-                  isPending={refreshPosts.isPending}
-                  progress={progress}
-                  loadingMessage={loadingMessage}
-                />
-              </LiquidButton>
-              <LiquidButton
-                onClick={clearAll}
-                variant="ghost"
-                size="sm"
-                disabled={scrapeJobs.size === 0 || refreshPosts.isPending}
-                className="px-4"
-              >
-                Clear
-              </LiquidButton>
-            </div>
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <LiquidButton
+                  onClick={handleRunAllJobs}
+                  variant="primary"
+                  size="md"
+                  shimmer={scrapeJobs.size > 0 && !refreshPosts.isPending}
+                  liquid={!refreshPosts.isPending}
+                  disabled={scrapeJobs.size === 0 || refreshPosts.isPending}
+                  className="flex-1 relative overflow-hidden"
+                >
+                  <WieldPowerButtonContent
+                    isPending={refreshPosts.isPending}
+                    progress={progress}
+                    loadingMessage={loadingMessage}
+                  />
+                </LiquidButton>
+                <LiquidButton
+                  onClick={clearAll}
+                  variant="ghost"
+                  size="sm"
+                  disabled={scrapeJobs.size === 0 || refreshPosts.isPending}
+                  className="px-4"
+                >
+                  Clear
+                </LiquidButton>
+              </div>
 
-            {/* Progress bar */}
-            {refreshPosts.isPending && (
-              <LoadingProgressBar progress={progress} />
+              {/* Progress bar */}
+              {refreshPosts.isPending && (
+                <LoadingProgressBar progress={progress} />
+              )}
+            </GlassPanel>
+          </div>
+
+          {/* Scrollable Accordion Section */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {jobsArray.length > 0 ? (
+              <Accordion type="multiple" className="space-y-2">
+                <AnimatePresence mode="popLayout">
+                  {jobsArray.map((job) => (
+                    <motion.div
+                      key={job.prospectId}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                    >
+                      <ScrapeJobAccordion
+                        job={job}
+                        onUpdate={(updates) =>
+                          updateScrapeJob(job.prospectId, updates)
+                        }
+                        onRemove={() => removeScrapeJob(job.prospectId)}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </Accordion>
+            ) : (
+              <EmptyState />
             )}
-          </GlassPanel>
+          </div>
         </div>
-
-        {/* Scrollable Accordion Section */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          {jobsArray.length > 0 ? (
-            <Accordion type="multiple" className="space-y-2">
-              <AnimatePresence mode="popLayout">
-                {jobsArray.map((job) => (
-                  <motion.div
-                    key={job.prospectId}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                  >
-                    <ScrapeJobAccordion
-                      job={job}
-                      onUpdate={(updates) =>
-                        updateScrapeJob(job.prospectId, updates)
-                      }
-                      onRemove={() => removeScrapeJob(job.prospectId)}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </Accordion>
-          ) : (
-            <EmptyState />
-          )}
-        </div>
-      </div>
-    </RightSidePanel>
+      </RightSidePanel>
+      
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onSuccess={async () => {
+          setShowPaywall(false);
+          // After successful subscription, retry the scraping action
+          await handleRunAllJobs();
+        }}
+        remainingJobs={remainingJobs}
+      />
+    </>
   );
 }

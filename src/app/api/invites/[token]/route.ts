@@ -8,13 +8,26 @@ import { InviteError } from "@/types/invite";
 export async function POST(request: NextRequest, context: any) {
   try {
     const session = await auth();
+    console.log("[INVITE_DEBUG] Session in POST:", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      email: session?.user?.email,
+      name: session?.user?.name,
+      provider: (session as any)?.user?.provider,
+      fullSession: JSON.stringify(session)
+    });
+    
     const firestore = adminDb();
     const inviteService = new InviteService(firestore);
 
-    const token = context?.params?.token as string;
+    const params = await context?.params;
+    const token = params?.token as string;
+    console.log("[INVITE_DEBUG] Token:", token);
 
     // Resolve user ID with fallback
+    console.log("[INVITE_DEBUG] Attempting to resolve userId...");
     const userId = await inviteService.resolveUserId(session);
+    console.log("[INVITE_DEBUG] Resolved userId:", userId);
 
     // Create user profile from session
     const userProfile = {
@@ -23,12 +36,24 @@ export async function POST(request: NextRequest, context: any) {
       auth_type: ((session as any)?.user as any)?.provider || "unknown",
     };
 
+    console.log("[INVITE_DEBUG] Calling acceptInvite with:", {
+      token,
+      userId,
+      userProfile
+    });
     const result = await inviteService.acceptInvite(token, userId, userProfile);
+    console.log("[INVITE_DEBUG] AcceptInvite result:", result);
 
     // Verify the data was actually written to the database
     const userDoc = await firestore.collection("users").doc(userId).get();
     const userExists = userDoc.exists;
     const userData = userExists ? userDoc.data() : null;
+    console.log("[INVITE_DEBUG] User verification:", {
+      userId,
+      userExists,
+      userData,
+      hasBrandId: !!userData?.brand_id
+    });
 
     if (result.brandId) {
       const brandDoc = await firestore
@@ -37,6 +62,12 @@ export async function POST(request: NextRequest, context: any) {
         .get();
       const brandExists = brandDoc.exists;
       const brandData = brandExists ? brandDoc.data() : null;
+      console.log("[INVITE_DEBUG] Brand verification:", {
+        brandId: result.brandId,
+        brandExists,
+        userIdsInBrand: brandData?.user_ids,
+        userInBrand: brandData?.user_ids?.includes(userId)
+      });
     }
 
     const res = NextResponse.json(result);
@@ -59,6 +90,7 @@ export async function POST(request: NextRequest, context: any) {
     } catch {}
     return res;
   } catch (error: any) {
+    console.error("[INVITE_DEBUG] Error in POST handler:", error);
     if (error instanceof InviteError) {
       return NextResponse.json(
         { error: error.message },
@@ -80,7 +112,8 @@ export async function GET(request: NextRequest, context: any) {
   try {
     const firestore = adminDb();
     const inviteService = new InviteService(firestore);
-    const token = (await context?.params?.token) as string;
+    const params = await context?.params;
+    const token = params?.token as string;
 
     const metadata = await inviteService.getInviteMetadata(token);
 
