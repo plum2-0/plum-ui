@@ -568,7 +568,7 @@ function HelpHintSection() {
     );
 
     // Find the full prospect data for those that need scraping
-    const scrapeJobs: ScrapeJob[] = prospectsNeedingScraping
+    const scrapeJobs = prospectsNeedingScraping
       .map((prospectDisplay) => {
         const prospect = brandData.prospects?.find(
           (p) => p.id === prospectDisplay.id
@@ -606,7 +606,7 @@ function HelpHintSection() {
           numPosts: 50, // Default number of posts per prospect
         };
       })
-      .filter((job): job is ScrapeJob => job !== null);
+      .filter((job) => job !== null) as ScrapeJob[];
 
     // Open drawer with the jobs
     if (scrapeJobs.length > 0) {

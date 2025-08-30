@@ -35,8 +35,8 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     subscriptionStatus: subscription.status,
     subscriptionId: subscription.id,
     subscriptionTier,
-    subscriptionEndDate: subscription.current_period_end 
-      ? Timestamp.fromMillis(subscription.current_period_end * 1000) 
+    subscriptionEndDate: (subscription as any).current_period_end 
+      ? Timestamp.fromMillis((subscription as any).current_period_end * 1000) 
       : null,
     updatedAt: Timestamp.now()
   });

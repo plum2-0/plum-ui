@@ -4,7 +4,6 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-// @ts-ignore - defaultSchema is provided by rehype-sanitize deps
 import { defaultSchema } from "hast-util-sanitize";
 import { getPostBySlug, posts } from "../posts";
 import styles from "../post.module.css";
@@ -360,8 +359,9 @@ Agencies that operate this way quickly become “the trusted helper,” not a ve
 Reddit is where unfiltered demand, objections, and success stories live in public. Agencies can turn that into research, creative, authority, search lift, and lower CAC—without acting like advertisers. Package it as listening + thought leadership + launch support, measure share‑of‑voice and language lift‑through, and you’ve added a durable new lever to your client growth stack.
  `;
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const meta = getPostBySlug(params.slug);
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const meta = getPostBySlug(slug);
   if (!meta) return notFound();
 
   const isPMF = meta.slug === "validating-product-market-fit-on-reddit";

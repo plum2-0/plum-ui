@@ -25,7 +25,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 // Constants
 // ---------------------------------------------
 const POSTS_PER_KEYWORD = 100;
-const MAX_KEYWORDS_PER_PROSPECT = 8;
+const MAX_KEYWORDS_PER_PROSPECT = 30;
 const MONTHLY_SCRAPE_LIMIT = 100; // Pro tier monthly limit
 
 const LOADING_MESSAGES = [

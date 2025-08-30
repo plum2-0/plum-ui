@@ -15,7 +15,7 @@ async function isAdmin(userId: string): Promise<boolean> {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Promise<{ code: string }> }
 ) {
   try {
     const session = await auth();
@@ -30,7 +30,7 @@ export async function PATCH(
     }
 
     const { isActive } = await request.json();
-    const codeId = params.code;
+    const { code: codeId } = await params;
 
     if (typeof isActive !== 'boolean') {
       return NextResponse.json(
@@ -71,7 +71,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Promise<{ code: string }> }
 ) {
   try {
     const session = await auth();
@@ -85,7 +85,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const codeId = params.code;
+    const { code: codeId } = await params;
     const db = adminDb();
     
     const codeRef = db.collection('testerCodes').doc(codeId);

@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const now = Timestamp.now();
     
     // Validate code constraints
-    if (!codeData.isActive) {
+    if (!codeData || !codeData.isActive) {
       return NextResponse.json({ error: 'Code is inactive' }, { status: 400 });
     }
 

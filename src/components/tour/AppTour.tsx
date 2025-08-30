@@ -178,7 +178,7 @@ function CustomNavigation({
   currentStep: number;
   stepsLength: number;
   setCurrentStep: (step: number) => void;
-  setIsOpen: (open: boolean) => void;
+  setIsOpen?: (open: boolean) => void;
 }) {
   const { completeTour } = useAppTour();
   const isLastStep = currentStep === stepsLength - 1;
@@ -187,7 +187,7 @@ function CustomNavigation({
   const handleNext = () => {
     if (isLastStep) {
       completeTour();
-      setIsOpen(false);
+      setIsOpen?.(false);
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -195,7 +195,7 @@ function CustomNavigation({
 
   const handleSkip = () => {
     completeTour();
-    setIsOpen(false);
+    setIsOpen?.(false);
   };
 
   return (
@@ -336,7 +336,7 @@ export default function AppTour({ children }: { children: React.ReactNode }) {
                 onClick={() => {
                   completeTour();
                   setIsActive(false);
-                  setIsOpen(false);
+                  setIsOpen?.(false);
                 }}
               />
               {/* Main content */}

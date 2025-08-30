@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         email: session.user.email,
         metadata: {
           userId: session.user.id,
-          brandId: session.brandId || '',
+          brandId: (session.user as any).brandId || '',
         },
       });
       
@@ -67,12 +67,12 @@ export async function POST(request: NextRequest) {
       billing_address_collection: 'auto',
       metadata: {
         userId: session.user.id,
-        brandId: session.brandId || '',
+        brandId: (session.user as any).brandId || '',
       },
       subscription_data: {
         metadata: {
           userId: session.user.id,
-          brandId: session.brandId || '',
+          brandId: (session.user as any).brandId || '',
         },
       },
     });
