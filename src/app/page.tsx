@@ -4,10 +4,12 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { PricingModal, PricingDialogTrigger } from "@/components/PricingModal";
 
 export default function Home() {
   const { data: session, status } = useSession();
+  const [pricingOpen, setPricingOpen] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
@@ -184,12 +186,13 @@ export default function Home() {
             >
               Blog
             </Link>
-            <Link
-              href="#pricing"
-              className="font-medium text-white/80 hover:text-white transition-all duration-300 hover:drop-shadow-lg"
-            >
-              Pricing
-            </Link>
+            <PricingDialogTrigger>
+              <button
+                className="font-medium text-white/80 hover:text-white transition-all duration-300 hover:drop-shadow-lg"
+              >
+                Pricing
+              </button>
+            </PricingDialogTrigger>
             <Link
               href="/auth/signin"
               className="px-6 py-3 rounded-xl font-heading text-lg tracking-wide text-white transition-all duration-300 hover:scale-105 glass-button"
@@ -206,11 +209,13 @@ export default function Home() {
           {/* TAGLINE + CTA */}
           <div className="text-left space-y-6">
             <div className="space-y-4">
-              <h1 className="font-heading font-bold text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight text-white drop-shadow-2xl tracking-tight">
-                <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent animate-pulse font-extrabold">
-                  Validate and Grow{" "}
+              <h1 className="font-heading font-extrabold text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight text-white drop-shadow-2xl tracking-tight">
+                <span className="block">
+                  <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent">
+                    Validate and Grow
+                  </span>
                 </span>
-                Your Business
+                <span className="block">Your Business</span>
               </h1>
               <p className="font-body font-medium text-lg md:text-xl max-w-2xl text-white/90 leading-relaxed tracking-wide">
                 Engage Reddit communities talking about relevant problems your company can help solve to validate your product
@@ -379,6 +384,8 @@ export default function Home() {
           © 2025 PlumSprout – Never miss a conversation about your brand
         </div>
       </footer>
+
+      <PricingModal open={pricingOpen} onOpenChange={setPricingOpen} />
     </div>
   );
 }
