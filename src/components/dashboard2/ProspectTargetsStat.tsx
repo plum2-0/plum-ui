@@ -108,7 +108,7 @@ export default function ProspectTargetStat({
 
                 <div className="flex items-center justify-center">
                   <div className="w-8 h-8 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
-                    <span className="text-white/40 text-sm">vs</span>
+                    <span className="text-white/40 text-sm">⬅️</span>
                   </div>
                 </div>
 

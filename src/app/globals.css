@@ -54,6 +54,38 @@
   animation: fade-in 0.3s ease-out;
 }
 
+/* Debt Clock Style Animations */
+@keyframes number-spin {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes counter-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 40px currentColor, 0 0 60px currentColor;
+  }
+}
+
+.number-spinning {
+  animation: number-spin 0.3s ease-out;
+}
+
+.counter-glow {
+  animation: counter-glow 2s ease-in-out infinite;
+}
+
 @keyframes accordion-down {
   from {
     height: 0;

@@ -88,6 +88,13 @@ export function useBrandQuery() {
   const redirectToOnboarding = () => {
     if (typeof window === "undefined") return;
     if (hasRedirectedRef.current) return;
+    
+    // Don't redirect if already on onboarding pages
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith("/onboarding") || currentPath.startsWith("/auth")) {
+      return;
+    }
+    
     hasRedirectedRef.current = true;
     router.push("/onboarding");
   };
@@ -102,7 +109,11 @@ export function useBrandQuery() {
 
       if (!brandId) {
         // If no brandId in cookies or session, user likely needs onboarding
-        redirectToOnboarding();
+        // Only redirect if not already on onboarding/auth pages
+        const currentPath = window.location.pathname;
+        if (!currentPath.startsWith("/onboarding") && !currentPath.startsWith("/auth")) {
+          redirectToOnboarding();
+        }
         throw new BrandQueryError("User needs onboarding", undefined, true);
       }
 
@@ -115,7 +126,11 @@ export function useBrandQuery() {
           (error.needsOnboarding || error.statusCode === 404)
         ) {
           clearBrandCookie();
-          redirectToOnboarding();
+          // Only redirect if not already on onboarding/auth pages
+          const currentPath = window.location.pathname;
+          if (!currentPath.startsWith("/onboarding") && !currentPath.startsWith("/auth")) {
+            redirectToOnboarding();
+          }
         }
         throw error;
       }

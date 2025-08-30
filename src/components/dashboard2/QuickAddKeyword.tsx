@@ -7,7 +7,7 @@ import { useScrapeJob } from "@/contexts/ScrapeJobContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
-import KeywordSuggest from "./KeywordSuggestSimple";
+import KeywordSuggest from "./KeywordSuggest";
 
 interface QuickAddKeywordProps {
   prospectId: string;
@@ -29,7 +29,7 @@ export default function QuickAddKeyword({
   const [isAnimating, setIsAnimating] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const { scrapeJobs, addScrapeJob, updateScrapeJob, openDrawer } = useScrapeJob();
   const { brand } = useBrand();
   const { showToast } = useToast();
@@ -69,7 +69,7 @@ export default function QuickAddKeyword({
 
   const handleSubmit = () => {
     const trimmedKeyword = keyword.trim().toLowerCase();
-    
+
     if (!trimmedKeyword) {
       showToast({
         message: "Please enter a keyword",
@@ -96,7 +96,7 @@ export default function QuickAddKeyword({
 
     // Check if there's an existing job for this prospect
     const existingJob = scrapeJobs.get(prospectId);
-    
+
     if (existingJob) {
       // Add keyword to existing job
       const updatedKeywords = [...existingJob.keywords, trimmedKeyword];
@@ -113,9 +113,9 @@ export default function QuickAddKeyword({
       };
       addScrapeJob(newScrapeJob);
     }
-    
+
     openDrawer();
-    
+
     showToast({
       message: `Added keyword "${trimmedKeyword}" to scrape queue`,
       type: "success",
@@ -149,8 +149,8 @@ export default function QuickAddKeyword({
             <motion.div
               className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
               style={{
-                background: `linear-gradient(135deg, 
-                  rgba(168, 85, 247, 0.15) 0%, 
+                background: `linear-gradient(135deg,
+                  rgba(168, 85, 247, 0.15) 0%,
                   rgba(34, 197, 94, 0.15) 100%)`,
                 backdropFilter: "blur(20px)",
                 border: "1px solid rgba(168, 85, 247, 0.3)",
@@ -158,8 +158,8 @@ export default function QuickAddKeyword({
               }}
               whileHover={{
                 scale: 1.1,
-                background: `linear-gradient(135deg, 
-                  rgba(168, 85, 247, 0.25) 0%, 
+                background: `linear-gradient(135deg,
+                  rgba(168, 85, 247, 0.25) 0%,
                   rgba(34, 197, 94, 0.25) 100%)`,
                 boxShadow: "0 6px 20px rgba(168, 85, 247, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
               }}
@@ -182,7 +182,7 @@ export default function QuickAddKeyword({
                 />
               </motion.svg>
             </motion.div>
-            
+
             {/* Shimmer effect on hover */}
             <motion.div
               className="absolute inset-0 rounded-full pointer-events-none"
@@ -212,7 +212,7 @@ export default function QuickAddKeyword({
             initial={{ width: 32, opacity: 0 }}
             animate={{ width: "auto", opacity: 1 }}
             exit={{ width: 32, opacity: 0 }}
-            transition={{ 
+            transition={{
               width: { duration: 0.3, ease: "easeOut" },
               opacity: { duration: 0.2 }
             }}
@@ -240,7 +240,7 @@ export default function QuickAddKeyword({
                   borderColor: "transparent",
                 }}
               />
-              
+
               {/* Action buttons inside input */}
               <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
                 <motion.button
@@ -269,7 +269,7 @@ export default function QuickAddKeyword({
                     />
                   </svg>
                 </motion.button>
-                
+
                 <motion.button
                   onClick={handleCancel}
                   className="px-2 py-0.5 rounded-lg text-xs font-medium cursor-pointer"
@@ -298,7 +298,7 @@ export default function QuickAddKeyword({
                 </motion.button>
               </div>
             </div>
-            
+
             {/* KeywordSuggest Button - shown when expanded */}
             <KeywordSuggest
               prospectId={prospectId}

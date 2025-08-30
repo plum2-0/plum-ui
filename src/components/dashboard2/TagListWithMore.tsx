@@ -128,8 +128,6 @@ export default function TagListWithMore({
           ))}
         </AnimatePresence>
 
-        {typeof trailingNode !== "undefined" && trailingNode}
-
         {hasMore && (
           <motion.button
             layout
@@ -180,6 +178,8 @@ export default function TagListWithMore({
             />
           </motion.button>
         )}
+
+        {typeof trailingNode !== "undefined" && trailingNode}
       </motion.div>
     </div>
   );

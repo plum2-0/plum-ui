@@ -739,30 +739,53 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                       </motion.div>
                     )}
 
-                    {/* Danger Zone */}
+                    {/* Settings with Danger Zone */}
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="mt-8 pt-8 border-t"
+                      className="mt-8 pt-8 border-t flex justify-end"
                       style={{
-                        borderColor: "rgba(239, 68, 68, 0.2)",
+                        borderColor: "rgba(255, 255, 255, 0.08)",
                       }}
                     >
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-6 h-6 rounded-lg flex items-center justify-center"
+                      <PopoverWithPortal
+                        trigger={
+                          <button
+                            className="p-2 rounded-lg transition-all duration-200 group hover:bg-white/10"
                             style={{
-                              background:
-                                "linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2))",
-                              border: "1px solid rgba(239, 68, 68, 0.3)",
-                              boxShadow:
-                                "0 2px 8px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                              background: "rgba(255, 255, 255, 0.05)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
                             }}
                           >
                             <svg
-                              className="w-3.5 h-3.5 text-red-400"
+                              className="w-5 h-5 text-white/60 group-hover:text-white/80 transition-colors"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                          </button>
+                        }
+                        side="top"
+                        align="end"
+                      >
+                        <div className="w-80 space-y-4">
+                          <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+                            <svg
+                              className="w-4 h-4 text-red-400"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -774,24 +797,17 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                               />
                             </svg>
+                            <h4 className="text-red-400 font-heading text-sm font-semibold">
+                              Danger Zone
+                            </h4>
                           </div>
-                          <h4 className="text-red-400 font-heading text-sm font-semibold">
-                            Danger Zone
-                          </h4>
-                        </div>
 
-                        <div
-                          className="p-4 rounded-xl"
-                          style={{
-                            background: "rgba(239, 68, 68, 0.05)",
-                            border: "1px solid rgba(239, 68, 68, 0.15)",
-                          }}
-                        >
-                          <p className="text-white/70 text-sm mb-4">
+                          <p className="text-white/70 text-sm">
                             Deleting this prospect will permanently remove all
                             associated data including scraped posts, keywords,
                             and insights. This action cannot be undone.
                           </p>
+                          
 
                           {confirmDeleteProspect === prospect.id ? (
                             <div className="flex items-center gap-3">
@@ -865,7 +881,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                                 setConfirmDeleteProspect(prospect.id)
                               }
                               shimmer={true}
-                              className="flex items-center gap-2"
+                              className="w-full flex items-center justify-center gap-2"
                             >
                               <div className="flex items-center gap-2">
                                 <svg
@@ -886,7 +902,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             </LiquidButton>
                           )}
                         </div>
-                      </div>
+                      </PopoverWithPortal>
                     </motion.div>
                   </div>
                 </motion.div>

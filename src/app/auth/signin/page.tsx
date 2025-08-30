@@ -1,14 +1,40 @@
 "use client";
 
-import { Suspense } from "react";
-import { signIn } from "next-auth/react";
+import { Suspense, useEffect, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 
 function SignInContent() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/onboarding";
+  const { data: session } = useSession();
+  const [dynamicCallbackUrl, setDynamicCallbackUrl] = useState<string>("/onboarding");
   const error = searchParams.get("error");
+  
+  // Check if user has completed onboarding by checking for existing brand
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch("/api/onboarding/state");
+          if (response.ok) {
+            const data = await response.json();
+            // If user has a brand, redirect to discover page
+            if (data.hasProject) {
+              setDynamicCallbackUrl("/dashboard/discover");
+            }
+          }
+        } catch (error) {
+          console.error("Error checking onboarding status:", error);
+        }
+      }
+    };
+    
+    checkOnboardingStatus();
+  }, [session]);
+  
+  // Use provided callbackUrl or our dynamic one
+  const callbackUrl = searchParams.get("callbackUrl") || dynamicCallbackUrl;
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
