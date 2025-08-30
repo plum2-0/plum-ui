@@ -6,6 +6,9 @@ import { RedditPostUI } from "@/types/brand";
 import SwipeableProspectModal from "./SwipeableProspectModal";
 import { PaywallModal } from "@/components/paywall/PaywallModal";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useBrand } from "@/contexts/BrandContext";
+
+const MONTHLY_SCRAPE_LIMIT = 100; // Pro tier monthly limit
 
 interface ProspectTargetsProps {
   posts?: RedditPostUI[];
@@ -39,7 +42,8 @@ export default function ProspectTargetStat({
 }: ProspectTargetsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
-  const { checkAccess, remainingJobs, incrementUsage } = useSubscription();
+  const { checkAccess, remainingJobs } = useSubscription();
+  const { scrapeJobsThisMonth } = useBrand();
 
   const handleCardClick = async () => {
     if (posts.length > 0) {
@@ -50,9 +54,8 @@ export default function ProspectTargetStat({
       console.log('Remaining jobs:', remainingJobs);
       
       if (hasAccess) {
-        // Increment usage when accessing prospects
-        console.log('User has access, incrementing usage...');
-        await incrementUsage();
+        // User has access, open the modal
+        console.log('User has access, opening modal...');
         setIsModalOpen(true);
       } else {
         console.log('User does not have access, showing paywall...');
@@ -195,6 +198,8 @@ export default function ProspectTargetStat({
           setIsModalOpen(true);
         }}
         remainingJobs={remainingJobs}
+        usedJobs={scrapeJobsThisMonth}
+        monthlyLimit={MONTHLY_SCRAPE_LIMIT}
       />
     </>
   );

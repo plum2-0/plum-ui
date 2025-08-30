@@ -51,8 +51,7 @@ export default function AllRedditPostsOverview({
           All Reddit Posts
         </h3>
         <p className="text-white/80 font-body text-base leading-relaxed">
-          {stats.total} posts collected across {prospects.length} prospect
-          {prospects.length !== 1 ? "s" : ""}
+          {stats.total} potential new leads collected
         </p>
       </div>
 

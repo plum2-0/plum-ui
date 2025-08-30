@@ -39,31 +39,12 @@ export function useSubscription() {
     return currentStatus?.hasAccess || false;
   }, [status, fetchSubscriptionStatus]);
 
-  const incrementUsage = useCallback(async (): Promise<boolean> => {
-    try {
-      const response = await fetch('/api/subscription/increment-usage', {
-        method: 'POST',
-      });
-      
-      if (!response.ok) {
-        return false;
-      }
-      
-      // Refresh status after incrementing
-      await fetchSubscriptionStatus();
-      return true;
-    } catch (err) {
-      console.error('Error incrementing usage:', err);
-      return false;
-    }
-  }, [fetchSubscriptionStatus]);
 
   return {
     status,
     loading,
     error,
     checkAccess,
-    incrementUsage,
     refetch: fetchSubscriptionStatus,
     remainingJobs: status?.remainingJobs || 0,
     monthlyLimit: status?.monthlyLimit || 5,
