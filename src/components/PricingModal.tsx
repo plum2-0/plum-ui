@@ -39,11 +39,11 @@ export function PricingDialogTrigger({ children }: { children: ReactNode }) {
 
 function PricingCard({ onClose }: { onClose?: () => void }) {
   const plumFeatures = [
-    "8 Keywords",
-    "100 Reddit Scrape Jobs",
-    "24 months data retention",
-    "Unlimited Leads",
-    "Unlimited Seats",
+    "30 Keywords",
+    "100,000 Reddit Post Fetch",
+    "Unlimited Leads Engagement",
+    "Customizable AI Agent",
+    "Unlimited Seats"
   ];
   const octolensFeatures = [
     "20,000 mentions",
@@ -66,7 +66,7 @@ function PricingCard({ onClose }: { onClose?: () => void }) {
     <div className="relative w-full max-w-5xl">
       <div className="glass-card rounded-3xl p-6 sm:p-8 text-white">
         <Dialog.Title className="text-xl font-extrabold mb-4">
-          Compare: PlumSprout vs OGTools vs Octolens
+          Price Comparison
         </Dialog.Title>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
