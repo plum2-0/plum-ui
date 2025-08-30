@@ -1,0 +1,70 @@
+.post {
+  color: #ffffff;
+}
+
+.post h1 {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 800;
+}
+.post h2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 800;
+}
+.post h3 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+.post p {
+  margin: 0.75rem 0;
+}
+.post ul,
+.post ol {
+  margin: 0.75rem 0 0.75rem 1.25rem;
+}
+.post table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+.post th,
+.post td {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+}
+.post th {
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 700;
+}
+.post thead th {
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(6px);
+}
+.post blockquote {
+  border-left: 4px solid rgba(255, 255, 255, 0.2);
+  padding-left: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+.post hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 1.25rem 0;
+}
+.post code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+}
+.post a {
+  color: #C4B5FD;
+} 
