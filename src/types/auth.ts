@@ -36,4 +36,24 @@ export interface User {
   onboardingComplete: boolean;
   onboardingStep: number;
   subscriptionTier: "free" | "pro" | "enterprise";
+  
+  // Stripe Integration Fields
+  stripeCustomerId?: string;
+  subscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid';
+  subscriptionId?: string;
+  subscriptionEndDate?: Date;
+  
+  // Usage Tracking
+  scrapeJobsThisMonth: number;
+  lastUsageReset: Date;
+  lifetimeScrapeJobs: number;
+  
+  // Tester Access
+  hasTesterAccess: boolean;
+  testerCode?: string;
+  testerAccessExpiry?: Date;
+  
+  // Payment Metadata
+  firstPaymentDate?: Date;
+  totalRevenue?: number;
 }

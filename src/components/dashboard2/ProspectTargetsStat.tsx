@@ -4,6 +4,8 @@ import { useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { RedditPostUI } from "@/types/brand";
 import SwipeableProspectModal from "./SwipeableProspectModal";
+import { PaywallModal } from "@/components/paywall/PaywallModal";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface ProspectTargetsProps {
   posts?: RedditPostUI[];
@@ -36,10 +38,26 @@ export default function ProspectTargetStat({
   onModalClose,
 }: ProspectTargetsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const { checkAccess, remainingJobs, incrementUsage } = useSubscription();
 
-  const handleCardClick = () => {
+  const handleCardClick = async () => {
     if (posts.length > 0) {
-      setIsModalOpen(true);
+      // Check subscription status
+      console.log('Checking subscription access...');
+      const hasAccess = await checkAccess();
+      console.log('Has access:', hasAccess);
+      console.log('Remaining jobs:', remainingJobs);
+      
+      if (hasAccess) {
+        // Increment usage when accessing prospects
+        console.log('User has access, incrementing usage...');
+        await incrementUsage();
+        setIsModalOpen(true);
+      } else {
+        console.log('User does not have access, showing paywall...');
+        setShowPaywall(true);
+      }
     }
   };
 
@@ -166,6 +184,17 @@ export default function ProspectTargetStat({
           onModalClose?.();
         }}
         onStackCompleted={handleStackCompleted}
+      />
+      
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onSuccess={() => {
+          setShowPaywall(false);
+          setIsModalOpen(true);
+        }}
+        remainingJobs={remainingJobs}
       />
     </>
   );

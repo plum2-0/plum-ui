@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 
 export default function InviteClient({ token }: { token: string }) {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,14 +34,36 @@ export default function InviteClient({ token }: { token: string }) {
   const acceptInvite = useCallback(
     async (retries = 5, delayMs = 300): Promise<void> => {
       try {
+        console.log("[CLIENT_DEBUG] Starting acceptInvite");
+        console.log("[CLIENT_DEBUG] Current session:", {
+          hasSession: !!session,
+          userId: (session as any)?.user?.id,
+          email: session?.user?.email,
+          status
+        });
+        
         setIsAccepting(true);
         const res = await fetch(`/api/invites/${token}`, { method: "POST" });
         const data = await res.json().catch(() => ({}));
+        console.log("[CLIENT_DEBUG] Invite API response:", {
+          status: res.status,
+          ok: res.ok,
+          data
+        });
+        
         if (!res.ok) {
           throw new Error(
             data?.error || `Failed to accept invite (${res.status})`
           );
         }
+        
+        // Force NextAuth session update to refresh the JWT token with new brandId
+        if (update) {
+          console.log("[CLIENT_DEBUG] Calling session update");
+          await update();
+          console.log("[CLIENT_DEBUG] Session update complete");
+        }
+        
         // Wait until /api/user/brand reflects the new brand, then navigate
         const maxWaitMs = 4000;
         const start = Date.now();
@@ -49,15 +71,31 @@ export default function InviteClient({ token }: { token: string }) {
           try {
             const brandRes = await fetch("/api/user/brand", {
               cache: "no-store",
+              headers: {
+                "Cache-Control": "no-cache",
+              },
             });
             if (brandRes.ok) {
               const brandData = await brandRes.json();
-              if (brandData?.brandId) break;
+              console.log("[CLIENT_DEBUG] Brand check:", {
+                brandId: brandData?.brandId,
+                source: brandData?.source,
+                elapsed: Date.now() - start
+              });
+              // Check if brandId is from Firestore (most reliable source)
+              if (brandData?.brandId && brandData?.source === "firestore") {
+                console.log("[CLIENT_DEBUG] Brand confirmed, navigating to dashboard");
+                router.replace("/dashboard/discover");
+                return;
+              }
             }
           } catch {}
           await new Promise((r) => setTimeout(r, 200));
         }
-        router.replace("/dashboard/leads");
+        
+        // If we couldn't confirm via API, still navigate since the invite was accepted
+        console.log("[CLIENT_DEBUG] Timeout waiting for brand confirmation, navigating anyway");
+        router.replace("/dashboard/discover");
       } catch (e: any) {
         if (retries > 0) {
           // Small backoff to allow auth session/id to settle
@@ -68,7 +106,7 @@ export default function InviteClient({ token }: { token: string }) {
         setIsAccepting(false);
       }
     },
-    [router, token]
+    [router, token, update]
   );
 
   // Auto-accept invite when user becomes authenticated
@@ -101,7 +139,7 @@ export default function InviteClient({ token }: { token: string }) {
           <div className="text-red-300 mb-2">{error}</div>
           <button
             className="mt-2 px-4 py-2 rounded bg-purple-600 hover:bg-purple-700"
-            onClick={() => router.replace("/dashboard/leads")}
+            onClick={() => router.replace("/dashboard/discover")}
           >
             Go to Dashboard
           </button>
