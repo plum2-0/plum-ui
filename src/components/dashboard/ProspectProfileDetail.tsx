@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  X,
   Clock,
-  Star,
   HelpCircle,
   ExternalLink,
   ChevronDown,
@@ -13,10 +11,12 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getBrandIdFromCookie } from "@/lib/cookies";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { LiquidButton } from "@/components/ui/LiquidButton";
+
 import { LiquidBadge } from "@/components/ui/LiquidBadge";
 import { Popover } from "@/components/ui/Popover";
+import { PopoverWithPortal } from "@/components/ui/PopoverWithPortal";
 import { RedditConvo } from "./RedditConvo";
 import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import type { Agent } from "@/types/agent";
@@ -336,23 +336,66 @@ const BestReplyWindows: React.FC<BestReplyWindowsProps> = ({ windows }) => {
   );
 };
 
-interface ProfileActionButtonsProps {
-  onClose?: () => void;
-  onStar?: () => void;
+
+// ============================================================================
+// Status Dropdown
+// ============================================================================
+
+interface ProfileStatusDropdownProps {
+  status?: ProspectProfile["prospect_status"];
+  onChange?: (status: "ENGAGED" | "REMOVED" | "CONVERTED") => void;
 }
 
-const ProfileActionButtons: React.FC<ProfileActionButtonsProps> = ({ onClose, onStar }) => (
-  <div className="flex gap-2">
-    <LiquidButton variant="ghost" size="icon" onClick={onStar || (() => {})}>
-      <Star className="w-4 h-4" />
-    </LiquidButton>
-    {onClose && (
-      <LiquidButton variant="ghost" size="icon" onClick={onClose}>
-        <X className="w-4 h-4" />
-      </LiquidButton>
-    )}
-  </div>
-);
+const ProfileStatusDropdown: React.FC<ProfileStatusDropdownProps> = ({ status, onChange }) => {
+  const getInitial = (): "ENGAGED" | "REMOVED" | "CONVERTED" => {
+    if (status === "REMOVED") return "REMOVED";
+    if (status === "CONVERTED") return "CONVERTED";
+    return "ENGAGED";
+  };
+
+  const [current, setCurrent] = useState<"ENGAGED" | "REMOVED" | "CONVERTED">(getInitial());
+
+  useEffect(() => {
+    setCurrent(getInitial());
+  }, [status]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-white/60 uppercase tracking-wider">Status</span>
+        <PopoverWithPortal
+          trigger={<HelpCircle className="w-3 h-3 text-white/30 cursor-help" />}
+          side="bottom"
+          align="start"
+        >
+          <div className="text-xs space-y-2 max-w-[320px]">
+            <div><span className="text-purple-400 font-medium">Engaged</span> - Leads you are engaged in converting</div>
+            <div><span className="text-green-400 font-medium">Converted</span> - Leads that you converted as Customers</div>
+            <div><span className="text-red-400 font-medium">Dropped</span> - Leads that you deem are not worth pursuing anymore</div>
+          </div>
+        </PopoverWithPortal>
+      </div>
+      <select
+        value={current}
+        onChange={(e) => {
+          const next = e.target.value as "ENGAGED" | "REMOVED" | "CONVERTED";
+          setCurrent(next);
+          onChange?.(next);
+        }}
+        className={cn(
+          "bg-white/5 border text-sm rounded-md px-3 py-1 focus:outline-none focus:ring-2",
+          current === "REMOVED" && "border-red-500/40 text-red-300 focus:ring-red-500",
+          current === "ENGAGED" && "border-purple-500/40 text-purple-300 focus:ring-purple-500",
+          current === "CONVERTED" && "border-green-500/40 text-green-300 focus:ring-green-500"
+        )}
+      >
+        <option value="ENGAGED">Engaged</option>
+        <option value="REMOVED">Dropped</option>
+        <option value="CONVERTED">Converted</option>
+      </select>
+    </div>
+  );
+};
 
 // ============================================================================
 // Main Component
@@ -360,7 +403,6 @@ const ProfileActionButtons: React.FC<ProfileActionButtonsProps> = ({ onClose, on
 
 interface ProspectProfileDetailProps {
   profile: ProspectProfile;
-  onClose?: () => void;
   agents: Agent[];
   isLoadingAgents: boolean;
   setSelectedProfile: (profile: ProspectProfile) => void;
@@ -369,7 +411,6 @@ interface ProspectProfileDetailProps {
 
 export function ProspectProfileDetail({
   profile,
-  onClose,
   isLoadingProfile,
 }: ProspectProfileDetailProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -399,8 +440,34 @@ export function ProspectProfileDetail({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <ProfileActionButtons onClose={onClose} />
+          {/* Status Dropdown (replaces action buttons) */}
+          <ProfileStatusDropdown
+            status={profile.prospect_status}
+            onChange={async (next) => {
+              try {
+                const brandId = getBrandIdFromCookie();
+                if (!brandId || !profile.id) return;
+                if (next !== "REMOVED" && next !== "CONVERTED") return; // Only backend-accepted statuses
+                const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+                await fetch(
+                  `${backendUrl}/api/brand/${brandId}/prospect/profiles/${profile.id}/status`,
+                  {
+                    method: "PATCH",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "User-Agent": "Plum-UI/1.0",
+                    },
+                    body: JSON.stringify({
+                      status: next,
+                      brand_prospect_id: profile.prospect_source_id ?? null,
+                    }),
+                  }
+                );
+              } catch (e) {
+                console.error("Failed to update prospect status", e);
+              }
+            }}
+          />
         </div>
 
         {/* Profile Tags and Interests */}
