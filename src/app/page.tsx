@@ -325,14 +325,14 @@ export default function Home() {
                 emoji: "🔍",
                 title: "Discover",
                 blurb:
-                  "AI finds relevant conversations, recommends opportunities, and drafts on-brand responses.",
+                  "PlumSprout AI finds relevant conversations, recommends opportunities, and drafts on-brand responses.",
                 gradient: "from-green-500 to-emerald-500",
                 glowColor: "rgba(34, 197, 94, 0.5)",
               },
               {
                 num: 3,
                 emoji: "📈",
-                title: "Leads",
+                title: "Engage Leads",
                 blurb:
                   "Publish approved posts across your social channels and drive community growth.",
                 gradient: "from-orange-500 to-red-500",
