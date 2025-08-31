@@ -159,7 +159,16 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
       (acc, p) => {
         const postsScraped = Number(p.total_posts_scraped ?? 0);
         const leadsDiscovered = Number(
-          (p as any).total_posts_tagged ?? (p as any).total_leads_tagged ?? 0
+        
+            (p as any).total_leads_tagged ??
+            (() => {
+              const pendingAuthors = new Set(
+                (p.sourced_reddit_posts ?? [])
+                  .map((post) => post.author)
+                  .filter((a) => a != null)
+              );
+              return pendingAuthors.size;
+            })()
         );
         const leadsEngaged = Number(
           (p as any).total_leads_engaged ??
