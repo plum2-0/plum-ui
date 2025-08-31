@@ -71,25 +71,13 @@ export interface RedditPost {
 
 export const PROSPECT_PROFILES_QUERY_KEY = ["prospect-profiles"] as const;
 
-// Mock data generator for development
-
 export function useProspectProfilesQuery() {
   const { data: session, status: sessionStatus } = useSession();
-
-  // Debug logging for session state
-  console.log("🔍 [useProspectProfilesQuery] Session status:", sessionStatus);
-  console.log("🔍 [useProspectProfilesQuery] Session data:", session);
-  console.log("🔍 [useProspectProfilesQuery] BrandId:", session?.user?.brandId);
-  console.log(
-    "🔍 [useProspectProfilesQuery] Query enabled:",
-    !!session?.user?.brandId
-  );
 
   return useQuery<ProspectProfile[]>({
     queryKey: [...PROSPECT_PROFILES_QUERY_KEY, session?.user?.brandId],
     queryFn: async () => {
       const brandId = session?.user?.brandId;
-      console.log("🚀 [queryFn] Starting fetch with brandId:", brandId);
 
       if (!brandId) {
         console.error(
@@ -103,15 +91,8 @@ export function useProspectProfilesQuery() {
         throw error;
       }
 
-      console.log("🚀 Fetching prospect profiles from API, brandId:", brandId);
-
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      console.log("📡 [queryFn] API URL:", backendUrl);
-      console.log(
-        "📡 [queryFn] Full endpoint:",
-        `${backendUrl}/api/brand/${brandId}/prospect/profiles`
-      );
 
       const response = await fetch(
         `${backendUrl}/api/brand/${brandId}/prospect/profiles`,
@@ -124,9 +105,6 @@ export function useProspectProfilesQuery() {
         }
       );
 
-      console.log("📡 [queryFn] Response status:", response.status);
-      console.log("📡 [queryFn] Response ok:", response.ok);
-
       if (!response.ok) {
         console.error("❌ [queryFn] Fetch failed:", response.statusText);
         throw new Error(
@@ -135,7 +113,6 @@ export function useProspectProfilesQuery() {
       }
 
       const data = await response.json();
-      console.log("✅ [queryFn] Data received:", data);
       return data;
     },
     enabled: !!session?.user?.brandId, // Only enable when brandId is available

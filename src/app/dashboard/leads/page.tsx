@@ -26,22 +26,16 @@ export default function DashboardPage() {
   const [selectedProfile, setSelectedProfile] =
     useState<ProspectProfile | null>(null);
 
-  // Debug logging
-  console.log("🎯 [EngagePage] Session status:", status);
-  console.log("🎯 [EngagePage] Session data:", session);
-  console.log("🎯 [EngagePage] BrandId from session:", session?.user?.brandId);
-  console.log("🎯 [EngagePage] Brand response:", brandResponse);
-  console.log("🎯 [EngagePage] Brand loading:", isLoading);
-
   // Fetch agents for the reply component
   const { data: agentsData, isLoading: isLoadingAgents } = useAgents();
 
   // Fetch prospect profiles
-  const { data: prospectProfiles, isLoading: isLoadingProfiles, error: profilesError } = useProspectProfilesQuery();
-  
-  console.log("🎯 [EngagePage] Prospect profiles data:", prospectProfiles);
-  console.log("🎯 [EngagePage] Prospect profiles loading:", isLoadingProfiles);
-  console.log("🎯 [EngagePage] Prospect profiles error:", profilesError);
+  const {
+    data: prospectProfiles,
+    isLoading: isLoadingProfiles,
+    error: profilesError,
+  } = useProspectProfilesQuery();
+
 
   // Fetch detailed profile data with active conversation
   const { data: detailedProfile, isLoading: isLoadingProfile } =
@@ -66,9 +60,15 @@ export default function DashboardPage() {
   // Handle reply success - auto-select next profile
   const handleReplySuccess = () => {
     if (!prospectProfiles || prospectProfiles.length === 0) return;
-    
-    const currentIndex = prospectProfiles.findIndex(p => p.id === selectedProfile?.id);
-    if (currentIndex !== undefined && currentIndex !== -1 && currentIndex < prospectProfiles.length - 1) {
+
+    const currentIndex = prospectProfiles.findIndex(
+      (p) => p.id === selectedProfile?.id
+    );
+    if (
+      currentIndex !== undefined &&
+      currentIndex !== -1 &&
+      currentIndex < prospectProfiles.length - 1
+    ) {
       // Select the next profile in the list
       setSelectedProfile(prospectProfiles[currentIndex + 1]);
     } else if (currentIndex === prospectProfiles.length - 1) {
@@ -137,37 +137,37 @@ export default function DashboardPage() {
     <ProfileProvider selectedProfile={detailedProfile || null}>
       <ReplyProvider onReplySuccess={handleReplySuccess}>
         <main className="flex-1 flex min-h-0 h-full overflow-hidden">
-              {/* Prospect Profiles Inbox - 30% width */}
-              <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
-                <ProspectProfilesInbox
-                  onProfileSelect={setSelectedProfile}
-                  selectedProfileId={selectedProfile?.id}
-                />
-              </div>
+          {/* Prospect Profiles Inbox - 30% width */}
+          <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
+            <ProspectProfilesInbox
+              onProfileSelect={setSelectedProfile}
+              selectedProfileId={selectedProfile?.id}
+            />
+          </div>
 
-              {/* Detail View - 70% width */}
-              <div className="flex-1 h-full">
-                {detailedProfile ? (
-                  <ProspectProfileDetail
-                    profile={detailedProfile}
-                    onClose={() => setSelectedProfile(null)}
-                    agents={agentsData || []}
-                    isLoadingAgents={isLoadingAgents}
-                    setSelectedProfile={setSelectedProfile}
-                    isLoadingProfile={isLoadingProfile}
-                  />
-                ) : selectedProfile && isLoadingProfile ? (
-                  <div className="flex items-center justify-center h-full">
-                    <PlumSproutLoader show={true} />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-white/60 text-xl font-body">
-                      No prospect profile selected
-                    </div>
-                  </div>
-                )}
+          {/* Detail View - 70% width */}
+          <div className="flex-1 h-full">
+            {detailedProfile ? (
+              <ProspectProfileDetail
+                profile={detailedProfile}
+                onClose={() => setSelectedProfile(null)}
+                agents={agentsData || []}
+                isLoadingAgents={isLoadingAgents}
+                setSelectedProfile={setSelectedProfile}
+                isLoadingProfile={isLoadingProfile}
+              />
+            ) : selectedProfile && isLoadingProfile ? (
+              <div className="flex items-center justify-center h-full">
+                <PlumSproutLoader show={true} />
               </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-white/60 text-xl font-body">
+                  No prospect profile selected
+                </div>
+              </div>
+            )}
+          </div>
         </main>
       </ReplyProvider>
     </ProfileProvider>

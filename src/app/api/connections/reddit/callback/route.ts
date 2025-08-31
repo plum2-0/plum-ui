@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
 
     // Clear OAuth cookies and set brand cookie
     const response = NextResponse.redirect(
-      new URL("/dashboard/settings?reddit=connected", request.url)
+      new URL("/dashboard/leads?reddit=connected", request.url)
     );
     response.cookies.delete("reddit_oauth_state");
     response.cookies.set("brand_id", brandId, {

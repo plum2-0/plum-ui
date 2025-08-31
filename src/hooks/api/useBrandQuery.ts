@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useRef } from "react";
+import { useRef, useCallback } from "react";
 import { Brand } from "@/types/brand";
 
 // API Configuration
@@ -85,21 +85,27 @@ export function useBrandQuery() {
   const brandId = getBrandId(session);
   const hasRedirectedRef = useRef(false);
 
-  const redirectToOnboarding = () => {
+  const redirectToOnboarding = useCallback(() => {
     if (typeof window === "undefined") return;
     if (hasRedirectedRef.current) return;
-    
-    // Don't redirect if already on onboarding, auth, or invite pages
     const currentPath = window.location.pathname;
-    if (currentPath.startsWith("/onboarding") || 
-        currentPath.startsWith("/auth") || 
-        currentPath.startsWith("/invite")) {
+    if (
+      currentPath.startsWith("/onboarding") ||
+      currentPath.startsWith("/auth") ||
+      currentPath.startsWith("/invite")
+    ) {
       return;
     }
-    
+
     hasRedirectedRef.current = true;
     router.push("/onboarding");
-  };
+  }, [router]);
+
+  const handleOnboardingRedirect = useCallback(() => {
+    clearBrandCookie();
+    redirectToOnboarding();
+  }, [redirectToOnboarding]);
+
   const queryResult = useQuery({
     // Include brandId in query key for better cache isolation
     queryKey: brandId ? BRAND_QUERY_KEYS.detail(brandId) : BRAND_QUERY_KEYS.all,
@@ -111,32 +117,19 @@ export function useBrandQuery() {
 
       if (!brandId) {
         // If no brandId in cookies or session, user likely needs onboarding
-        // Only redirect if not already on onboarding/auth/invite pages
-        const currentPath = window.location.pathname;
-        if (!currentPath.startsWith("/onboarding") && 
-            !currentPath.startsWith("/auth") && 
-            !currentPath.startsWith("/invite")) {
-          redirectToOnboarding();
-        }
-        throw new BrandQueryError("User needs onboarding", undefined, true);
+        handleOnboardingRedirect();
+        throw new BrandQueryError("User needs onboarding", 404, true);
       }
 
       let brandData: Brand;
       try {
-        brandData = await fetchBrandData(brandId);
+        brandData = await fetchBrandData(brandId as string);
       } catch (error) {
         if (
           error instanceof BrandQueryError &&
           (error.needsOnboarding || error.statusCode === 404)
         ) {
-          clearBrandCookie();
-          // Only redirect if not already on onboarding/auth/invite pages
-          const currentPath = window.location.pathname;
-          if (!currentPath.startsWith("/onboarding") && 
-              !currentPath.startsWith("/auth") && 
-              !currentPath.startsWith("/invite")) {
-            redirectToOnboarding();
-          }
+          handleOnboardingRedirect();
         }
         throw error;
       }
@@ -171,17 +164,6 @@ export function useBrandQuery() {
     // Add network mode for better offline handling
     networkMode: "online",
   });
-
-  useEffect(() => {
-    const error = queryResult.error as unknown;
-    if (
-      error instanceof BrandQueryError &&
-      (error.needsOnboarding || error.statusCode === 404)
-    ) {
-      clearBrandCookie();
-      redirectToOnboarding();
-    }
-  }, [queryResult.error, redirectToOnboarding]);
 
   return queryResult;
 }
@@ -383,22 +365,25 @@ export function useDeleteProspectKeywords() {
     onSuccess: (_, variables) => {
       // Invalidate brand queries to refresh the prospect data
       queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
-      
+
       // Optimistically update the cache
-      const cachedData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as { brand: Brand } | undefined;
+      const cachedData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as
+        | { brand: Brand }
+        | undefined;
       if (cachedData?.brand?.prospects) {
         const updatedProspects = cachedData.brand.prospects.map((prospect) => {
           if (prospect.id === variables.prospectId) {
             return {
               ...prospect,
-              keywords: prospect.keywords?.filter(
-                (kw) => !variables.keywords.includes(kw)
-              ) || [],
+              keywords:
+                prospect.keywords?.filter(
+                  (kw) => !variables.keywords.includes(kw)
+                ) || [],
             };
           }
           return prospect;
         });
-        
+
         queryClient.setQueryData(BRAND_QUERY_KEYS.all, {
           brand: {
             ...cachedData.brand,
@@ -459,7 +444,9 @@ export function useDeleteProspect() {
       await queryClient.cancelQueries({ queryKey: BRAND_QUERY_KEYS.all });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as { brand: Brand } | undefined;
+      const previousData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as
+        | { brand: Brand }
+        | undefined;
 
       // Optimistically update to the new value
       if (previousData?.brand?.prospects) {
@@ -549,12 +536,14 @@ export function useAddBrandProspect() {
 
   return useMutation({
     mutationFn: addBrandProspect,
-    onMutate: async ({ brandId, problemToSolve, keywords }) => {
+    onMutate: async ({ problemToSolve, keywords }) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: BRAND_QUERY_KEYS.all });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as { brand: Brand } | undefined;
+      const previousData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as
+        | { brand: Brand }
+        | undefined;
 
       // Optimistically update to the new value
       if (previousData?.brand) {
@@ -573,7 +562,10 @@ export function useAddBrandProspect() {
         queryClient.setQueryData(BRAND_QUERY_KEYS.all, {
           brand: {
             ...previousData.brand,
-            prospects: [...(previousData.brand.prospects || []), optimisticProspect],
+            prospects: [
+              ...(previousData.brand.prospects || []),
+              optimisticProspect,
+            ],
           },
         });
       }

@@ -24,7 +24,6 @@ export default {
           emailVerified: profile.email_verified ? new Date() : null,
         } as any;
       },
-      allowDangerousEmailAccountLinking: true,
     }),
   ],
   session: {
@@ -86,18 +85,12 @@ export default {
     },
   },
   callbacks: {
-    async signIn({ account, profile, user }) {
+    async signIn({ account, profile }) {
       // Add error handling for OAuth sign-in
       try {
         if (account?.provider === "google") {
           // Only allow linking if Google says the email is verified
           const emailVerified = (profile as any)?.email_verified;
-          console.log("[NextAuth] Google sign-in attempt:", {
-            email: (profile as any)?.email,
-            emailVerified,
-            userId: user?.id,
-            accountId: account?.id,
-          });
           return emailVerified === true;
         }
         return true;

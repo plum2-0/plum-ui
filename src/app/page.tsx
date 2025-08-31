@@ -13,7 +13,7 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
-    if (session?.user) redirect("/dashboard/leads");
+    if (session?.user) redirect("/onboarding");
   }, [session, status]);
 
   if (status === "loading") {
@@ -106,10 +106,12 @@ export default function Home() {
         @keyframes text-glow {
           0%,
           100% {
-            text-shadow: 0 0 6px rgba(168, 85, 247, 0.6), 0 0 14px rgba(34, 197, 94, 0.5);
+            text-shadow: 0 0 6px rgba(168, 85, 247, 0.6),
+              0 0 14px rgba(34, 197, 94, 0.5);
           }
           50% {
-            text-shadow: 0 0 12px rgba(168, 85, 247, 0.95), 0 0 24px rgba(34, 197, 94, 0.85);
+            text-shadow: 0 0 12px rgba(168, 85, 247, 0.95),
+              0 0 24px rgba(34, 197, 94, 0.85);
           }
         }
         .glow-text {
@@ -187,9 +189,7 @@ export default function Home() {
               Blog
             </Link>
             <PricingDialogTrigger>
-              <button
-                className="font-medium text-white/80 hover:text-white transition-all duration-300 hover:drop-shadow-lg"
-              >
+              <button className="font-medium text-white/80 hover:text-white transition-all duration-300 hover:drop-shadow-lg">
                 Pricing
               </button>
             </PricingDialogTrigger>
@@ -216,7 +216,8 @@ export default function Home() {
               </h1>
               <div className="flex flex-col">
                 <p className="font-body font-medium text-lg md:text-xl max-w-3xl mx-auto text-white/90 leading-relaxed tracking-wide md:mb-0 lg:whitespace-nowrap">
-                  Engage Reddit communities to find leads and validate your product.
+                  Engage Reddit communities to find leads and validate your
+                  product.
                 </p>
               </div>
               <div className="mt-6 flex justify-center">
@@ -242,7 +243,12 @@ export default function Home() {
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
                   </svg>
                 </Link>
               </div>

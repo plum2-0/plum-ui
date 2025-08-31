@@ -95,7 +95,7 @@ export default function SettingsSidebar() {
 
   const handleNavigation = (href: string, disabled: boolean) => {
     if (disabled || href === "#") return;
-    router.push(href);
+     (href);
   };
 
   const sidebarContent = (
