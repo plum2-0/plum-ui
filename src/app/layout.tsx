@@ -40,6 +40,17 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/plum-favicon.svg?v=6" type="image/svg+xml" />
         <link rel="shortcut icon" href="/plum-favicon.svg?v=6" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y0RT2J0PQ"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-7Y0RT2J0PQ');
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
