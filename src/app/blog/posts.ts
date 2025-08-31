@@ -14,7 +14,7 @@ export const posts: BlogPostMeta[] = [
   },
   {
     slug: "what-is-product-concept-validation",
-    title: "What is Product Concept Validation (and how to do it right)?",
+    title: "What Is Product Concept Validation—and How to Do It Right?",
     date: "2025-02-15",
     image: "/blog/pcv.png",
   },
