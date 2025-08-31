@@ -7,6 +7,79 @@ import rehypeSanitize from "rehype-sanitize";
 import { defaultSchema } from "hast-util-sanitize";
 import { getPostBySlug, posts } from "../posts";
 import styles from "../post.module.css";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
+
+  if (!post) {
+    return {
+      title: "Post Not Found | Plum Blog",
+      description: "The requested blog post could not be found.",
+    };
+  }
+
+  const baseUrl = "https://plumsprout.com";
+  const canonicalUrl = `${baseUrl}/blog/${post.slug}`;
+
+  return {
+    title: `${post.title} | Plum - Reddit Marketing Intelligence`,
+    description: post.seoDescription || post.excerpt || post.title,
+    keywords: post.keywords?.join(", "),
+    authors: post.author
+      ? [{ name: post.author.name }]
+      : [{ name: "Plum Team" }],
+    creator: "Plum",
+    publisher: "Plum",
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: post.title,
+      description: post.seoDescription || post.excerpt || post.title,
+      url: canonicalUrl,
+      siteName: "Plum",
+      images: [
+        {
+          url: post.ogImage || `${baseUrl}${post.image}`,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+      locale: "en_US",
+      type: "article",
+      publishedTime: post.date,
+      modifiedTime: post.updatedAt || post.date,
+      authors: post.author ? [post.author.name] : ["Plum Team"],
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.seoDescription || post.excerpt || post.title,
+      site: "@plum_hq",
+      creator: "@plum_hq",
+      images: [post.ogImage || `${baseUrl}${post.image}`],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+  };
+}
 
 const SANITIZE_SCHEMA = {
   ...defaultSchema,
@@ -110,24 +183,24 @@ Two hours of disciplined coding beats ten hours of doom-scrolling.
 
 Move up the ladder only when the prior rung shows signal.
 
-1) **Concept comment** (zero build)  
-   - *Goal:* Gauge resonance.  
+1) **Concept comment** (zero build)
+   - *Goal:* Gauge resonance.
    - *Signal:* Replies asking for specifics; users volunteering use cases.
 
-2) **Screenshot/micro-prototype** (Figma or text mock)  
-   - *Goal:* Validate *how* it should work.  
+2) **Screenshot/micro-prototype** (Figma or text mock)
+   - *Goal:* Validate *how* it should work.
    - *Signal:* Users debating details; “When can I try this?”
 
-3) **One-screen landing page**  
-   - *Goal:* Measure intent.  
+3) **One-screen landing page**
+   - *Goal:* Measure intent.
    - *Signal:* Email opt-ins ≥ 15–25% from relevant traffic.
 
-4) **Concierge test** (manual service behind the scenes)  
-   - *Goal:* Validate willingness to *depend* on you.  
+4) **Concierge test** (manual service behind the scenes)
+   - *Goal:* Validate willingness to *depend* on you.
    - *Signal:* 2–5 users ask you to run it again next week.
 
-5) **Wizard-of-Oz MVP** (fake the hard part)  
-   - *Goal:* Validate repeatable usage.  
+5) **Wizard-of-Oz MVP** (fake the hard part)
+   - *Goal:* Validate repeatable usage.
    - *Signal:* 3+ consecutive weeks of usage by the same user(s).
 
 ---
@@ -348,83 +421,83 @@ Decision: Persevere. Build a Wizard-of-Oz MVP with automated prompts, manual fee
 
 const AGENCY_CONTENT = `
    # Why to Run Your Agency Marketing Strategy on Reddit
- 
+
 Reddit has quietly become one of the most durable places on the internet where real buyers narrate their problems, compare options, and report back on what actually worked. For agencies, that makes Reddit less of a “social channel” and more of a market sensor plus an earned‑media engine. This piece lays out why Reddit matters now, how it complements your current services, and practical ways to package it inside your offering.
- 
+
 ---
- 
+
 ## Why Reddit, and why now
- 
+
 - **Search is changing**: more queries start with “reddit” appended, and Google surfaces Reddit threads directly. Winning conversations on Reddit increasingly shows up in search, long after the thread cools.
 - **Trust tax on ads**: audiences discount polished ads but reward specific, peer‑level answers. Reddit is built around that expectation of specificity.
 - **Community as distribution**: category communities (and micro‑niches) form the closest thing to “owned attention” that brands don’t own. Agencies can broker access ethically.
 - **Signal density**: comments reveal the language, objections, and alternatives people actually use—gold for creative, SEO, and positioning.
- 
+
 ---
- 
+
 ## What makes Reddit different from social and search
- 
+
 - **Intent without keywords**: people narrate situations (“migrating from X,” “stuck at Y”), not just type queries. This exposes problems earlier in the funnel.
 - **Long half‑life**: valuable answers are upvoted and rediscovered for months. A single authoritative comment can return compounding brand impressions.
 - **Opinionated governance**: moderators enforce norms. Done right, this becomes a moat—competitors who spam will get removed; helpful contributors are welcomed.
- 
+
 ---
- 
+
 ## Where Reddit fits inside an agency offering
- 
+
 Think of Reddit as a horizontal capability that powers existing service lines:
- 
+
 - **Strategy and research**: capture the client’s category language, objections, and comparison sets directly from threads. Feed this into positioning, SEO, CRO, and creative briefs.
 - **Thought leadership and brand voice**: turn SMEs into credible contributors. Helpful, specifics‑first participation builds authority faster than polished blog posts.
 - **Influencer and partner discovery**: identify super‑contributors and adjacent product advocates; collaborate on AMAs or co‑created guides.
 - **Crisis and reputation**: monitor sentiment around launches, pricing, or outages; respond with context not corporate boilerplate.
 - **SEO assist**: comments and guides that win upvotes become durable search artifacts; mine threads for long‑tail content and FAQs.
- 
+
 ---
- 
+
 ## Packaging and pricing (examples)
- 
-- **Listening & Insights Retainer** (lightweight): weekly digest of top threads, emerging pains, language to steal, and competitor mentions. Feeds the content calendar and ad testing. 
+
+- **Listening & Insights Retainer** (lightweight): weekly digest of top threads, emerging pains, language to steal, and competitor mentions. Feeds the content calendar and ad testing.
 - **Community Thought‑Leadership** (executional): represent the brand (or ghostwrite for SMEs) in priority subs; publish 2–4 authoritative comments and 1 mini‑guide per week; coordinate mod‑approved AMAs.
 - **Launch Companion** (campaign): 4‑week spike during product/feature launch—pre‑brief mods, seed comparison checklists, staff office‑hours thread, capture objections into landing pages.
- 
+
 Deliverables map naturally to existing artifacts: research memos, creative briefs, SEO clusters, and case‑study fodder.
- 
+
 ---
- 
+
 ## How to talk outcomes (executive‑friendly)
- 
+
 - **Category share of voice on Reddit** (mentions, upvotes, comment velocity)
 - **Qualified conversation capture** (threads where the brand gave/received a credible answer)
 - **Language lift‑through** (terms from Reddit reused in ads/LPs that improve CTR or CVR)
 - **Search echo** (threads ranking for target queries; referral traffic from Reddit to owned assets)
 - **Pipeline assists** (sales anecdotes and attribution notes tied to threads)
- 
+
 These aren’t vanity metrics; they are leading indicators for lower CAC and faster creative iteration.
- 
+
 ---
- 
+
 ## Guardrails and ethics (your brand moat)
- 
-- Get mod guidance first; show you’ve read the sidebar. 
+
+- Get mod guidance first; show you’ve read the sidebar.
 - Lead with specifics; avoid “DM me” as a first move.
 - Disclose affiliations; offer summaries before links.
 - Treat sub rules as creative constraints, not obstacles.
- 
+
 Agencies that operate this way quickly become “the trusted helper,” not a vendor.
- 
+
 ---
- 
+
 ## What “good” looks like
- 
+
 - A CMO comment that becomes the canonical answer linked by others.
 - An AMA that surfaces three killer objections you turn into a high‑performing FAQ page.
 - A contributor partnership that yields a co‑authored rubric shared across the sub every time newcomers ask the same question.
- 
+
 ---
- 
+
 ## TL;DR
- 
+
 Reddit is where unfiltered demand, objections, and success stories live in public. Agencies can turn that into research, creative, authority, search lift, and lower CAC—without acting like advertisers. Package it as listening + thought leadership + launch support, measure share‑of‑voice and language lift‑through, and you’ve added a durable new lever to your client growth stack.
 `;
 
@@ -432,29 +505,72 @@ function IdealFlowDiagram() {
   return (
     <div className="chart-card">
       <div className="label-muted mb-2">I.D.E.A.L. flow</div>
-      <svg viewBox="0 0 880 160" width="100%" height="auto" role="img" aria-label="IDEAL framework flow">
+      <svg
+        viewBox="0 0 880 160"
+        width="100%"
+        height="auto"
+        role="img"
+        aria-label="IDEAL framework flow"
+      >
         <defs>
           <linearGradient id="g1" x1="0" x2="1">
             <stop offset="0%" stopColor="rgba(168,85,247,0.9)" />
             <stop offset="100%" stopColor="rgba(34,197,94,0.9)" />
           </linearGradient>
         </defs>
-        {["Insight","Define","Experiment","Assess","Loop"].map((label, i) => {
-          const x = 20 + i * 170;
-          return (
-            <g key={label} transform={`translate(${x}, 30)`}>
-              <rect rx="12" ry="12" width="150" height="60" fill="url(#g1)" opacity="0.9" />
-              <rect rx="12" ry="12" width="150" height="60" fill="#000" opacity="0.15" />
-              <text x="75" y="38" textAnchor="middle" fill="#fff" fontWeight="700" fontSize="14">{label}</text>
-            </g>
-          );
-        })}
-        {[0,1,2,3].map((i) => {
+        {["Insight", "Define", "Experiment", "Assess", "Loop"].map(
+          (label, i) => {
+            const x = 20 + i * 170;
+            return (
+              <g key={label} transform={`translate(${x}, 30)`}>
+                <rect
+                  rx="12"
+                  ry="12"
+                  width="150"
+                  height="60"
+                  fill="url(#g1)"
+                  opacity="0.9"
+                />
+                <rect
+                  rx="12"
+                  ry="12"
+                  width="150"
+                  height="60"
+                  fill="#000"
+                  opacity="0.15"
+                />
+                <text
+                  x="75"
+                  y="38"
+                  textAnchor="middle"
+                  fill="#fff"
+                  fontWeight="700"
+                  fontSize="14"
+                >
+                  {label}
+                </text>
+              </g>
+            );
+          }
+        )}
+        {[0, 1, 2, 3].map((i) => {
           const x = 20 + i * 170 + 150;
           return (
             <g key={i}>
-              <line x1={x} y1={60} x2={x+20} y2={60} stroke="#fff" strokeOpacity="0.7" strokeWidth="2" />
-              <polygon points={`${x+20},60 ${x+12},56 ${x+12},64`} fill="#fff" fillOpacity="0.8" />
+              <line
+                x1={x}
+                y1={60}
+                x2={x + 20}
+                y2={60}
+                stroke="#fff"
+                strokeOpacity="0.7"
+                strokeWidth="2"
+              />
+              <polygon
+                points={`${x + 20},60 ${x + 12},56 ${x + 12},64`}
+                fill="#fff"
+                fillOpacity="0.8"
+              />
             </g>
           );
         })}
@@ -478,35 +594,112 @@ function PcvResultsChart() {
   const rowH = 40;
   return (
     <div className="chart-card">
-      <div className="label-muted mb-2">Example results vs green thresholds</div>
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="auto" role="img" aria-label="Results vs thresholds">
+      <div className="label-muted mb-2">
+        Example results vs green thresholds
+      </div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        width="100%"
+        height="auto"
+        role="img"
+        aria-label="Results vs thresholds"
+      >
         {data.map((d, i) => {
           const y = 20 + i * rowH;
           const barW = (d.value / 100) * chartWidth;
           const thrX = left + (d.threshold / 100) * chartWidth;
           return (
             <g key={d.label}>
-              <text x={10} y={y + 14} fill="#fff" opacity="0.9" fontSize="12">{d.label}</text>
-              <rect x={left} y={y} width={chartWidth} height={12} fill="#000" opacity="0.18" rx={6} />
-              <rect x={left} y={y} width={barW} height={12} fill="rgba(34,197,94,0.9)" rx={6} />
-              <line x1={thrX} y1={y-4} x2={thrX} y2={y+16} stroke="#fff" strokeDasharray="4 3" opacity="0.8" />
-              <text x={left + barW + 8} y={y + 11} fill="#fff" fontSize="11">{d.value}%</text>
-              <text x={thrX + 6} y={y - 6} fill="#fff" fontSize="10" opacity="0.8">{d.threshold}%</text>
+              <text x={10} y={y + 14} fill="#fff" opacity="0.9" fontSize="12">
+                {d.label}
+              </text>
+              <rect
+                x={left}
+                y={y}
+                width={chartWidth}
+                height={12}
+                fill="#000"
+                opacity="0.18"
+                rx={6}
+              />
+              <rect
+                x={left}
+                y={y}
+                width={barW}
+                height={12}
+                fill="rgba(34,197,94,0.9)"
+                rx={6}
+              />
+              <line
+                x1={thrX}
+                y1={y - 4}
+                x2={thrX}
+                y2={y + 16}
+                stroke="#fff"
+                strokeDasharray="4 3"
+                opacity="0.8"
+              />
+              <text x={left + barW + 8} y={y + 11} fill="#fff" fontSize="11">
+                {d.value}%
+              </text>
+              <text
+                x={thrX + 6}
+                y={y - 6}
+                fill="#fff"
+                fontSize="10"
+                opacity="0.8"
+              >
+                {d.threshold}%
+              </text>
             </g>
           );
         })}
         <g>
-          <text x={10} y={20 + 3 * rowH + 22} fill="#fff" opacity="0.9" fontSize="12">Repeat users</text>
-          <rect x={left} y={20 + 3 * rowH} width={chartWidth} height={12} fill="#000" opacity="0.18" rx={6} />
-          <rect x={left} y={20 + 3 * rowH} width={(3 / 6) * chartWidth} height={12} fill="rgba(168,85,247,0.9)" rx={6} />
-          <text x={left + (3 / 6) * chartWidth + 8} y={20 + 3 * rowH + 11} fill="#fff" fontSize="11">4 users (≥ 3 green)</text>
+          <text
+            x={10}
+            y={20 + 3 * rowH + 22}
+            fill="#fff"
+            opacity="0.9"
+            fontSize="12"
+          >
+            Repeat users
+          </text>
+          <rect
+            x={left}
+            y={20 + 3 * rowH}
+            width={chartWidth}
+            height={12}
+            fill="#000"
+            opacity="0.18"
+            rx={6}
+          />
+          <rect
+            x={left}
+            y={20 + 3 * rowH}
+            width={(3 / 6) * chartWidth}
+            height={12}
+            fill="rgba(168,85,247,0.9)"
+            rx={6}
+          />
+          <text
+            x={left + (3 / 6) * chartWidth + 8}
+            y={20 + 3 * rowH + 11}
+            fill="#fff"
+            fontSize="11"
+          >
+            4 users (≥ 3 green)
+          </text>
         </g>
       </svg>
     </div>
   );
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const meta = getPostBySlug(slug);
   if (!meta) return notFound();
@@ -514,36 +707,99 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const isPMF = meta.slug === "validating-product-market-fit-on-reddit";
   const isPCV = meta.slug === "what-is-product-concept-validation";
   const isAgency = meta.slug === "agency-marketing-on-reddit";
-  const content = isPMF ? PMF_CONTENT : isPCV ? PCV_CONTENT : isAgency ? AGENCY_CONTENT : "Coming soon.";
+  const content = isPMF
+    ? PMF_CONTENT
+    : isPCV
+    ? PCV_CONTENT
+    : isAgency
+    ? AGENCY_CONTENT
+    : "Coming soon.";
+
+  const baseUrl = "https://plumsprout.com";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: meta.title,
+    description: meta.seoDescription || meta.excerpt || meta.title,
+    image: meta.ogImage || `${baseUrl}${meta.image}`,
+    datePublished: meta.date,
+    dateModified: meta.updatedAt || meta.date,
+    author: {
+      "@type": "Organization",
+      name: meta.author?.name || "Plum",
+      url: baseUrl,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Plum",
+      url: baseUrl,
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/blog/${meta.slug}`,
+    },
+    keywords: meta.keywords?.join(", "),
+    articleSection: "Blog",
+    wordCount: isPMF ? 2500 : isPCV ? 2000 : isAgency ? 1500 : 500,
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", ".prose"],
+    },
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      <div className="absolute inset-0 z-0" style={{
-        background: `
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: `
           radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3), transparent 50%),
           radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3), transparent 50%),
           radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2), transparent 50%),
           linear-gradient(135deg, #0F0F23 0%, #1A0B2E 25%, #2D1B3D 50%, #1E293B 75%, #0F172A 100%)
         `,
-      }} />
+        }}
+      />
 
       <main className="relative z-10 mx-6 my-8">
         <div className="max-w-4xl mx-auto">
-          <Link href="/blog" className="text-white/70 hover:text-white">← Back to blog</Link>
+          <Link href="/blog" className="text-white/70 hover:text-white">
+            ← Back to blog
+          </Link>
 
           <article className="glass-card rounded-3xl overflow-hidden mt-4">
             <div className="relative w-full h-56 sm:h-64 md:h-80">
-              <Image src={meta.image} alt={meta.title} fill className="object-cover" />
+              <Image
+                src={meta.image}
+                alt={meta.title}
+                fill
+                className="object-cover"
+              />
             </div>
             <div className="p-6">
               <h1 className="text-white text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">
                 {meta.title}
               </h1>
               <div className="text-white/60 text-sm mb-6">
-                {new Date(meta.date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
+                {new Date(meta.date).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
               </div>
               <div className={`${styles.post} prose prose-invert max-w-none`}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, SANITIZE_SCHEMA]]}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[[rehypeSanitize, SANITIZE_SCHEMA]]}
+                >
                   {content}
                 </ReactMarkdown>
                 {isPCV && (
@@ -563,4 +819,4 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
 export function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
-} 
+}
