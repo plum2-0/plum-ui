@@ -20,6 +20,7 @@ import { PopoverWithPortal } from "@/components/ui/PopoverWithPortal";
 import { RedditConvo } from "./RedditConvo";
 import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import type { Agent } from "@/types/agent";
+import { useBrand } from "@/contexts/BrandContext";
 
 // ============================================================================
 // Constants & Utilities
@@ -368,7 +369,7 @@ const ProfileStatusDropdown: React.FC<ProfileStatusDropdownProps> = ({ status, o
           side="bottom"
           align="start"
         >
-          <div className="text-xs space-y-2 max-w-[320px]">
+          <div className="text-xs space-y-2 w-[420px] sm:w-[520px] max-w-[85vw]">
             <div><span className="text-purple-400 font-medium">Engaged</span> - Leads you are engaged in converting</div>
             <div><span className="text-green-400 font-medium">Converted</span> - Leads that you converted as Customers</div>
             <div><span className="text-red-400 font-medium">Dropped</span> - Leads that you deem are not worth pursuing anymore</div>
@@ -414,6 +415,7 @@ export function ProspectProfileDetail({
   isLoadingProfile,
 }: ProspectProfileDetailProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { brand } = useBrand();
 
   // Show loading state if prospect_status is LOADING
   if (profile.prospect_status === "LOADING") {
@@ -459,7 +461,7 @@ export function ProspectProfileDetail({
                     },
                     body: JSON.stringify({
                       status: next,
-                      brand_prospect_id: profile.prospect_source_id ?? null,
+                      brand_prospect_id: brand?.prospects?.[0]?.id ?? null,
                     }),
                   }
                 );
