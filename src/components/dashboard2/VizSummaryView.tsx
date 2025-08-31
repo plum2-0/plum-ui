@@ -5,16 +5,12 @@ import { motion } from "framer-motion";
 import { Prospect, RedditPost } from "@/types/brand";
 import LiquidGlassCard from "./charts/LiquidGlassCard";
 import StackedPostsChart from "./charts/StackedPostsChart";
-import MultiLineChart from "./charts/MultiLineChart";
 import KeywordPostsModal from "./KeywordPostsModal";
 import BrandFunnelChart from "./charts/BrandFunnelChart";
 import {
   transformStackedBarDataByKeywords,
-  transformPostsOverTimeData,
   calculateEngagementMetrics,
 } from "@/utils/chartDataTransformations";
-import { evaluateProspectPMF } from "@/utils/pmf";
-import { Popover } from "@/components/ui/Popover";
 
 interface VizSummaryViewProps {
   prospects: Prospect[];
@@ -121,7 +117,6 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
 
   const chartData = useMemo(() => {
     const stackedData = transformStackedBarDataByKeywords(aggregatedProspect);
-    const timeSeriesData = transformPostsOverTimeData([aggregatedProspect]);
     const engagementMetrics = calculateEngagementMetrics([
       aggregatedProspect,
     ])[0] || {
@@ -135,18 +130,9 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
       engagementRate: 0,
     };
 
-    const lineKeys =
-      timeSeriesData.length > 0
-        ? Object.keys(timeSeriesData[0]).filter(
-            (k) => k !== "date" && k !== "fullDate"
-          )
-        : [];
-
     return {
       stackedData,
-      timeSeriesData,
       engagementMetrics,
-      lineKeys,
     };
   }, [aggregatedProspect]);
 
@@ -201,21 +187,40 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
       }
     );
 
+    const discoveredBase = totals.total_leads_discovered || 0;
+    const engagedBase = totals.total_leads_engaged || 0;
     const funnelData = [
-      { name: "Total Posts Scraped", value: totals.total_posts_scraped },
-      { name: "Total Leads Discovered", value: totals.total_leads_discovered },
-      { name: "Total Leads Engaged", value: totals.total_leads_engaged },
-      { name: "Total Leads Converted", value: totals.total_leads_converted },
-      { name: "Total Leads Dropped", value: totals.total_leads_dropped },
+      {
+        name: "Total Leads Discovered",
+        value: totals.total_leads_discovered,
+        prev: discoveredBase,
+      },
+      {
+        name: "Total Leads Engaged",
+        value: totals.total_leads_engaged,
+        prev: discoveredBase,
+      },
+      {
+        name: "Total Leads Converted",
+        value: totals.total_leads_converted,
+        prev: engagedBase,
+        color: "#34D399",
+      },
+      // Dropped intentionally omitted from the chart view
     ];
 
     return { funnelData, totals };
   }, [filteredProspects]);
 
-  // PMF evaluation for brand-level aggregated funnel
-  const pmf = useMemo(() => evaluateProspectPMF(totals), [totals]);
+  // PMF status based solely on Total Leads Engaged % of Discovered
+  const pmf = useMemo(() => {
+    const base = totals.total_leads_discovered || 0;
+    const engaged = totals.total_leads_engaged || 0;
+    const engagedPct = base > 0 ? (engaged / base) * 100 : 0;
 
-  const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
+    const status = engagedPct > 20 ? "GOOD" : engagedPct >= 10 ? "AVG" : "BAD";
+    return { status, engagedPct };
+  }, [totals]);
 
   return (
     <div className="space-y-6">
@@ -258,109 +263,38 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
         />
       </LiquidGlassCard>
 
-      {/* Posts Over Time */}
-      {chartData.timeSeriesData.length > 0 ? (
-        <LiquidGlassCard
-          title="Posts Over Time"
-          subtitle="Daily post count trends"
-          glowColor="rgba(139, 92, 246, 0.4)"
-        >
-          <MultiLineChart
-            data={chartData.timeSeriesData}
-            lines={chartData.lineKeys}
-          />
-        </LiquidGlassCard>
-      ) : null}
-
       {/* Brand > Prospect Funnel */}
       <LiquidGlassCard
         title="Leads Funnel"
-        subtitle="From scraped posts to discovered and engaged leads to converted and dropped leads"
+        subtitle="From discovered leads to engaged and converted leads"
         glowColor="rgba(34, 211, 238, 0.35)"
       >
-        {/* PMF Status Row */}
+        {/* PMF Status Row (Engaged % only) */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <span
               className="px-3 py-1 rounded-full text-xs font-medium"
               style={{
                 background:
-                  pmf.pmf_status === "GOOD"
+                  pmf.status === "GOOD"
                     ? "rgba(16, 185, 129, 0.15)"
-                    : pmf.pmf_status === "BAD"
+                    : pmf.status === "BAD"
                     ? "rgba(239, 68, 68, 0.15)"
                     : "rgba(234, 179, 8, 0.15)",
                 color:
-                  pmf.pmf_status === "GOOD"
+                  pmf.status === "GOOD"
                     ? "#34D399"
-                    : pmf.pmf_status === "BAD"
+                    : pmf.status === "BAD"
                     ? "#F87171"
                     : "#FBBF24",
                 border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
-              PMF: {pmf.pmf_status} · {pmf.score}
+              PMF: {pmf.status} · {pmf.engagedPct.toFixed(1)}%
             </span>
             <span className="text-white/60 text-xs">
-              {pmf.reasons[0] ?? "PMF evaluated from recent funnel performance"}
+              Based on Total Leads Engaged %
             </span>
-            <Popover
-              openOnHover={false}
-              side="bottom"
-              align="start"
-              trigger={
-                <button className="text-[11px] text-white/60 underline decoration-dotted hover:text-white/80">
-                  How is this scored?
-                </button>
-              }
-            >
-              <div className="space-y-2">
-                <div className="font-medium text-white/90">
-                  PMF score formula
-                </div>
-                <div className="text-white/80">
-                  Priority on discovery and engagement relative to scraped
-                  posts.
-                </div>
-                <div className="text-white/80">
-                  Score = 100 × (<span className="text-white">0.45</span>
-                  ×Discovery (Discovered/Scraped) +
-                  <span className="text-white"> 0.35</span>×Engagement vs
-                  Scraped (Engaged/Scraped) +
-                  <span className="text-white"> 0.12</span>×Conversion +
-                  <span className="text-white"> 0.08</span>×(1−Drop) ) × Volume
-                </div>
-                <div className="text-white/70 text-[11px]">
-                  GOOD heuristic: Discovery/Scraped ≥ 10% and Engaged/Discovered
-                  ≥ 10% (with volume ≥ 30 discovered).
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-white/85">
-                  <div>Discovery (discovered/scraped)</div>
-                  <div className="text-right">
-                    {pct(pmf.metrics.discovery_rate)}
-                  </div>
-                  <div>Engagement vs scraped (engaged/scraped)</div>
-                  <div className="text-right">
-                    {pct(pmf.metrics.engaged_over_scraped)}
-                  </div>
-                  <div>Engagement vs discovered</div>
-                  <div className="text-right">
-                    {pct(pmf.metrics.engagement_rate)}
-                  </div>
-                  <div>Conversion (converted/engaged)</div>
-                  <div className="text-right">
-                    {pct(pmf.metrics.conversion_rate)}
-                  </div>
-                  <div>Drop (dropped/engaged)</div>
-                  <div className="text-right">{pct(pmf.metrics.drop_rate)}</div>
-                  <div>Volume gate</div>
-                  <div className="text-right">
-                    {pct(pmf.metrics.volume)} (min(discovered/30, scraped/200,
-                    1))
-                  </div>
-                </div>
-              </div>
-            </Popover>
           </div>
         </div>
 

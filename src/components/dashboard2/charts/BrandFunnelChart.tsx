@@ -16,6 +16,7 @@ import {
 export type BrandFunnelDatum = {
   name: string;
   value: number;
+  prev?: number; // previous step absolute value (for % context)
   color?: string;
 };
 
@@ -35,14 +36,16 @@ const DESCRIPTIONS: Record<string, string> = {
   "Total Leads Discovered": "Potential Leads facing relevant problems the Brand can help",
   "Total Leads Engaged": "Leads who you are actively engaged in a conversation",
   "Total Leads Converted": "Leads who you were engaged that converted as Customers",
-  "Total Leads Dropped": "Leads who you were engaged that you deemed not worth pursuing anymore.",
 };
 
 function CustomTooltip({ active, payload }: any) {
   if (!active || !payload || !payload.length) return null;
-  const datum = payload[0]?.payload as BrandFunnelDatum & { fill?: string };
+  // payload[0] may represent one of the stacked bars. We want the data item.
+  const datum = payload[0]?.payload as any;
   const name = datum?.name ?? "";
-  const value = datum?.value ?? 0;
+  const actual = Number(datum?.actual ?? 0);
+  const prev = Number(datum?.prev ?? actual);
+  const pct = prev > 0 ? Math.round((actual / prev) * 1000) / 10 : 0;
   const description = DESCRIPTIONS[name] ?? "";
 
   return (
@@ -53,31 +56,39 @@ function CustomTooltip({ active, payload }: any) {
         borderRadius: 12,
         color: "#fff",
         padding: "10px 12px",
-        maxWidth: 320,
+        maxWidth: 340,
         boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-        <span
-          style={{
-            display: "inline-block",
-            width: 10,
-            height: 10,
-            background: (datum as any)?.fill ?? "#8B5CF6",
-            borderRadius: 3,
-          }}
-        />
-        <div style={{ fontWeight: 600, fontSize: 14 }}>{name}</div>
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>
-        {formatNumber(Number(value))}
+      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{name}</div>
+      <div style={{ fontSize: 16 }}>
+        {formatNumber(actual)} of {formatNumber(prev)} ({pct}%)
       </div>
       {description ? (
-        <div style={{ fontSize: 12, lineHeight: 1.4, color: "rgba(255,255,255,0.8)" }}>
+        <div style={{ fontSize: 12, lineHeight: 1.4, color: "rgba(255,255,255,0.8)", marginTop: 6 }}>
           {description}
         </div>
       ) : null}
     </div>
+  );
+}
+
+function CategoryTick(props: any) {
+  const { x, y, payload } = props;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        transform="rotate(-25)"
+        fill="rgba(255,255,255,0.75)"
+        fontSize={12}
+      >
+        {payload?.value}
+      </text>
+    </g>
   );
 }
 
@@ -101,48 +112,79 @@ export default function BrandFunnelChart({
     );
   }
 
-  const chartData = data.map((d, idx) => ({
-    ...d,
-    fill: d.color ?? colors[idx % colors.length],
-  }));
+  // Build chart data with actual and remainder so total height equals previous step
+  const chartData = data.map((d, idx) => {
+    const prev = typeof d.prev === "number" ? d.prev : d.value;
+    const actual = d.value;
+    const remainder = Math.max(prev - actual, 0);
+    const fill = d.color ?? colors[idx % colors.length];
+    return { name: d.name, actual, remainder, prev, fill };
+  });
+
+  const actualFills = chartData.map((d) => d.fill);
+  const remainderFills = chartData.map(() => "rgba(255,255,255,0.18)");
+
+  // Custom label rendering percentage on top of actual portion
+  const renderPercentLabel = (props: any) => {
+    const { x, y, width, value, index } = props;
+    const prev = Number(chartData[index]?.prev ?? value);
+    const pct = prev > 0 ? Math.round((Number(value) / prev) * 1000) / 10 : 0;
+    if (isNaN(x) || isNaN(y) || isNaN(width)) return null;
+    return (
+      <text
+        x={x + width / 2}
+        y={y - 6}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.9)"
+        fontSize={12}
+        fontWeight={600}
+      >
+        {pct}%
+      </text>
+    );
+  };
 
   return (
-    <div className="w-full h-[360px]">
+    <div className="w-full h-[380px]">
       <ResponsiveContainer>
         <BarChart
           data={chartData}
-          layout="vertical"
-          margin={{ top: 8, right: 32, bottom: 8, left: 8 }}
-          barCategoryGap={18}
+          margin={{ top: 20, right: 24, bottom: 84, left: 16 }}
+          barCategoryGap={24}
         >
-          <CartesianGrid horizontal={true} vertical={false} stroke="rgba(255,255,255,0.06)" />
+          <CartesianGrid vertical={true} horizontal={true} stroke="rgba(255,255,255,0.06)" />
           <XAxis
+            type="category"
+            dataKey="name"
+            interval={0}
+            tick={<CategoryTick />}
+            tickLine={false}
+            axisLine={{ stroke: "rgba(255,255,255,0.12)" }}
+            height={64}
+            tickMargin={12}
+          />
+          <YAxis
             type="number"
             tickFormatter={(v) => formatNumber(Number(v))}
             tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+            tickLine={false}
             axisLine={{ stroke: "rgba(255,255,255,0.12)" }}
-            tickLine={false}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fill: "rgba(255,255,255,0.75)", fontSize: 14 }}
-            tickMargin={6}
-            width={180}
-            axisLine={false}
-            tickLine={false}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="value" radius={[6, 6, 6, 6]} minPointSize={2}>
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.fill} />
+
+          {/* Actual value (colored) at the bottom */}
+          <Bar dataKey="actual" stackId="f" radius={[0, 0, 0, 0]} minPointSize={2}>
+            {actualFills.map((fill, i) => (
+              <Cell key={`act-${i}`} fill={fill} />
             ))}
-            <LabelList
-              dataKey="value"
-              position="right"
-              formatter={(v: any) => formatNumber(Number(v))}
-              fill="rgba(255,255,255,0.85)"
-            />
+            <LabelList dataKey="actual" content={renderPercentLabel} />
+          </Bar>
+
+          {/* Remainder to reach previous step height (ghost) on top */}
+          <Bar dataKey="remainder" stackId="f" radius={[6, 6, 0, 0]}>
+            {remainderFills.map((fill, i) => (
+              <Cell key={`rem-${i}`} fill={fill} />
+            ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
