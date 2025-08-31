@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Prospect } from "@/types/brand";
+import { Prospect, RedditPost } from "@/types/brand";
 import LiquidGlassCard from "./charts/LiquidGlassCard";
 import StackedPostsChart from "./charts/StackedPostsChart";
 import MultiLineChart from "./charts/MultiLineChart";
+import KeywordPostsModal from "./KeywordPostsModal";
 import {
   transformStackedBarDataByKeywords,
   transformPostsOverTimeData,
@@ -84,6 +85,9 @@ function FilterToggle({
 
 export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
   const [filter, setFilter] = useState<"all" | "accepted">("all");
+  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
+  const [selectedPosts, setSelectedPosts] = useState<RedditPost[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter posts in each prospect based on selection
   const filteredProspects = useMemo(() => {
@@ -112,7 +116,6 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
     return synthetic;
   }, [filteredProspects]);
 
-  // Transform data using the same structure as VizProspectView
   const chartData = useMemo(() => {
     const stackedData = transformStackedBarDataByKeywords(aggregatedProspect);
     const timeSeriesData = transformPostsOverTimeData([aggregatedProspect]);
@@ -144,6 +147,24 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
     };
   }, [aggregatedProspect]);
 
+  // Handle keyword selection for modal
+  const handleKeywordClick = (keyword: string) => {
+    const keywordData = chartData.stackedData.find(
+      (item) => item.fullName === keyword
+    );
+    if (keywordData?.posts) {
+      setSelectedKeyword(keyword);
+      setSelectedPosts(keywordData.posts);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedKeyword(null);
+    setSelectedPosts([]);
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter Toggle */}
@@ -174,11 +195,15 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
 
       {/* Posts by Source Keywords */}
       <LiquidGlassCard
-        title="Posts by Source Keywords"
+        title="Top 10 Keywords"
         subtitle={`Distribution of ${chartData.engagementMetrics.totalPosts} posts by keyword source`}
         glowColor="rgba(59, 130, 246, 0.4)"
       >
-        <StackedPostsChart data={chartData.stackedData} />
+        <StackedPostsChart 
+          data={chartData.stackedData}
+          onBarClick={handleKeywordClick}
+          onViewPosts={handleKeywordClick}
+        />
       </LiquidGlassCard>
 
       {/* Posts Over Time */}
@@ -228,6 +253,16 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
             </p>
           </div>
         </motion.div>
+      )}
+
+      {/* Keyword Posts Modal */}
+      {selectedKeyword && (
+        <KeywordPostsModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          keyword={selectedKeyword}
+          posts={selectedPosts}
+        />
       )}
     </div>
   );

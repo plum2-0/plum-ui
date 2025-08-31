@@ -9,15 +9,23 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Cell,
+  Tooltip,
 } from "recharts";
 import { motion } from "framer-motion";
 import { getChartColors } from "@/utils/chartDataTransformations";
+import KeywordTooltip from "./KeywordTooltip";
 
 interface StackedPostsChartProps {
   data: any[];
+  onBarClick?: (keyword: string) => void;
+  onViewPosts?: (keyword: string) => void;
 }
 
-export default function StackedPostsChart({ data }: StackedPostsChartProps) {
+export default function StackedPostsChart({ 
+  data, 
+  onBarClick,
+  onViewPosts 
+}: StackedPostsChartProps) {
   const colors = getChartColors();
   
   // Generate liquid glass gradients for each bar
@@ -87,17 +95,30 @@ export default function StackedPostsChart({ data }: StackedPostsChartProps) {
           }}
         />
         
+        {/* Tooltip with custom content */}
+        <Tooltip 
+          content={<KeywordTooltip onViewPosts={onViewPosts} />}
+          cursor={{ fill: "rgba(139, 92, 246, 0.1)" }}
+        />
+        
         {/* Single bar showing total with gradient */}
         <Bar
           dataKey="total"
           fill="url(#barGradient0)"
           radius={[12, 12, 0, 0]}
           filter="url(#neumorphicGlow)"
+          onClick={(data: any) => {
+            if (onBarClick && data?.fullName) {
+              onBarClick(data.fullName);
+            }
+          }}
+          style={{ cursor: "pointer" }}
         >
           {data.map((entry, index) => (
             <Cell 
               key={`cell-${index}`} 
               fill={`url(#barGradient${index % barGradients.length})`}
+              style={{ cursor: "pointer" }}
             />
           ))}
         </Bar>

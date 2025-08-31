@@ -16,8 +16,8 @@ export const transformStackedBarDataByKeywords = (prospect: Prospect) => {
     keywordGroups[keyword].push(post);
   });
   
-  // Transform to chart data
-  return Object.entries(keywordGroups).map(([keyword, keywordPosts]) => {
+  // Transform to chart data and sort by total posts
+  const sortedData = Object.entries(keywordGroups).map(([keyword, keywordPosts]) => {
     const statusCounts = keywordPosts.reduce((acc, post) => {
       const status = post.status || "PENDING";
       acc[status] = (acc[status] || 0) + 1;
@@ -36,8 +36,19 @@ export const transformStackedBarDataByKeywords = (prospect: Prospect) => {
       SUGGESTED_REPLY: statusCounts.SUGGESTED_REPLY || 0,
       total: keywordPosts.length,
       avgScore: Math.round(avgScore),
+      posts: keywordPosts, // Include posts for modal access
     };
-  }).sort((a, b) => b.total - a.total); // Sort by total posts
+  }).sort((a, b) => b.total - a.total);
+  
+  // Limit to top 10 keywords and add ranking info
+  const top10 = sortedData.slice(0, 10);
+  const maxPosts = top10[0]?.total || 0;
+  
+  return top10.map((item, index) => ({
+    ...item,
+    rank: index + 1,
+    difference: maxPosts - item.total,
+  }));
 };
 
 // Transform data for stacked bar chart (original - by prospect)
