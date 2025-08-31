@@ -183,98 +183,167 @@ Reddit can be your highest‑signal channel if you play long‑game trust: log p
 `;
 
 const PCV_CONTENT = `
-# What is Product Concept Validation (and how to do it right)?
+# What Is Product Concept Validation—and How to Do It Right?
 
-Great teams don’t “ship and hope.” They validate concepts quickly with real users, real problems, and real signals—before committing months of build time.
-
-This guide breaks down what concept validation is, when to use it, which signals matter, and a step‑by‑step playbook you can reuse.
+A friendly, no-fluff playbook with a real brand example and a week-by-week plan.
 
 ---
 
-## What is concept validation?
+## The one-line answer
 
-A lightweight process to test whether a proposed solution (the “concept”) solves a real problem for a real audience—in a way they understand and want.
+Product concept validation is how you prove a specific idea (your concept) is desirable, clear, and valuable for a defined audience—before you invest months of design and engineering. In research circles it’s often called concept testing, and it’s used to assess viability ahead of launch.
 
-- **Goal:** reduce uncertainty before build
-- **Output:** a clear go / refine / no‑go decision
-- **Scope:** problems, audience, value props, core workflow—not full features
+> What you typically measure: interest/appeal, purchase or usage intent, clarity & believability, and how the concept stacks up against alternatives.
 
 ---
 
-## When should you validate?
+## The I.D.E.A.L. framework (insight → action)
 
-Validate concepts when any of these are true:
+A simple loop you can run in 2–3 weeks:
 
-- New product or 0→1 feature
-- New audience or use case
-- Core workflow change that affects activation or retention
-
-If you already have strong usage/retention on the job-to-be-done, you’re beyond concept validation—measure impact instead.
+- **Insight** — Gather real, recent evidence of the problem in the wild.
+- **Define** — Tighten your ICP, the Job-to-be-Done, and your riskiest assumptions.
+- **Experiment** — Run tiny tests (fake door, mock, concierge/WoZ).
+- **Assess** — Use behavioral metrics, not vibes.
+- **Loop** — Decide: persevere, pivot, or pause; then run the next bet.
 
 ---
 
-## Signals that matter (and what to ignore)
+## A tangible example (with a real brand)
 
-| Signal | Why it matters | Green | Yellow | Red |
+- **Brand**: Duolingo (illustrative only; hypothetical concept)
+- **Concept**: Duo Interview Coach — guided, job-specific practice interviews for non-native English speakers inside Duolingo, with instant feedback on answers, tone, and fluency.
+
+We’ll walk the concept through I.D.E.A.L. from insight to action. Numbers below are example thresholds and sample outcomes for illustration.
+
+### 1) INSIGHT — Find the problem heat
+
+**Where to look (fast):**
+
+- Reddit communities (e.g., r/LearnEnglish, r/cscareerquestions, r/AskHR)
+- App store reviews & support tickets (themes: confidence, speaking anxiety)
+- LinkedIn/Discord groups for jobseekers and international students
+
+**What to capture (verbatim > summary):**
+
+- Triggers (“interview next week”, “visa timeline”, “accent confidence”)
+- Workarounds (YouTube scripts, mirror practice, language partners)
+- Outcome language (“sound natural”, “stop freezing”, “structure answers”)
+
+Artifact: a lightweight “evidence board” that clusters quotes and counts repeats.
+
+### 2) DEFINE — Sharpen the bet
+
+**JTBD statement**
+
+When international candidates have upcoming interviews (trigger), they want to practice realistic answers and get actionable feedback (job/outcome) without scheduling a tutor or guessing alone (constraints).
+
+**ICP v1:** Students & early-career professionals in EN-as-L2 markets (e.g., India/SEA), interviewing for tech and service roles, 2–6 weeks pre-interview.
+
+**Riskiest assumptions (top 3):**
+
+1. Users prefer guided interview drills over generic speaking practice.
+2. On-device feedback (no human tutor) feels accurate and encouraging.
+3. Candidates will book sessions weekly in the run-up to an interview.
+
+### 3) EXPERIMENT — Tiny tests, big learning
+
+We’ll stack three lightweight tests over ~14 days.
+
+| Test | What it is | Traffic source | Pass metric (behavioral) | Why it matters |
+|---|---|---|---|---|
+| Fake door LP | 1-screen page: “Interview Coach” | Reddit threads (mod-approved), email list, LI | ≥ 18–25% qualified opt-in | Validates desirability & message |
+| Clickable mock | 2–3 Figma screens (STAR prompts, feedback view) | 5–8 target users (recorded calls) | ≥ 4/5 complete a drill in < 2 min | Validates flow & clarity |
+| Concierge pilot (WoZ) | Manual feedback: users send answers; you annotate | 5–7 early users | ≥ 3 return for ≥ 2 weeks | Validates habit & repeat value |
+
+Note: We’re testing behavior: clicks, callbacks, repeat usage. Not “sounds cool.”
+
+### 4) ASSESS — Score like a scientist (not a fan)
+
+**Scoring table**
+
+| Signal | Metric | Green | Yellow | Red |
 |---|---|---:|---:|---:|
-| Clarity of problem | Users articulate pains without prompting | Specific and repeated | Vague or scattered | No consistent pain |
-| Resonance | Users respond to the concept and ask “how would it work?” | Frequent follow‑ups | Occasional interest | Crickets |
-| Intent | Users join a waitlist, book a call, or share data | ≥ 20% from qualified traffic | 10–19% | < 10% |
-| Dependence | Users request to use it again (concierge) | 3+ repeat users | 1–2 | 0 |
+| Desirability | LP opt-in (qualified) | ≥ 20% | 10–19% | < 10% |
+| Clarity | Mock task completion | ≥ 80% | 60–79% | < 60% |
+| Repeat value | Weekly sessions (pilot) | ≥ 3 users | 1–2 | 0 |
+| Willingness to pay | Paid pilot acceptance | ≥ 5–10% | 2–4% | < 2% |
 
-Ignore vanity signals like likes or generic “cool idea” comments—they rarely translate to adoption.
+**Example results (hypothetical):**
 
----
+- LP opt-in: 22% (n=210) → Green
+- Mock completion: 6/7 users in < 2 min → Green
+- Concierge: 4 users returned 2+ weeks → Green
+- Pilot price test ($9/mo add-on): 8% acceptance → Green
 
-## The 6‑step concept validation playbook
+Decision: Persevere. Build a Wizard-of-Oz MVP with automated prompts, manual feedback behind the scenes, and a weekly “coach plan” reminder.
 
-1. **Define the job-to-be-done**  
-   - Who is the user? When does the pain spike? What outcome do they want?
-2. **Draft 2–3 sharp value props**  
-   - Write one‑line promises that anchor the concept.
-3. **Create a micro‑prototype**  
-   - One screen (Figma or text mock) showing how it works.
-4. **Run the concept test**  
-   - Share in relevant communities or interviews; collect objections and must‑haves.
-5. **Measure intent**  
-   - Simple landing page or Calendly; capture waitlist/booking rate.
-6. **Decide and next step**  
-   - If signals are green on problem + intent, scope a Wizard‑of‑Oz MVP.
+### 5) LOOP — From insight to action in 14 days
 
----
-
-## Lightweight experiments you can run this week
-
-- Concept post with decision framework (no links; ask for feedback)
-- 1‑pager mock with three screens; ask users to narrate usage
-- Concierge offer for a single workflow (you do it manually)
-- “Swap test” landing page with two value props; measure which wins
-
----
-
-## Common pitfalls
-
-- Validating the solution name or UI, not the underlying job
-- Over‑collecting feedback; under‑measuring intent
-- Asking leading questions; not logging quotes verbatim
-- Ignoring moderator guidelines in communities (and getting banned)
+- **Day 1–2: Insight**
+  - Mine 40–60 recent posts/comments; extract 25–40 verbatims.
+  - Cluster triggers, workarounds, outcome language.
+- **Day 3–4: Define**
+  - Lock ICP + JTBD + 3 riskiest assumptions.
+  - Draft LP copy (headlines from verbatims).
+- **Day 5–7: Experiment (v1)**
+  - Launch LP (UTMs for source), invite small, relevant traffic.
+  - Run 5 think-aloud mock tests; fix clarity issues same-day.
+- **Day 8–10: Experiment (v2)**
+  - Start concierge pilot with 5–7 users.
+  - Track weekly sessions, qualitative feedback, objections.
+- **Day 11–14: Assess & Decide**
+  - Compare against thresholds, pick 1 next bet.
+  - If green: WoZ MVP; if yellow: refine JTBD/audience; if red: pivot.
 
 ---
 
-## A reusable checklist
+## The Concept Validation Toolkit (steal these)
 
-- Target audience and job-to-be-done written clearly
-- 2–3 value props mapped to pains
-- One micro‑prototype ready
-- Channel list (where the audience hangs out)
-- Success thresholds defined up‑front (intent, dependence)
-- A decision date on the calendar
+### Riskiest Assumption Canvas
+
+| Assumption | Why risky | Evidence so far | Test | Pass/Fail | Next |
+|---|---|---|---|---|---|
+| Users want guided drills | Might prefer tutors | 17 threads ask “how to practice answers” | LP + mock | ≥ 20% opt-in & 4/5 mock | Build WoZ |
+
+### Experiment brief template
+
+- **Objective:** Validate [assumption].
+- **Audience:** [ICP]
+- **Method:** [LP + mock / concierge]
+- **Source:** [Reddit thread (mod OK) / email / LI]
+- **Success:** [exact threshold]
+- **If pass:** [next step]. **If fail:** [pivot action].
+
+### 1-screen landing page outline
+
+- [H1] Ace your next interview — practice real answers with instant feedback
+- [Subhead] 10-minute drills. No tutor needed. Feel natural, not robotic.
+- [Bullets] Structure answers (STAR), reduce filler, get clarity + tone hints
+- [CTA] Get early access (email)
+- [FAQ] “How accurate is feedback?” “Will it work offline?” “Pricing?”
+
+### Outreach scripts (ethical & mod-friendly)
+
+- **Public comment (no link unless allowed):**
+  - “If it helps, I’m prototyping quick interview drills with instant feedback. Happy to share a 1-pager mock—no links unless ok with mods.”
+- **DM (only after opt-in):**
+  - “As promised—here’s a 90-second walkthrough. If you’ve got an interview this month, I can run a free practice and send feedback. Want to try it this week?”
 
 ---
 
-## TL;DR
+## Common pitfalls (and fixes)
 
-Concept validation = fast learning about real problems and real intent. Keep it lightweight, measure signals, and only graduate to build when users vote with time or access—not just opinions.
+- **Collecting opinions, not behavior.**
+  - Fix: Always pair interviews with a behavioral test (LP click, booking, repeat use).
+- **Too-broad ICP.**
+  - Fix: Pick one role + one trigger moment; expand after you find signal.
+- **Overbuilding early.**
+  - Fix: Concierge/WoZ the hard part; automate later.
+- **Unclear concept copy.**
+  - Fix: Borrow users’ words from your verbatims for headlines and benefits.
+- **Ignoring non-buyers.**
+  - Fix: Ask “What would make this a no-brainer?” and log objections for roadmap.
 `;
 
 const AGENCY_CONTENT = `
@@ -357,7 +426,85 @@ Agencies that operate this way quickly become “the trusted helper,” not a ve
 ## TL;DR
  
 Reddit is where unfiltered demand, objections, and success stories live in public. Agencies can turn that into research, creative, authority, search lift, and lower CAC—without acting like advertisers. Package it as listening + thought leadership + launch support, measure share‑of‑voice and language lift‑through, and you’ve added a durable new lever to your client growth stack.
- `;
+`;
+
+function IdealFlowDiagram() {
+  return (
+    <div className="chart-card">
+      <div className="label-muted mb-2">I.D.E.A.L. flow</div>
+      <svg viewBox="0 0 880 160" width="100%" height="auto" role="img" aria-label="IDEAL framework flow">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0%" stopColor="rgba(168,85,247,0.9)" />
+            <stop offset="100%" stopColor="rgba(34,197,94,0.9)" />
+          </linearGradient>
+        </defs>
+        {["Insight","Define","Experiment","Assess","Loop"].map((label, i) => {
+          const x = 20 + i * 170;
+          return (
+            <g key={label} transform={`translate(${x}, 30)`}>
+              <rect rx="12" ry="12" width="150" height="60" fill="url(#g1)" opacity="0.9" />
+              <rect rx="12" ry="12" width="150" height="60" fill="#000" opacity="0.15" />
+              <text x="75" y="38" textAnchor="middle" fill="#fff" fontWeight="700" fontSize="14">{label}</text>
+            </g>
+          );
+        })}
+        {[0,1,2,3].map((i) => {
+          const x = 20 + i * 170 + 150;
+          return (
+            <g key={i}>
+              <line x1={x} y1={60} x2={x+20} y2={60} stroke="#fff" strokeOpacity="0.7" strokeWidth="2" />
+              <polygon points={`${x+20},60 ${x+12},56 ${x+12},64`} fill="#fff" fillOpacity="0.8" />
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function PcvResultsChart() {
+  // Values from the example results
+  const data = [
+    { label: "LP opt-in", value: 22, threshold: 20 },
+    { label: "Mock completion", value: 86, threshold: 80 },
+    { label: "WTP", value: 8, threshold: 5 },
+  ];
+  const width = 880;
+  const height = 190;
+  const left = 120;
+  const right = 30;
+  const chartWidth = width - left - right;
+  const rowH = 40;
+  return (
+    <div className="chart-card">
+      <div className="label-muted mb-2">Example results vs green thresholds</div>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="auto" role="img" aria-label="Results vs thresholds">
+        {data.map((d, i) => {
+          const y = 20 + i * rowH;
+          const barW = (d.value / 100) * chartWidth;
+          const thrX = left + (d.threshold / 100) * chartWidth;
+          return (
+            <g key={d.label}>
+              <text x={10} y={y + 14} fill="#fff" opacity="0.9" fontSize="12">{d.label}</text>
+              <rect x={left} y={y} width={chartWidth} height={12} fill="#000" opacity="0.18" rx={6} />
+              <rect x={left} y={y} width={barW} height={12} fill="rgba(34,197,94,0.9)" rx={6} />
+              <line x1={thrX} y1={y-4} x2={thrX} y2={y+16} stroke="#fff" strokeDasharray="4 3" opacity="0.8" />
+              <text x={left + barW + 8} y={y + 11} fill="#fff" fontSize="11">{d.value}%</text>
+              <text x={thrX + 6} y={y - 6} fill="#fff" fontSize="10" opacity="0.8">{d.threshold}%</text>
+            </g>
+          );
+        })}
+        <g>
+          <text x={10} y={20 + 3 * rowH + 22} fill="#fff" opacity="0.9" fontSize="12">Repeat users</text>
+          <rect x={left} y={20 + 3 * rowH} width={chartWidth} height={12} fill="#000" opacity="0.18" rx={6} />
+          <rect x={left} y={20 + 3 * rowH} width={(3 / 6) * chartWidth} height={12} fill="rgba(168,85,247,0.9)" rx={6} />
+          <text x={left + (3 / 6) * chartWidth + 8} y={20 + 3 * rowH + 11} fill="#fff" fontSize="11">4 users (≥ 3 green)</text>
+        </g>
+      </svg>
+    </div>
+  );
+}
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -399,6 +546,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, SANITIZE_SCHEMA]]}>
                   {content}
                 </ReactMarkdown>
+                {isPCV && (
+                  <div>
+                    <IdealFlowDiagram />
+                    <PcvResultsChart />
+                  </div>
+                )}
               </div>
             </div>
           </article>

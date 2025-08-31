@@ -150,7 +150,7 @@ export default function DashboardPage() {
             {detailedProfile ? (
               <ProspectProfileDetail
                 profile={detailedProfile}
-                onClose={() => setSelectedProfile(null)}
+                // onClose={() => setSelectedProfile(null)}
                 agents={agentsData || []}
                 isLoadingAgents={isLoadingAgents}
                 setSelectedProfile={setSelectedProfile}

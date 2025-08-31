@@ -7,11 +7,14 @@ import LiquidGlassCard from "./charts/LiquidGlassCard";
 import StackedPostsChart from "./charts/StackedPostsChart";
 import MultiLineChart from "./charts/MultiLineChart";
 import KeywordPostsModal from "./KeywordPostsModal";
+import BrandFunnelChart from "./charts/BrandFunnelChart";
 import {
   transformStackedBarDataByKeywords,
   transformPostsOverTimeData,
   calculateEngagementMetrics,
 } from "@/utils/chartDataTransformations";
+import { evaluateProspectPMF } from "@/utils/pmf";
+import { Popover } from "@/components/ui/Popover";
 
 interface VizSummaryViewProps {
   prospects: Prospect[];
@@ -164,6 +167,55 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
     setSelectedKeyword(null);
     setSelectedPosts([]);
   };
+  // Aggregate brand-level funnel metrics across prospects
+  const { funnelData, totals } = useMemo(() => {
+    const totals = filteredProspects.reduce(
+      (acc, p) => {
+        const postsScraped = Number(p.total_posts_scraped ?? 0);
+        const leadsDiscovered = Number(
+          (p as any).total_posts_tagged ?? (p as any).total_leads_tagged ?? 0
+        );
+        const leadsEngaged = Number(
+          (p as any).total_leads_engaged ??
+            (p as any).total_posts_engaged ??
+            p.sourced_reddit_posts?.filter((post) => post.status === "ACTIONED")
+              .length ??
+            0
+        );
+        const leadsConverted = Number((p as any).total_leads_converted ?? 0);
+        const leadsDropped = Number((p as any).total_leads_dropped ?? 0);
+
+        acc.total_posts_scraped += postsScraped;
+        acc.total_leads_discovered += leadsDiscovered;
+        acc.total_leads_engaged += leadsEngaged;
+        acc.total_leads_converted += leadsConverted;
+        acc.total_leads_dropped += leadsDropped;
+        return acc;
+      },
+      {
+        total_posts_scraped: 0,
+        total_leads_discovered: 0,
+        total_leads_engaged: 0,
+        total_leads_converted: 0,
+        total_leads_dropped: 0,
+      }
+    );
+
+    const funnelData = [
+      { name: "Total Posts Scraped", value: totals.total_posts_scraped },
+      { name: "Total Leads Discovered", value: totals.total_leads_discovered },
+      { name: "Total Leads Engaged", value: totals.total_leads_engaged },
+      { name: "Total Leads Converted", value: totals.total_leads_converted },
+      { name: "Total Leads Dropped", value: totals.total_leads_dropped },
+    ];
+
+    return { funnelData, totals };
+  }, [filteredProspects]);
+
+  // PMF evaluation for brand-level aggregated funnel
+  const pmf = useMemo(() => evaluateProspectPMF(totals), [totals]);
+
+  const pct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 
   return (
     <div className="space-y-6">
@@ -199,7 +251,7 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
         subtitle={`Distribution of ${chartData.engagementMetrics.totalPosts} posts by keyword source`}
         glowColor="rgba(59, 130, 246, 0.4)"
       >
-        <StackedPostsChart 
+        <StackedPostsChart
           data={chartData.stackedData}
           onBarClick={handleKeywordClick}
           onViewPosts={handleKeywordClick}
@@ -219,6 +271,101 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
           />
         </LiquidGlassCard>
       ) : null}
+
+      {/* Brand > Prospect Funnel */}
+      <LiquidGlassCard
+        title="Leads Funnel"
+        subtitle="From scraped posts to discovered and engaged leads to converted and dropped leads"
+        glowColor="rgba(34, 211, 238, 0.35)"
+      >
+        {/* PMF Status Row */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <span
+              className="px-3 py-1 rounded-full text-xs font-medium"
+              style={{
+                background:
+                  pmf.pmf_status === "GOOD"
+                    ? "rgba(16, 185, 129, 0.15)"
+                    : pmf.pmf_status === "BAD"
+                    ? "rgba(239, 68, 68, 0.15)"
+                    : "rgba(234, 179, 8, 0.15)",
+                color:
+                  pmf.pmf_status === "GOOD"
+                    ? "#34D399"
+                    : pmf.pmf_status === "BAD"
+                    ? "#F87171"
+                    : "#FBBF24",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              PMF: {pmf.pmf_status} · {pmf.score}
+            </span>
+            <span className="text-white/60 text-xs">
+              {pmf.reasons[0] ?? "PMF evaluated from recent funnel performance"}
+            </span>
+            <Popover
+              openOnHover={false}
+              side="bottom"
+              align="start"
+              trigger={
+                <button className="text-[11px] text-white/60 underline decoration-dotted hover:text-white/80">
+                  How is this scored?
+                </button>
+              }
+            >
+              <div className="space-y-2">
+                <div className="font-medium text-white/90">
+                  PMF score formula
+                </div>
+                <div className="text-white/80">
+                  Priority on discovery and engagement relative to scraped
+                  posts.
+                </div>
+                <div className="text-white/80">
+                  Score = 100 × (<span className="text-white">0.45</span>
+                  ×Discovery (Discovered/Scraped) +
+                  <span className="text-white"> 0.35</span>×Engagement vs
+                  Scraped (Engaged/Scraped) +
+                  <span className="text-white"> 0.12</span>×Conversion +
+                  <span className="text-white"> 0.08</span>×(1−Drop) ) × Volume
+                </div>
+                <div className="text-white/70 text-[11px]">
+                  GOOD heuristic: Discovery/Scraped ≥ 10% and Engaged/Discovered
+                  ≥ 10% (with volume ≥ 30 discovered).
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-white/85">
+                  <div>Discovery (discovered/scraped)</div>
+                  <div className="text-right">
+                    {pct(pmf.metrics.discovery_rate)}
+                  </div>
+                  <div>Engagement vs scraped (engaged/scraped)</div>
+                  <div className="text-right">
+                    {pct(pmf.metrics.engaged_over_scraped)}
+                  </div>
+                  <div>Engagement vs discovered</div>
+                  <div className="text-right">
+                    {pct(pmf.metrics.engagement_rate)}
+                  </div>
+                  <div>Conversion (converted/engaged)</div>
+                  <div className="text-right">
+                    {pct(pmf.metrics.conversion_rate)}
+                  </div>
+                  <div>Drop (dropped/engaged)</div>
+                  <div className="text-right">{pct(pmf.metrics.drop_rate)}</div>
+                  <div>Volume gate</div>
+                  <div className="text-right">
+                    {pct(pmf.metrics.volume)} (min(discovered/30, scraped/200,
+                    1))
+                  </div>
+                </div>
+              </div>
+            </Popover>
+          </div>
+        </div>
+
+        <BrandFunnelChart data={funnelData} />
+      </LiquidGlassCard>
 
       {/* No data state */}
       {chartData.engagementMetrics.totalPosts === 0 && (
