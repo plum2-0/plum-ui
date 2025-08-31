@@ -5,12 +5,14 @@ import GlassPanel from "@/components/ui/GlassPanel";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import InviteTeammateModal from "./InviteTeammateModal";
+import SupportModal from "./SupportModal";
 
 export default function SidebarBottomSection() {
   const { data: session } = useSession();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
@@ -87,6 +89,25 @@ export default function SidebarBottomSection() {
     setIsInviteOpen(true);
     setIsMenuOpen(false);
   };
+
+  const handleSupportClick = () => {
+    setIsSupportOpen(true);
+    setIsMenuOpen(false);
+  };
+
+  const handleAdminTicketsClick = () => {
+    router.push("/admin/support-tickets");
+    setIsMenuOpen(false);
+  };
+
+  const handleTesterCodesClick = () => {
+    router.push("/admin/tester-codes");
+    setIsMenuOpen(false);
+  };
+
+  // Check if user is admin
+  const adminEmails = ["lamtomoki@gmail.com", "truedrju@gmail.com"];
+  const isAdmin = session?.user?.email && (adminEmails.includes(session.user.email) || session?.user?.isAdmin);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -211,6 +232,82 @@ export default function SidebarBottomSection() {
               <span>Invite Teammate</span>
             </button>
 
+            {/* Get Support Option */}
+            <button
+              onClick={handleSupportClick}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-white/80 hover:text-white hover:bg-white/10 transition-colors text-sm font-body"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+              <span>Get Support</span>
+            </button>
+
+            {/* Admin Options - Only visible to admins */}
+            {isAdmin && (
+              <>
+                {/* Divider */}
+                <div className="my-1 border-t border-white/10"></div>
+                
+                {/* Admin Section Label */}
+                <div className="px-4 py-1.5 text-xs text-white/40 uppercase tracking-wider font-body">
+                  Admin
+                </div>
+
+                {/* Support Tickets Admin */}
+                <button
+                  onClick={handleAdminTicketsClick}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors text-sm font-body"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    />
+                  </svg>
+                  <span>Support Tickets</span>
+                </button>
+
+                {/* Tester Codes Admin */}
+                <button
+                  onClick={handleTesterCodesClick}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors text-sm font-body"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                    />
+                  </svg>
+                  <span>Tester Codes</span>
+                </button>
+              </>
+            )}
+
             {/* Divider */}
             <div className="my-1 border-t border-white/10"></div>
 
@@ -243,6 +340,15 @@ export default function SidebarBottomSection() {
         brandId={session?.user?.brandId || null}
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
+      />
+
+      {/* Support Modal */}
+      <SupportModal
+        isOpen={isSupportOpen}
+        onClose={() => setIsSupportOpen(false)}
+        userEmail={session?.user?.email || ""}
+        userId={session?.user?.id || ""}
+        brandId={session?.user?.brandId || null}
       />
     </div>
   );
