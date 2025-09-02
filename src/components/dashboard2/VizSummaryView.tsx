@@ -95,7 +95,7 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
       sourced_reddit_posts:
         prospect.sourced_reddit_posts?.filter((post) =>
           filter === "all"
-            ? post.status === "ACTIONED" || post.status === "PENDING"
+            ? post.status === "ACTIONED" || post.status === "PENDING" || post.status === "ignore"
             : post.status === "ACTIONED"
         ) || [],
     }));

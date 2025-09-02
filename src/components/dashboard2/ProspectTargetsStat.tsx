@@ -35,7 +35,7 @@ export default function ProspectTargetStat({
   uniqueActionedAuthors,
   totalKeywordCounts = 0,
   totalPostsScraped = 0,
-  label = "Potential Leads",
+  label = "Discovered Leads",
   onSwipe,
   onStackCompleted,
   onModalClose,
