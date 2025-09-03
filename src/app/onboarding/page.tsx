@@ -25,6 +25,7 @@ function OnboardingContent() {
   // Auto-redirect users to the correct onboarding step or dashboard if complete
   useOnboardingState(true);
   const router = useRouter();
+  const [sessionValidated, setSessionValidated] = useState(false);
   const [phase, setPhase] = useState<"website" | "details">("website");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -42,6 +43,30 @@ function OnboardingContent() {
   
   // Maximum number of prospects allowed
   const MAX_PROSPECTS = 3;
+
+  // Validate session against server to prevent phantom login state
+  useEffect(() => {
+    if (status === "loading" || sessionValidated) return;
+    
+    if (status === "authenticated" && session?.user) {
+      fetch("/api/auth/session")
+        .then(res => res.json())
+        .then(data => {
+          if (!data?.user) {
+            // Session invalid, redirect to sign in
+            router.push("/auth/signin");
+          } else {
+            setSessionValidated(true);
+          }
+        })
+        .catch(() => {
+          // On error, assume session invalid
+          router.push("/auth/signin");
+        });
+    } else if (status === "unauthenticated") {
+      router.push("/auth/signin");
+    }
+  }, [status, session, sessionValidated, router]);
 
   useEffect(() => {
     if (isSubmitting || isGenerating) {

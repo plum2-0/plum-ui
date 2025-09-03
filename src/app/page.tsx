@@ -13,7 +13,25 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
-    if (session?.user) redirect("/onboarding");
+    
+    // Validate cached session against server to prevent phantom login state
+    if (session?.user) {
+      fetch("/api/auth/session")
+        .then(res => res.json())
+        .then(data => {
+          if (data?.user) {
+            // Session is valid, proceed to onboarding
+            redirect("/onboarding");
+          } else {
+            // Session invalid, clear cached state by reloading
+            window.location.reload();
+          }
+        })
+        .catch(() => {
+          // On error, assume session invalid and reload
+          window.location.reload();
+        });
+    }
   }, [session, status]);
 
   if (status === "loading") {
