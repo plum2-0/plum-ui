@@ -178,7 +178,7 @@ export default function SupportModal({
                 </label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value as TicketCategory)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCategory(e.target.value as TicketCategory)}
                   className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white/90 font-body focus:outline-none focus:border-purple-400/50 transition-colors"
                 >
                   <option value="bug">Bug Report</option>
@@ -196,7 +196,7 @@ export default function SupportModal({
                 </label>
                 <GlassInput
                   value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)}
                   placeholder="Brief description of your issue"
                   className="w-full"
                   required
@@ -210,7 +210,7 @@ export default function SupportModal({
                 </label>
                 <textarea
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
                   placeholder="Please provide details about your issue or feedback..."
                   className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/90 font-body placeholder-white/30 focus:outline-none focus:border-purple-400/50 transition-colors resize-none"
                   rows={5}

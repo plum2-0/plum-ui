@@ -6,6 +6,7 @@ import { Send, X, Bot, RefreshCw, Loader2, ExternalLink, User } from "lucide-rea
 import Link from "next/link";
 import { useBrand } from "@/contexts/BrandContext";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useProspectProfiles } from "@/contexts/ProspectProfilesContext";
 import { useProspectConvoReply } from "@/hooks/api/useProspectConvoReply";
 import { useAgentReply } from "@/hooks/useAgentReply";
 import { useToast } from "@/components/ui/Toast";
@@ -27,12 +28,23 @@ export function InlineReplyBox({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { brand: brandData } = useBrand();
   const { activeConvoId, prospectProfileId } = useProfile();
+  const { currentProfileId } = useProspectProfiles();
   const replyConvo = useProspectConvoReply();
   const { showToast } = useToast();
   
   // Use the agent reply hook with proper brand ID
   const { agents, isLoadingAgents, generateWithAgent, isBrandLoaded } = useAgentReply(brandData?.id || "");
   const agent = agents[0] || null;
+  
+  // Reset state when profile changes
+  useEffect(() => {
+    if (currentProfileId) {
+      // Reset all state when profile changes
+      setReplyText("");
+      setIsGenerating(false);
+      setHasTriedGeneration(false);
+    }
+  }, [currentProfileId]);
   
   // Debug logging
   useEffect(() => {
@@ -43,8 +55,9 @@ export function InlineReplyBox({
       isLoadingAgents,
       isBrandLoaded,
       agent,
+      currentProfileId,
     });
-  }, [brandData, agents, isLoadingAgents, isBrandLoaded, agent]);
+  }, [brandData, agents, isLoadingAgents, isBrandLoaded, agent, currentProfileId]);
   
   // Auto-focus textarea on mount
   useEffect(() => {

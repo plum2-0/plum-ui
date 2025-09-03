@@ -8,7 +8,7 @@ const ADMIN_EMAILS = ["lamtomoki@gmail.com", "truedrju@gmail.com"];
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -21,7 +21,7 @@ export async function GET(
     }
 
     // Check if user is admin
-    const isAdmin = ADMIN_EMAILS.includes(session.user.email!) || session.user.isAdmin;
+    const isAdmin = ADMIN_EMAILS.includes(session.user.email!);
     
     if (!isAdmin) {
       return NextResponse.json(
@@ -31,9 +31,10 @@ export async function GET(
     }
 
     const db = adminDb();
+    const { id } = await params;
     const ticketDoc = await db
       .collection("supportTickets")
-      .doc(params.id)
+      .doc(id)
       .get();
 
     if (!ticketDoc.exists) {
@@ -61,7 +62,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -74,7 +75,7 @@ export async function PATCH(
     }
 
     // Check if user is admin
-    const isAdmin = ADMIN_EMAILS.includes(session.user.email!) || session.user.isAdmin;
+    const isAdmin = ADMIN_EMAILS.includes(session.user.email!);
     
     if (!isAdmin) {
       return NextResponse.json(
@@ -85,7 +86,8 @@ export async function PATCH(
 
     const body: UpdateTicketRequest = await request.json();
     const db = adminDb();
-    const ticketRef = db.collection("supportTickets").doc(params.id);
+    const { id } = await params;
+    const ticketRef = db.collection("supportTickets").doc(id);
     
     // Check if ticket exists
     const ticketDoc = await ticketRef.get();

@@ -15,6 +15,7 @@ import type { ProspectProfile } from "@/hooks/api/useProspectProfilesQuery";
 import { useProspectProfilesQuery } from "@/hooks/api/useProspectProfilesQuery";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { ReplyProvider } from "@/contexts/ReplyContext";
+import { ProspectProfilesProvider } from "@/contexts/ProspectProfilesContext";
 import { useProspectProfileDetailQuery } from "@/hooks/api/useProspectProfileDetailQuery";
 import { PlumSproutLoader } from "@/components/ui/PlumSproutLoader";
 
@@ -134,42 +135,44 @@ export default function DashboardPage() {
   }
 
   return (
-    <ProfileProvider selectedProfile={detailedProfile || null}>
-      <ReplyProvider onReplySuccess={handleReplySuccess}>
-        <main className="flex-1 flex min-h-0 h-full overflow-hidden">
-          {/* Prospect Profiles Inbox - 30% width */}
-          <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
-            <ProspectProfilesInbox
-              onProfileSelect={setSelectedProfile}
-              selectedProfileId={selectedProfile?.id}
-            />
-          </div>
-
-          {/* Detail View - 70% width */}
-          <div className="flex-1 h-full">
-            {detailedProfile ? (
-              <ProspectProfileDetail
-                profile={detailedProfile}
-                // onClose={() => setSelectedProfile(null)}
-                agents={agentsData || []}
-                isLoadingAgents={isLoadingAgents}
-                setSelectedProfile={setSelectedProfile}
-                isLoadingProfile={isLoadingProfile}
+    <ProspectProfilesProvider currentProfileId={selectedProfile?.id || null}>
+      <ProfileProvider selectedProfile={detailedProfile || null}>
+        <ReplyProvider onReplySuccess={handleReplySuccess}>
+          <main className="flex-1 flex min-h-0 h-full overflow-hidden">
+            {/* Prospect Profiles Inbox - 30% width */}
+            <div className="w-[30%] min-w-[320px] border-r border-white/10 h-full">
+              <ProspectProfilesInbox
+                onProfileSelect={setSelectedProfile}
+                selectedProfileId={selectedProfile?.id}
               />
-            ) : selectedProfile && isLoadingProfile ? (
-              <div className="flex items-center justify-center h-full">
-                <PlumSproutLoader show={true} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-white/60 text-xl font-body">
-                  No prospect profile selected
+            </div>
+
+            {/* Detail View - 70% width */}
+            <div className="flex-1 h-full">
+              {detailedProfile ? (
+                <ProspectProfileDetail
+                  profile={detailedProfile}
+                  // onClose={() => setSelectedProfile(null)}
+                  agents={agentsData || []}
+                  isLoadingAgents={isLoadingAgents}
+                  setSelectedProfile={setSelectedProfile}
+                  isLoadingProfile={isLoadingProfile}
+                />
+              ) : selectedProfile && isLoadingProfile ? (
+                <div className="flex items-center justify-center h-full">
+                  <PlumSproutLoader show={true} />
                 </div>
-              </div>
-            )}
-          </div>
-        </main>
-      </ReplyProvider>
-    </ProfileProvider>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-white/60 text-xl font-body">
+                    No prospect profile selected
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+        </ReplyProvider>
+      </ProfileProvider>
+    </ProspectProfilesProvider>
   );
 }

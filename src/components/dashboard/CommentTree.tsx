@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { InlineReplyBox } from "./InlineReplyBox";
 import { LiquidButton } from "@/components/ui/LiquidButton";
+import { useProspectProfiles } from "@/contexts/ProspectProfilesContext";
+import { useProfile } from "@/contexts/ProfileContext";
 
 interface CommentNode {
   id: string;
@@ -68,8 +70,13 @@ export function CommentTree({
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [upvoted, setUpvoted] = React.useState(false);
   const [downvoted, setDownvoted] = React.useState(false);
-  const [showReplyBox, setShowReplyBox] = React.useState(false);
+  const { currentProfileId, isReplyBoxOpen, openReplyBox, closeReplyBox } = useProspectProfiles();
+  const { prospectProfileId } = useProfile();
   const hasChildren = node.children && node.children.length > 0;
+  
+  const profileId = prospectProfileId || currentProfileId || "";
+  const postId = node.thing_id || node.id;
+  const showReplyBox = isReplyBoxOpen(profileId, postId);
 
   const currentScore = node.score + (upvoted ? 1 : 0) - (downvoted ? 1 : 0);
 
@@ -166,7 +173,7 @@ export function CommentTree({
 
                   {showReplyBox ? (
                     <button
-                      onClick={() => setShowReplyBox(false)}
+                      onClick={() => closeReplyBox(profileId, postId)}
                       className="px-2 py-1 rounded hover:bg-zinc-800 font-medium transition-colors flex items-center gap-1 bg-zinc-800 text-zinc-400"
                     >
                       <X className="w-3 h-3" />
@@ -174,7 +181,7 @@ export function CommentTree({
                     </button>
                   ) : (
                     <LiquidButton
-                      onClick={() => setShowReplyBox(true)}
+                      onClick={() => openReplyBox(profileId, postId)}
                       variant="primary"
                       size="sm"
                       shimmer={true}
@@ -223,9 +230,9 @@ export function CommentTree({
                 {showReplyBox && (
                   <InlineReplyBox
                     parentPost={node}
-                    onClose={() => setShowReplyBox(false)}
+                    onClose={() => closeReplyBox(profileId, postId)}
                     onSuccess={() => {
-                      setShowReplyBox(false);
+                      closeReplyBox(profileId, postId);
                       // Optionally refresh the tree here
                     }}
                   />
@@ -271,7 +278,13 @@ interface CommentTreeContainerProps {
 function ParentPost({ post }: { post: any }) {
   const [upvoted, setUpvoted] = React.useState(false);
   const [downvoted, setDownvoted] = React.useState(false);
-  const [showReplyBox, setShowReplyBox] = React.useState(false);
+  const { currentProfileId, isReplyBoxOpen, openReplyBox, closeReplyBox } = useProspectProfiles();
+  const { prospectProfileId } = useProfile();
+  
+  const profileId = prospectProfileId || currentProfileId || "";
+  const postId = post?.thing_id || post?.id || "";
+  const showReplyBox = isReplyBoxOpen(profileId, postId);
+  
   const currentScore =
     (post?.score || 0) + (upvoted ? 1 : 0) - (downvoted ? 1 : 0);
 
@@ -380,7 +393,7 @@ function ParentPost({ post }: { post: any }) {
             <div className="flex items-center gap-2 mt-3 text-xs">
               {showReplyBox ? (
                 <button
-                  onClick={() => setShowReplyBox(false)}
+                  onClick={() => closeReplyBox(profileId, postId)}
                   className="px-3 py-1.5 rounded-lg hover:bg-zinc-800 font-medium transition-colors flex items-center gap-1 bg-zinc-800 text-zinc-400"
                 >
                   <X className="w-4 h-4" />
@@ -388,7 +401,7 @@ function ParentPost({ post }: { post: any }) {
                 </button>
               ) : (
                 <LiquidButton
-                  onClick={() => setShowReplyBox(true)}
+                  onClick={() => openReplyBox(profileId, postId)}
                   variant="primary"
                   size="sm"
                   shimmer={true}
@@ -427,9 +440,9 @@ function ParentPost({ post }: { post: any }) {
             {showReplyBox && (
               <InlineReplyBox
                 parentPost={post}
-                onClose={() => setShowReplyBox(false)}
+                onClose={() => closeReplyBox(profileId, postId)}
                 onSuccess={() => {
-                  setShowReplyBox(false);
+                  closeReplyBox(profileId, postId);
                   // Optionally refresh the tree here
                 }}
               />

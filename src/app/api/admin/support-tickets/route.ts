@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is admin
-    const isAdmin = ADMIN_EMAILS.includes(session.user.email!) || session.user.isAdmin;
+    const isAdmin = ADMIN_EMAILS.includes(session.user.email!);
     
     if (!isAdmin) {
       return NextResponse.json(
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const db = adminDb();
-    let query = db.collection("supportTickets");
+    let query: any = db.collection("supportTickets");
     
     if (status) {
       query = query.where("status", "==", status);
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const snapshot = await query.get();
     
     const tickets: SupportTicket[] = [];
-    snapshot.forEach((doc) => {
+    snapshot.forEach((doc: any) => {
       tickets.push({
         id: doc.id,
         ...doc.data(),

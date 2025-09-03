@@ -52,7 +52,7 @@ export default function SupportTicketsPage() {
     
     const adminEmails = ["lamtomoki@gmail.com", "truedrju@gmail.com"];
     const userEmail = session.user?.email || "";
-    if (!adminEmails.includes(userEmail) && !session.user?.isAdmin) {
+    if (!adminEmails.includes(userEmail)) {
       router.push("/dashboard");
       return;
     }

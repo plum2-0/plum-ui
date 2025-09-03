@@ -107,7 +107,7 @@ export default function SidebarBottomSection() {
 
   // Check if user is admin
   const adminEmails = ["lamtomoki@gmail.com", "truedrju@gmail.com"];
-  const isAdmin = session?.user?.email && (adminEmails.includes(session.user.email) || session?.user?.isAdmin);
+  const isAdmin = session?.user?.email && adminEmails.includes(session.user.email);
 
   // Close menu when clicking outside
   useEffect(() => {
