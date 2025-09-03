@@ -34,15 +34,6 @@ export function ProspectProfilesInbox({
   const [sortType, setSortType] = useState<SortType>("last-contact");
   const [loadingProfileId, setLoadingProfileId] = useState<string | null>(null);
 
-  // Debug logging
-  console.log("📦 [ProspectProfilesInbox] Profiles data:", profiles);
-  console.log("📦 [ProspectProfilesInbox] Loading state:", isLoading);
-  console.log("📦 [ProspectProfilesInbox] Error state:", error);
-  console.log(
-    "📦 [ProspectProfilesInbox] Selected profile ID:",
-    selectedProfileId
-  );
-
   // Filter and sort profiles
   // Clear loading state when selected profile changes
   React.useEffect(() => {
@@ -407,7 +398,9 @@ export function ProspectProfileCard({
                   />
                 ))}
               </div>
-              <span className="text-white/80 text-sm font-medium">Loading...</span>
+              <span className="text-white/80 text-sm font-medium">
+                Loading...
+              </span>
             </motion.div>
           </div>
         )}

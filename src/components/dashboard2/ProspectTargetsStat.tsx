@@ -119,26 +119,26 @@ export default function ProspectTargetStat({
               {/* Numbers breakdown */}
               <div className="flex justify-between items-center gap-4">
                 <div className="flex-1 text-left">
-                  <div className="text-emerald-400 text-2xl font-heading font-bold">
-                    {uniqueActionedAuthors}
-                  </div>
-                  <div className="text-emerald-400/70 text-xs font-body uppercase tracking-wider">
-                    Engaged
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-center">
-                  <div className="w-8 h-8 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
-                    <span className="text-white/40 text-sm">⬅️</span>
-                  </div>
-                </div>
-
-                <div className="flex-1 text-right">
                   <div className="text-orange-300 text-2xl font-heading font-bold">
                     {uniquePendingAuthors}
                   </div>
                   <div className="text-orange-300/70 text-xs font-body uppercase tracking-wider">
                     To Review
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
+                    <span className="text-white/40 text-sm">➡️</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 text-right">
+                  <div className="text-emerald-400 text-2xl font-heading font-bold">
+                    {uniqueActionedAuthors}
+                  </div>
+                  <div className="text-emerald-400/70 text-xs font-body uppercase tracking-wider">
+                    Engaged
                   </div>
                 </div>
               </div>
