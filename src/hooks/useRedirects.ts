@@ -144,32 +144,50 @@ export function usePublicPageRedirects() {
 }
 
 /**
- * Hook for the home page that immediately redirects authenticated users
- * to onboarding (which will then redirect to dashboard if complete).
- * Returns isLoading and isRedirecting states for showing loading UI.
+ * Hook for the home page that checks both auth and brand status
+ * before redirecting to the appropriate destination (no double redirect).
  */
 export function useHomePageRedirect() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const hasRedirected = useRef(false);
+  
+  const isAuthenticated = status === "authenticated" && !!session?.user;
+  
+  // Only fetch brand if authenticated
+  const { data: brandData, isLoading: brandLoading } = useBrandQuery({
+    enabled: isAuthenticated,
+    skipRedirect: true,
+  });
+  
+  const hasBrand = !!brandData?.brand?.id;
+  // Loading while checking auth or brand (if authenticated)
+  const isLoading = status === "loading" || (isAuthenticated && brandLoading);
 
   useEffect(() => {
-    // Skip if already redirected
-    if (hasRedirected.current) return;
+    // Skip if already redirected or still loading
+    if (hasRedirected.current || isLoading) return;
 
-    // Skip if session is still loading
-    if (status === "loading") return;
-
-    if (session?.user) {
-      // Authenticated users on home page go to onboarding
-      // (onboarding will redirect to dashboard if complete)
-      hasRedirected.current = true;
-      router.replace("/onboarding");
+    // Not authenticated - stay on home page
+    if (!isAuthenticated && status !== "loading") {
+      return;
     }
-  }, [status, session, router]);
+
+    // Authenticated - decide where to go based on brand status
+    if (isAuthenticated && !brandLoading) {
+      hasRedirected.current = true;
+      if (hasBrand) {
+        // Has brand -> go directly to dashboard
+        router.replace("/dashboard/discover");
+      } else {
+        // No brand -> go to onboarding
+        router.replace("/onboarding");
+      }
+    }
+  }, [isAuthenticated, hasBrand, isLoading, brandLoading, status, router]);
 
   return {
-    isLoading: status === "loading",
+    isLoading,
     isRedirecting: hasRedirected.current,
   };
 }
