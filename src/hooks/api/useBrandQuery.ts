@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useRef, useCallback } from "react";
+// react imports intentionally minimal here
 import { Brand } from "@/types/brand";
+import { redirectToOnboarding } from "@/hooks/useRedirects";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -44,9 +45,11 @@ function getBrandId(session: any): string | null {
   return session?.user?.brandId || null;
 }
 
-function clearBrandCookie() {
+function setBrandCookie(brandId: string) {
   if (typeof document !== "undefined") {
-    document.cookie = "brand_id=; Max-Age=0; path=/";
+    // Set cookie for 7 days
+    const maxAge = 7 * 24 * 60 * 60;
+    document.cookie = `brand_id=${brandId}; Max-Age=${maxAge}; path=/`;
   }
 }
 
@@ -78,36 +81,42 @@ async function fetchBrandData(brandId: string): Promise<Brand> {
   return brandData;
 }
 
+async function fetchBrandIdByUser(userId: string): Promise<string> {
+  const response = await fetch(`${API_BASE_URL}/api/brand/by-user/${userId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Plum-UI/1.0",
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new BrandQueryError("User needs onboarding", 404, true);
+    }
+    const errorText = await response.text();
+    throw new BrandQueryError(
+      `Failed to resolve brand by user: ${errorText}`,
+      response.status
+    );
+  }
+
+  const data = (await response.json()) as { brand_id?: string };
+  const id = data?.brand_id;
+  if (!id) {
+    throw new BrandQueryError("Brand not found for user", 404, true);
+  }
+  return id;
+}
+
 // Main hook with modern TanStack Query patterns
-export function useBrandQuery(options?: { enabled?: boolean; skipRedirect?: boolean }) {
+export function useBrandQuery(options?: {
+  enabled?: boolean;
+  skipRedirect?: boolean;
+}) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const brandId = getBrandId(session);
-  const hasRedirectedRef = useRef(false);
-  const skipRedirect = options?.skipRedirect ?? false;
-
-  const redirectToOnboarding = useCallback(() => {
-    if (typeof window === "undefined") return;
-    if (hasRedirectedRef.current) return;
-    if (skipRedirect) return; // Skip redirect if option is set
-    const currentPath = window.location.pathname;
-    if (
-      currentPath.startsWith("/onboarding") ||
-      currentPath.startsWith("/auth") ||
-      currentPath.startsWith("/invite")
-    ) {
-      return;
-    }
-
-    hasRedirectedRef.current = true;
-    router.push("/onboarding");
-  }, [router, skipRedirect]);
-
-  const handleOnboardingRedirect = useCallback(() => {
-    if (skipRedirect) return; // Skip redirect if option is set
-    clearBrandCookie();
-    redirectToOnboarding();
-  }, [redirectToOnboarding, skipRedirect]);
 
   const queryResult = useQuery({
     // Include brandId in query key for better cache isolation
@@ -118,21 +127,21 @@ export function useBrandQuery(options?: { enabled?: boolean; skipRedirect?: bool
         throw new BrandQueryError("User not authenticated");
       }
 
-      if (!brandId) {
-        // If no brandId in cookies or session, user likely needs onboarding
-        handleOnboardingRedirect();
-        throw new BrandQueryError("User needs onboarding", 404, true);
-      }
-
       let brandData: Brand;
       try {
-        brandData = await fetchBrandData(brandId as string);
+        let effectiveBrandId = brandId;
+        if (!effectiveBrandId) {
+          // Resolve brand id by user id
+          effectiveBrandId = await fetchBrandIdByUser(session.user.id);
+          setBrandCookie(effectiveBrandId);
+        }
+        brandData = await fetchBrandData(effectiveBrandId as string);
       } catch (error) {
         if (
           error instanceof BrandQueryError &&
           (error.needsOnboarding || error.statusCode === 404)
         ) {
-          handleOnboardingRedirect();
+          redirectToOnboarding(router, { skipRedirect: options?.skipRedirect });
         }
         throw error;
       }
@@ -142,7 +151,8 @@ export function useBrandQuery(options?: { enabled?: boolean; skipRedirect?: bool
       };
     },
     // Run when session is ready and user is authenticated
-    enabled: (options?.enabled ?? true) && status !== "loading" && !!session?.user?.id,
+    enabled:
+      (options?.enabled ?? true) && status !== "loading" && !!session?.user?.id,
     // Modern cache settings
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (replaces cacheTime in v5)

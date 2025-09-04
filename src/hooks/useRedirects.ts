@@ -275,3 +275,54 @@ export function useAdminPageLoading() {
 
   return { isLoading, isAdmin };
 }
+
+/**
+ * Utility function to handle onboarding redirects
+ * Can be used by other hooks that need to redirect to onboarding
+ */
+export function redirectToOnboarding(
+  router: ReturnType<typeof useRouter>,
+  options?: { skipRedirect?: boolean; clearBrandCookie?: boolean }
+) {
+  if (options?.skipRedirect) return;
+  
+  // Clear brand cookie if requested (default true for onboarding)
+  if (options?.clearBrandCookie !== false && typeof document !== "undefined") {
+    document.cookie = "brand_id=; Max-Age=0; path=/";
+  }
+  
+  // Ensure client-side before navigating
+  if (typeof window !== "undefined") {
+    router.push("/onboarding");
+  }
+}
+
+/**
+ * Utility function to handle dashboard redirects
+ */
+export function redirectToDashboard(
+  router: ReturnType<typeof useRouter>,
+  options?: { skipRedirect?: boolean }
+) {
+  if (options?.skipRedirect) return;
+  
+  // Ensure client-side before navigating
+  if (typeof window !== "undefined") {
+    router.push("/dashboard/discover");
+  }
+}
+
+/**
+ * Utility function to handle signin redirects
+ */
+export function redirectToSignIn(
+  router: ReturnType<typeof useRouter>,
+  options?: { skipRedirect?: boolean }
+) {
+  if (options?.skipRedirect) return;
+  
+  // Ensure client-side before navigating
+  if (typeof window !== "undefined") {
+    router.push("/auth/signin");
+  }
+}
