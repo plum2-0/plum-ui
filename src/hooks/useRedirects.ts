@@ -58,7 +58,7 @@ export function useRedirect(
       return;
     }
 
-    if (!isAuthenticated && status !== "loading") {
+    if (!isAuthenticated && status === "unauthenticated") {
       if (redirectIfUnauthenticated) {
         hasRedirectedRef.current = true;
         router.push(redirectIfUnauthenticated);
@@ -169,7 +169,7 @@ export function useHomePageRedirect() {
     if (hasRedirected.current || isLoading) return;
 
     // Not authenticated - stay on home page
-    if (!isAuthenticated && status !== "loading") {
+    if (!isAuthenticated && status === "unauthenticated") {
       return;
     }
 
@@ -215,7 +215,7 @@ export function useProtectedPageLoading(requireBrand = true) {
     if (hasRedirected.current || isLoading) return;
     
     // Not authenticated -> signin
-    if (!isAuthenticated && status !== "loading") {
+    if (!isAuthenticated && status === "unauthenticated") {
       hasRedirected.current = true;
       router.push("/auth/signin");
       return;
