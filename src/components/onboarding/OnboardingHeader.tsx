@@ -3,7 +3,7 @@ import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import { SignOutButton } from "@/components/SignOutButton";
 
 interface OnboardingHeaderProps {
-  session: Session;
+  session: Pick<Session, "user">;
 }
 
 export function OnboardingHeader({ session }: OnboardingHeaderProps) {

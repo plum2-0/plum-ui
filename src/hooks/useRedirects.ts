@@ -1,0 +1,241 @@
+import { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useBrandQuery } from "./api/useBrandQuery";
+
+export interface SimpleRedirectState {
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  hasBrand: boolean;
+  brand: any;
+  user: any;
+}
+
+export interface SimpleRedirectOptions {
+  redirectIfAuthenticated?: string;
+  redirectIfUnauthenticated?: string;
+  redirectIfHasBrand?: string;
+  redirectIfNoBrand?: string;
+  skipRedirect?: boolean;
+}
+
+/**
+ * Simplified redirect-centric auth hook
+ *
+ * Flow:
+ * 1. Check if user is authenticated
+ * 2. If authenticated, check if they have a brand
+ * 3. Redirect based on options provided
+ */
+export function useRedirect(
+  options: SimpleRedirectOptions = {}
+): SimpleRedirectState {
+  const {
+    redirectIfAuthenticated,
+    redirectIfUnauthenticated = "/auth/signin",
+    redirectIfHasBrand = "/dashboard/discover",
+    redirectIfNoBrand,
+    skipRedirect = false,
+  } = options;
+
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const hasRedirectedRef = useRef(false);
+
+  const isAuthenticated = status === "authenticated" && !!session?.user;
+  const isAuthLoading = status === "loading";
+
+  const { data: brandData, isLoading: brandLoading } = useBrandQuery({
+    enabled: isAuthenticated,
+    skipRedirect: true,
+  });
+
+  const hasBrand = !!brandData?.brand?.id;
+  const isLoading = isAuthLoading || (isAuthenticated && brandLoading);
+
+  useEffect(() => {
+    if (hasRedirectedRef.current || isLoading || skipRedirect) {
+      return;
+    }
+
+    if (!isAuthenticated && status !== "loading") {
+      if (redirectIfUnauthenticated) {
+        hasRedirectedRef.current = true;
+        router.push(redirectIfUnauthenticated);
+        return;
+      }
+    }
+
+    if (isAuthenticated && brandLoading) {
+      return;
+    }
+
+    if (isAuthenticated && hasBrand) {
+      if (redirectIfHasBrand) {
+        hasRedirectedRef.current = true;
+        router.push(redirectIfHasBrand);
+        return;
+      }
+      if (redirectIfAuthenticated) {
+        hasRedirectedRef.current = true;
+        router.push(redirectIfAuthenticated);
+        return;
+      }
+    }
+
+    if (isAuthenticated && !hasBrand && !brandLoading) {
+      if (redirectIfNoBrand) {
+        hasRedirectedRef.current = true;
+        router.push(redirectIfNoBrand);
+        return;
+      }
+    }
+  }, [
+    isAuthenticated,
+    hasBrand,
+    isLoading,
+    brandLoading,
+    status,
+    skipRedirect,
+    redirectIfAuthenticated,
+    redirectIfUnauthenticated,
+    redirectIfHasBrand,
+    redirectIfNoBrand,
+    router,
+  ]);
+
+  return {
+    isLoading,
+    isAuthenticated,
+    hasBrand,
+    brand: brandData?.brand,
+    user: session?.user,
+  };
+}
+
+/**
+ * Hook for pages that require authentication but no brand (like onboarding)
+ */
+export function useOnboardingRedirects() {
+  return useRedirect({
+    redirectIfUnauthenticated: "/auth/signin",
+    redirectIfHasBrand: "/dashboard/discover",
+  });
+}
+
+/**
+ * Hook for pages that require both authentication and brand
+ */
+export function useDashboardRedirects() {
+  return useRedirect({
+    redirectIfUnauthenticated: "/auth/signin",
+    redirectIfNoBrand: "/onboarding",
+  });
+}
+
+/**
+ * Hook for public pages that should redirect authenticated users
+ */
+export function usePublicPageRedirects() {
+  return useRedirect({
+    redirectIfHasBrand: "/dashboard/discover",
+    redirectIfNoBrand: "/onboarding",
+  });
+}
+
+/**
+ * Hook for the home page that immediately redirects authenticated users
+ * to onboarding (which will then redirect to dashboard if complete).
+ * Returns isLoading and isRedirecting states for showing loading UI.
+ */
+export function useHomePageRedirect() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const hasRedirected = useRef(false);
+
+  useEffect(() => {
+    // Skip if already redirected
+    if (hasRedirected.current) return;
+
+    // Skip if session is still loading
+    if (status === "loading") return;
+
+    if (session?.user) {
+      // Authenticated users on home page go to onboarding
+      // (onboarding will redirect to dashboard if complete)
+      hasRedirected.current = true;
+      router.replace("/onboarding");
+    }
+  }, [status, session, router]);
+
+  return {
+    isLoading: status === "loading",
+    isRedirecting: hasRedirected.current,
+  };
+}
+
+/**
+ * Simple loading state hook for protected pages.
+ * Handles auth and brand loading states with redirects.
+ */
+export function useProtectedPageLoading(requireBrand = true) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const hasRedirected = useRef(false);
+  
+  const isAuthenticated = status === "authenticated" && !!session?.user;
+  
+  const { data: brandData, isLoading: brandLoading } = useBrandQuery({
+    enabled: requireBrand && isAuthenticated,
+    skipRedirect: true,
+  });
+
+  const hasBrand = !!brandData?.brand?.id;
+  const isLoading = status === "loading" || (requireBrand && brandLoading);
+
+  useEffect(() => {
+    if (hasRedirected.current || isLoading) return;
+    
+    // Not authenticated -> signin
+    if (!isAuthenticated && status !== "loading") {
+      hasRedirected.current = true;
+      router.push("/auth/signin");
+      return;
+    }
+    
+    // Needs brand but doesn't have one -> onboarding
+    if (requireBrand && isAuthenticated && !hasBrand && !brandLoading) {
+      hasRedirected.current = true;
+      router.push("/onboarding");
+      return;
+    }
+  }, [isAuthenticated, hasBrand, isLoading, brandLoading, status, requireBrand, router]);
+
+  return { isLoading };
+}
+
+/**
+ * Admin check with loading state
+ */
+export function useAdminPageLoading() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const hasRedirected = useRef(false);
+  
+  // Simple admin check - adjust as needed
+  const isAdmin = session?.user?.email?.includes("@plum.") || 
+                  ["lamtomoki@gmail.com", "truedrju@gmail.com"].includes(session?.user?.email || "");
+  
+  const { isLoading } = useProtectedPageLoading(true);
+  
+  useEffect(() => {
+    if (hasRedirected.current || isLoading) return;
+    
+    if (!isAdmin && session) {
+      hasRedirected.current = true;
+      router.push("/dashboard/discover");
+    }
+  }, [isAdmin, session, isLoading, router]);
+  
+  return { isLoading, isAdmin };
+}

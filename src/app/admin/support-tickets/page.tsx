@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { SupportTicket, TicketStatus, TicketCategory } from "@/types/support";
 import { useToast } from "@/components/ui/Toast";
+import { useAdminPageLoading } from "@/hooks/useRedirects";
 
 export default function SupportTicketsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { data: session } = useSession();
   const { showToast } = useToast();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
+    null
+  );
   const [filter, setFilter] = useState({
     status: "" as TicketStatus | "",
     category: "" as TicketCategory | "",
@@ -21,15 +22,18 @@ export default function SupportTicketsPage() {
   const [responseText, setResponseText] = useState("");
   const [updating, setUpdating] = useState(false);
 
+  // Simple admin check with loading
+  const { isLoading: authLoading, isAdmin } = useAdminPageLoading();
+
   const fetchTickets = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (filter.status) params.append("status", filter.status);
       if (filter.category) params.append("category", filter.category);
-      
+
       const response = await fetch(`/api/admin/support-tickets?${params}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setTickets(data.tickets);
       } else {
@@ -44,21 +48,11 @@ export default function SupportTicketsPage() {
   }, [filter.status, filter.category, showToast]);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/auth/signin");
-      return;
-    }
-    
-    const adminEmails = ["lamtomoki@gmail.com", "truedrju@gmail.com"];
-    const userEmail = session.user?.email || "";
-    if (!adminEmails.includes(userEmail)) {
-      router.push("/dashboard");
-      return;
-    }
-    
+    if (authLoading) return;
+    if (!isAdmin) return;
+
     fetchTickets();
-  }, [session, status, router, fetchTickets]);
+  }, [authLoading, isAdmin, fetchTickets]);
 
   const updateTicketStatus = async (ticketId: string, status: TicketStatus) => {
     setUpdating(true);
@@ -68,7 +62,7 @@ export default function SupportTicketsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      
+
       const data = await response.json();
       if (data.success) {
         showToast({ message: "Ticket status updated", type: "success" });
@@ -92,7 +86,7 @@ export default function SupportTicketsPage() {
       showToast({ message: "Please enter a response", type: "error" });
       return;
     }
-    
+
     setUpdating(true);
     try {
       const response = await fetch(`/api/admin/support-tickets/${ticketId}`, {
@@ -108,7 +102,7 @@ export default function SupportTicketsPage() {
           },
         }),
       });
-      
+
       const data = await response.json();
       if (data.success) {
         showToast({ message: "Response sent", type: "success" });
@@ -130,21 +124,31 @@ export default function SupportTicketsPage() {
 
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
-      case "open": return "bg-blue-500/20 text-blue-400";
-      case "in_progress": return "bg-yellow-500/20 text-yellow-400";
-      case "resolved": return "bg-green-500/20 text-green-400";
-      case "closed": return "bg-gray-500/20 text-gray-400";
-      default: return "bg-white/10 text-white/60";
+      case "open":
+        return "bg-blue-500/20 text-blue-400";
+      case "in_progress":
+        return "bg-yellow-500/20 text-yellow-400";
+      case "resolved":
+        return "bg-green-500/20 text-green-400";
+      case "closed":
+        return "bg-gray-500/20 text-gray-400";
+      default:
+        return "bg-white/10 text-white/60";
     }
   };
 
   const getCategoryIcon = (category: TicketCategory) => {
     switch (category) {
-      case "bug": return "🐛";
-      case "feature_request": return "✨";
-      case "account": return "👤";
-      case "billing": return "💳";
-      default: return "📝";
+      case "bug":
+        return "🐛";
+      case "feature_request":
+        return "✨";
+      case "account":
+        return "👤";
+      case "billing":
+        return "💳";
+      default:
+        return "📝";
     }
   };
 
@@ -167,7 +171,12 @@ export default function SupportTicketsPage() {
         <div className="flex gap-4 flex-wrap">
           <select
             value={filter.status}
-            onChange={(e) => setFilter({ ...filter, status: e.target.value as TicketStatus | "" })}
+            onChange={(e) =>
+              setFilter({
+                ...filter,
+                status: e.target.value as TicketStatus | "",
+              })
+            }
             className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white/90 font-body"
           >
             <option value="">All Status</option>
@@ -179,7 +188,12 @@ export default function SupportTicketsPage() {
 
           <select
             value={filter.category}
-            onChange={(e) => setFilter({ ...filter, category: e.target.value as TicketCategory | "" })}
+            onChange={(e) =>
+              setFilter({
+                ...filter,
+                category: e.target.value as TicketCategory | "",
+              })
+            }
             className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white/90 font-body"
           >
             <option value="">All Categories</option>
@@ -198,7 +212,7 @@ export default function SupportTicketsPage() {
           <h2 className="text-xl font-semibold text-white/80 mb-3">
             Tickets ({tickets.length})
           </h2>
-          
+
           {tickets.length === 0 ? (
             <GlassPanel className="p-6 text-center text-white/60">
               No tickets found
@@ -214,16 +228,25 @@ export default function SupportTicketsPage() {
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{getCategoryIcon(ticket.category)}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(ticket.status)}`}>
+                    <span className="text-lg">
+                      {getCategoryIcon(ticket.category)}
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                        ticket.status
+                      )}`}
+                    >
                       {ticket.status.replace("_", " ").toUpperCase()}
                     </span>
                   </div>
                   <span className="text-xs text-white/40">
-                    {ticket.createdAt && new Date(ticket.createdAt.seconds * 1000).toLocaleDateString()}
+                    {ticket.createdAt &&
+                      new Date(
+                        ticket.createdAt.seconds * 1000
+                      ).toLocaleDateString()}
                   </span>
                 </div>
-                
+
                 <h3 className="text-white font-semibold mb-1 line-clamp-1">
                   {ticket.subject}
                 </h3>
@@ -231,7 +254,9 @@ export default function SupportTicketsPage() {
                   {ticket.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/40">{ticket.userEmail}</span>
+                  <span className="text-xs text-white/40">
+                    {ticket.userEmail}
+                  </span>
                   {ticket.responses && ticket.responses.length > 0 && (
                     <span className="text-xs text-purple-400">
                       {ticket.responses.length} response(s)
@@ -248,19 +273,25 @@ export default function SupportTicketsPage() {
           <h2 className="text-xl font-semibold text-white/80 mb-3">
             Ticket Details
           </h2>
-          
+
           {selectedTicket ? (
             <GlassPanel className="p-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">{getCategoryIcon(selectedTicket.category)}</span>
+                  <span className="text-2xl">
+                    {getCategoryIcon(selectedTicket.category)}
+                  </span>
                   <h3 className="text-xl font-semibold text-white">
                     {selectedTicket.subject}
                   </h3>
                 </div>
-                
+
                 <div className="flex gap-2 mb-4">
-                  <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(selectedTicket.status)}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                      selectedTicket.status
+                    )}`}
+                  >
                     {selectedTicket.status.replace("_", " ").toUpperCase()}
                   </span>
                   <span className="px-2 py-1 rounded-full text-xs bg-white/10 text-white/60">
@@ -270,8 +301,16 @@ export default function SupportTicketsPage() {
 
                 <div className="text-sm text-white/60 space-y-1 mb-4">
                   <p>User: {selectedTicket.userEmail}</p>
-                  <p>Created: {selectedTicket.createdAt && new Date(selectedTicket.createdAt.seconds * 1000).toLocaleString()}</p>
-                  {selectedTicket.brandId && <p>Brand ID: {selectedTicket.brandId}</p>}
+                  <p>
+                    Created:{" "}
+                    {selectedTicket.createdAt &&
+                      new Date(
+                        selectedTicket.createdAt.seconds * 1000
+                      ).toLocaleString()}
+                  </p>
+                  {selectedTicket.brandId && (
+                    <p>Brand ID: {selectedTicket.brandId}</p>
+                  )}
                 </div>
 
                 <div className="p-4 rounded-lg bg-white/5 mb-4">
@@ -282,10 +321,17 @@ export default function SupportTicketsPage() {
 
                 {/* Status Update */}
                 <div className="mb-4">
-                  <label className="block text-white/60 text-sm mb-2">Update Status</label>
+                  <label className="block text-white/60 text-sm mb-2">
+                    Update Status
+                  </label>
                   <select
                     value={selectedTicket.status}
-                    onChange={(e) => updateTicketStatus(selectedTicket.id, e.target.value as TicketStatus)}
+                    onChange={(e) =>
+                      updateTicketStatus(
+                        selectedTicket.id,
+                        e.target.value as TicketStatus
+                      )
+                    }
                     disabled={updating}
                     className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white/90 font-body disabled:opacity-50"
                   >
@@ -297,35 +343,46 @@ export default function SupportTicketsPage() {
                 </div>
 
                 {/* Responses */}
-                {selectedTicket.responses && selectedTicket.responses.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-white/60 text-sm mb-2">Responses</h4>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {selectedTicket.responses.map((response, idx) => (
-                        <div
-                          key={idx}
-                          className={`p-3 rounded-lg ${
-                            response.isAdmin
-                              ? "bg-purple-500/10 border border-purple-500/30"
-                              : "bg-white/5 border border-white/10"
-                          }`}
-                        >
-                          <div className="flex justify-between text-xs text-white/40 mb-1">
-                            <span>{response.authorEmail} {response.isAdmin && "(Admin)"}</span>
-                            <span>
-                              {response.createdAt && new Date(response.createdAt.seconds * 1000).toLocaleString()}
-                            </span>
+                {selectedTicket.responses &&
+                  selectedTicket.responses.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-white/60 text-sm mb-2">Responses</h4>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {selectedTicket.responses.map((response, idx) => (
+                          <div
+                            key={idx}
+                            className={`p-3 rounded-lg ${
+                              response.isAdmin
+                                ? "bg-purple-500/10 border border-purple-500/30"
+                                : "bg-white/5 border border-white/10"
+                            }`}
+                          >
+                            <div className="flex justify-between text-xs text-white/40 mb-1">
+                              <span>
+                                {response.authorEmail}{" "}
+                                {response.isAdmin && "(Admin)"}
+                              </span>
+                              <span>
+                                {response.createdAt &&
+                                  new Date(
+                                    response.createdAt.seconds * 1000
+                                  ).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-white/80 text-sm">
+                              {response.message}
+                            </p>
                           </div>
-                          <p className="text-white/80 text-sm">{response.message}</p>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Add Response */}
                 <div>
-                  <label className="block text-white/60 text-sm mb-2">Add Response</label>
+                  <label className="block text-white/60 text-sm mb-2">
+                    Add Response
+                  </label>
                   <textarea
                     value={responseText}
                     onChange={(e) => setResponseText(e.target.value)}

@@ -79,15 +79,17 @@ async function fetchBrandData(brandId: string): Promise<Brand> {
 }
 
 // Main hook with modern TanStack Query patterns
-export function useBrandQuery() {
+export function useBrandQuery(options?: { enabled?: boolean; skipRedirect?: boolean }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const brandId = getBrandId(session);
   const hasRedirectedRef = useRef(false);
+  const skipRedirect = options?.skipRedirect ?? false;
 
   const redirectToOnboarding = useCallback(() => {
     if (typeof window === "undefined") return;
     if (hasRedirectedRef.current) return;
+    if (skipRedirect) return; // Skip redirect if option is set
     const currentPath = window.location.pathname;
     if (
       currentPath.startsWith("/onboarding") ||
@@ -99,12 +101,13 @@ export function useBrandQuery() {
 
     hasRedirectedRef.current = true;
     router.push("/onboarding");
-  }, [router]);
+  }, [router, skipRedirect]);
 
   const handleOnboardingRedirect = useCallback(() => {
+    if (skipRedirect) return; // Skip redirect if option is set
     clearBrandCookie();
     redirectToOnboarding();
-  }, [redirectToOnboarding]);
+  }, [redirectToOnboarding, skipRedirect]);
 
   const queryResult = useQuery({
     // Include brandId in query key for better cache isolation
@@ -139,7 +142,7 @@ export function useBrandQuery() {
       };
     },
     // Run when session is ready and user is authenticated
-    enabled: status !== "loading" && !!session?.user?.id,
+    enabled: (options?.enabled ?? true) && status !== "loading" && !!session?.user?.id,
     // Modern cache settings
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (replaces cacheTime in v5)

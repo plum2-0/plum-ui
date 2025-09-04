@@ -1,35 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/dashboard2/DashboardSidebar";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { ScrapeJobProvider } from "@/contexts/ScrapeJobContext";
 import ScrapeJobDrawer from "@/components/dashboard2/ScrapeJobDrawer";
 import { TourProvider } from "@/contexts/TourContext";
 import AppTour from "@/components/tour/AppTour";
+import { useProtectedPageLoading } from "@/hooks/useRedirects";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { data: session, status } = useSession();
-  const [isLoading, setIsLoading] = useState(true);
+  // Simple loading check for protected pages
+  const { isLoading } = useProtectedPageLoading();
 
-  // Check authentication
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session?.user) {
-      router.push("/auth/signin");
-    } else {
-      setIsLoading(false);
-    }
-  }, [session, status, router]);
-
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
         <div

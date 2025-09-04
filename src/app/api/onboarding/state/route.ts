@@ -79,9 +79,24 @@ export async function GET() {
     const hasCompleteConfig =
       hasRedditConfig && hasSubreddits && hasTopicsAndPrompt;
 
-    // Determine current step and redirect location
-    const currentStep: 1 | 2 | 3 | 4 = 4;
-    const redirectTo: string = `/dashboard/discover`;
+    // Determine current step and redirect location based on configuration status
+    let currentStep: 1 | 2 | 3 | 4;
+    let redirectTo: string;
+
+    if (!hasRedditConfig) {
+      // No Reddit connection yet
+      currentStep = 2;
+      redirectTo = "/onboarding/reddit";
+    } else if (!hasSubreddits || !hasTopicsAndPrompt) {
+      // Has Reddit but needs configuration
+      currentStep = 3;
+      redirectTo = "/onboarding/configure";
+    } else {
+      // Fully configured - go to dashboard
+      currentStep = 4;
+      redirectTo = "/dashboard/discover";
+    }
+
     const state: OnboardingState = {
       currentStep,
       hasProject: true, // Keep this name for backward compatibility

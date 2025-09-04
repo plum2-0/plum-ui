@@ -4,14 +4,38 @@ import { Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
+import { usePublicPageRedirects } from "@/hooks/useRedirects";
 
 function SignInContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
+  // Use public page auth - redirects authenticated users appropriately
+  const { isLoading } = usePublicPageRedirects();
+
   // Always redirect to /onboarding after login
   // Ignore incoming callbackUrl to prevent accidental redirects to dashboard
   const callbackUrl = "/onboarding";
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            background: `
+              radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3), transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3), transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(147, 51, 234, 0.2), transparent 50%),
+              linear-gradient(135deg, #0F0F23 0%, #1A0B2E 25%, #2D1B3D 50%, #1E293B 75%, #0F172A 100%)
+            `,
+          }}
+        />
+        <div className="text-white text-xl relative z-10">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">

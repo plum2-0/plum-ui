@@ -1,40 +1,19 @@
 "use client";
 
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PlumSproutLogo } from "@/components/PlumSproutLogo";
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PricingModal, PricingDialogTrigger } from "@/components/PricingModal";
+import { useHomePageRedirect } from "@/hooks/useRedirects";
 
 export default function Home() {
-  const { data: session, status } = useSession();
   const [pricingOpen, setPricingOpen] = useState(false);
 
-  useEffect(() => {
-    if (status === "loading") return; // Still loading
-    
-    // Validate cached session against server to prevent phantom login state
-    if (session?.user) {
-      fetch("/api/auth/session")
-        .then(res => res.json())
-        .then(data => {
-          if (data?.user) {
-            // Session is valid, proceed to onboarding
-            redirect("/onboarding");
-          } else {
-            // Session invalid, clear cached state by reloading
-            window.location.reload();
-          }
-        })
-        .catch(() => {
-          // On error, assume session invalid and reload
-          window.location.reload();
-        });
-    }
-  }, [session, status]);
+  // Fast redirect for authenticated users - goes to onboarding which will
+  // redirect to dashboard if complete. This avoids waiting for brand data.
+  const { isLoading, isRedirecting } = useHomePageRedirect();
 
-  if (status === "loading") {
+  if (isLoading || isRedirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 to-indigo-900">
         <div className="text-white text-xl">Loading...</div>

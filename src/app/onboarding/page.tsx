@@ -1,11 +1,9 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { useOnboardingState } from "@/hooks/useOnboardingState";
 import { SecondaryButton } from "@/components/ui/SecondaryButton";
+import { useOnboardingRedirects } from "@/hooks/useRedirects";
 
 interface BrandOffering {
   title: string;
@@ -21,11 +19,10 @@ interface BrandGenerationResponse {
 }
 
 function OnboardingContent() {
-  const { data: session, status } = useSession();
-  // Auto-redirect users to the correct onboarding step or dashboard if complete
-  useOnboardingState(true);
-  const router = useRouter();
-  const [sessionValidated, setSessionValidated] = useState(false);
+  // Use simplified auth hook - redirects unauthenticated users to signin
+  // and users with brands to dashboard
+  const { isLoading, isAuthenticated, user } = useOnboardingRedirects();
+
   const [phase, setPhase] = useState<"website" | "details">("website");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -40,33 +37,9 @@ function OnboardingContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
-  
+
   // Maximum number of prospects allowed
   const MAX_PROSPECTS = 3;
-
-  // Validate session against server to prevent phantom login state
-  useEffect(() => {
-    if (status === "loading" || sessionValidated) return;
-    
-    if (status === "authenticated" && session?.user) {
-      fetch("/api/auth/session")
-        .then(res => res.json())
-        .then(data => {
-          if (!data?.user) {
-            // Session invalid, redirect to sign in
-            router.push("/auth/signin");
-          } else {
-            setSessionValidated(true);
-          }
-        })
-        .catch(() => {
-          // On error, assume session invalid
-          router.push("/auth/signin");
-        });
-    } else if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, session, sessionValidated, router]);
 
   useEffect(() => {
     if (isSubmitting || isGenerating) {
@@ -98,7 +71,7 @@ function OnboardingContent() {
     }
   }, [isSubmitting, isGenerating]);
 
-  if (status === "loading") {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
         {/* Animated Background */}
@@ -118,8 +91,8 @@ function OnboardingContent() {
     );
   }
 
-  // Guard handles redirect; avoid flashing content when unauthenticated
-  if (!session?.user) return null;
+  // Hook handles redirect; avoid flashing content when loading
+  if (!isAuthenticated || !user) return null;
 
   const validateUrl = (url: string): boolean => {
     try {
@@ -318,7 +291,7 @@ function OnboardingContent() {
 
     try {
       // Ensure user is authenticated
-      if (!session?.user?.id) {
+      if (!user?.id) {
         throw new Error("User not authenticated");
       }
 
@@ -327,7 +300,7 @@ function OnboardingContent() {
         .split("\n")
         .map((p) => p.trim())
         .filter((p) => p.length > 0);
-      
+
       // Check prospect limit
       if (problems.length > MAX_PROSPECTS) {
         alert(
@@ -352,7 +325,7 @@ function OnboardingContent() {
             (o) => o.title.trim() && o.description.trim()
           ),
           keywords: formData.keywords.filter((k) => k.trim()),
-          user_id: session.user.id,
+          user_id: user.id,
         }),
       });
 
@@ -528,7 +501,7 @@ function OnboardingContent() {
       `}</style>
 
       <div className="glass-header relative z-10">
-        <OnboardingHeader session={session} />
+        {user && <OnboardingHeader session={{ user }} />}
       </div>
 
       {/* Loading Overlay */}
@@ -689,7 +662,8 @@ function OnboardingContent() {
                     Problems You Solve 🎯
                   </label>
                   <p className="text-white/60 text-sm font-body mb-4">
-                    Enter the problems your brand solves (one per line, maximum {MAX_PROSPECTS} problems)
+                    Enter the problems your brand solves (one per line, maximum{" "}
+                    {MAX_PROSPECTS} problems)
                   </p>
                   {(() => {
                     const problemCount = formData.problems
@@ -698,8 +672,9 @@ function OnboardingContent() {
                     return problemCount > MAX_PROSPECTS ? (
                       <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
                         <p className="text-red-400 text-sm font-medium">
-                          ⚠️ You have entered {problemCount} problems but only {MAX_PROSPECTS} are allowed. 
-                          Please reduce to {MAX_PROSPECTS} problems to continue.
+                          ⚠️ You have entered {problemCount} problems but only{" "}
+                          {MAX_PROSPECTS} are allowed. Please reduce to{" "}
+                          {MAX_PROSPECTS} problems to continue.
                         </p>
                       </div>
                     ) : null;
