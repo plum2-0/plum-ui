@@ -151,18 +151,25 @@ export function useHomePageRedirect() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const hasRedirected = useRef(false);
-  
+
   const isAuthenticated = status === "authenticated" && !!session?.user;
-  
+
   // Only fetch brand if authenticated
   const { data: brandData, isLoading: brandLoading } = useBrandQuery({
     enabled: isAuthenticated,
     skipRedirect: true,
   });
-  
+
+  console.log("DEBUG: session", session);
+
   const hasBrand = !!brandData?.brand?.id;
   // Loading while checking auth or brand (if authenticated)
   const isLoading = status === "loading" || (isAuthenticated && brandLoading);
+
+  console.log("DEBUG: brandData", brandData);
+
+  console.log("DEBUG: hasBrand", hasBrand);
+  console.log("DEBUG: isLoading", isLoading);
 
   useEffect(() => {
     // Skip if already redirected or still loading
@@ -200,9 +207,9 @@ export function useProtectedPageLoading(requireBrand = true) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const hasRedirected = useRef(false);
-  
+
   const isAuthenticated = status === "authenticated" && !!session?.user;
-  
+
   const { data: brandData, isLoading: brandLoading } = useBrandQuery({
     enabled: requireBrand && isAuthenticated,
     skipRedirect: true,
@@ -213,21 +220,29 @@ export function useProtectedPageLoading(requireBrand = true) {
 
   useEffect(() => {
     if (hasRedirected.current || isLoading) return;
-    
+
     // Not authenticated -> signin
     if (!isAuthenticated && status === "unauthenticated") {
       hasRedirected.current = true;
       router.push("/auth/signin");
       return;
     }
-    
+
     // Needs brand but doesn't have one -> onboarding
     if (requireBrand && isAuthenticated && !hasBrand && !brandLoading) {
       hasRedirected.current = true;
       router.push("/onboarding");
       return;
     }
-  }, [isAuthenticated, hasBrand, isLoading, brandLoading, status, requireBrand, router]);
+  }, [
+    isAuthenticated,
+    hasBrand,
+    isLoading,
+    brandLoading,
+    status,
+    requireBrand,
+    router,
+  ]);
 
   return { isLoading };
 }
@@ -239,21 +254,24 @@ export function useAdminPageLoading() {
   const { data: session } = useSession();
   const router = useRouter();
   const hasRedirected = useRef(false);
-  
+
   // Simple admin check - adjust as needed
-  const isAdmin = session?.user?.email?.includes("@plum.") || 
-                  ["lamtomoki@gmail.com", "truedrju@gmail.com"].includes(session?.user?.email || "");
-  
+  const isAdmin =
+    session?.user?.email?.includes("@plum.") ||
+    ["lamtomoki@gmail.com", "truedrju@gmail.com"].includes(
+      session?.user?.email || ""
+    );
+
   const { isLoading } = useProtectedPageLoading(true);
-  
+
   useEffect(() => {
     if (hasRedirected.current || isLoading) return;
-    
+
     if (!isAdmin && session) {
       hasRedirected.current = true;
       router.push("/dashboard/discover");
     }
   }, [isAdmin, session, isLoading, router]);
-  
+
   return { isLoading, isAdmin };
 }
