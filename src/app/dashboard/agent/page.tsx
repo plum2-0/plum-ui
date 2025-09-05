@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useBrandQuery } from "@/hooks/api/useBrandQuery";
 import {
-  useAgent,
   useDeleteAgent,
   useUpdateAgent,
   useAgents,

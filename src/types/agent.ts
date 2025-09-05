@@ -82,30 +82,8 @@ export interface ConversationPost {
   permalink: string;
 }
 
-// Agent Analytics
-export interface RedditMetrics {
-  totalKarma: number;
-  totalUpvotes: number;
-  totalComments: number;
-  totalConversations: number;
-  totalDownvotes: number;
-}
-
-export interface AgentMetrics {
-  agentId: string;
-  totalConversations: number;
-  activeConversations: number;
-  responseRate: number;
-  engagementRate: number;
-  lastActive: Date;
-  redditMetrics: RedditMetrics;
-}
-
 // API Response Types
-export interface AgentListResponse {
-  agents: Agent[];
-  totalCount: number;
-}
+// AgentListResponse, RedditMetrics, and AgentMetrics removed - unused
 
 // Agent Categories and Status
 export enum AgentCategory {
@@ -122,17 +100,6 @@ export enum AgentStatus {
   PAUSED = "paused",
 }
 
-// Reddit Agent Conversation
-export interface RedditAgentConvo {
-  id: string;
-  threadId: string;
-  postId: string;
-  status: "monitoring" | "engaged" | "archived";
-  relevanceScore: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 // Extended Agent Details
 export interface AgentDetails {
   id: string;
@@ -147,7 +114,6 @@ export interface AgentDetails {
   status: AgentStatus;
   redditUsername?: string;
   redditAgentConvos: RedditConvo[];
-  metrics?: AgentMetrics;
   createdAt: Date;
   updatedAt: Date;
 }

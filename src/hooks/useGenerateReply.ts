@@ -1,5 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
-import { useAgents } from "@/hooks/api/useAgentQueries";
+import { useState, useCallback } from "react";
 import type { Agent } from "@/types/agent";
 import type { RedditPost } from "@/types/brand";
 import { useBrand } from "@/contexts/BrandContext";

@@ -146,12 +146,8 @@ export function useKeywordManagement({
   return {
     newKeywordInput,
     setNewKeywordInput,
-    addKeyword,
-    removeKeyword,
     toggleKeyword,
     handleKeyboardInput,
-    normalizeKeyword,
-    validateKeywordAddition,
     currentCounts,
   };
 }

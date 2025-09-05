@@ -17,7 +17,7 @@ const API_BASE =
  */
 export function useAgentReply(brandId: string) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const { data, isLoading, error } = useAgents(brandId);
+  const { data, isLoading } = useAgents(brandId);
   const [brandData, setBrandData] = useState<any>(null);
 
   const agents: Agent[] = useMemo(() => data ?? [], [data]);
@@ -83,7 +83,6 @@ export function useAgentReply(brandId: string) {
   return {
     agents,
     isLoadingAgents: isLoading,
-    agentsError: error,
     isGenerating,
     isBrandLoaded: !!brandData,
     generateWithAgent,

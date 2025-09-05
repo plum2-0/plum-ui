@@ -123,15 +123,6 @@ export function useOnboardingRedirects() {
   });
 }
 
-/**
- * Hook for pages that require both authentication and brand
- */
-export function useDashboardRedirects() {
-  return useRedirect({
-    redirectIfUnauthenticated: "/auth/signin",
-    redirectIfNoBrand: "/onboarding",
-  });
-}
 
 /**
  * Hook for public pages that should redirect authenticated users
@@ -160,16 +151,9 @@ export function useHomePageRedirect() {
     skipRedirect: true,
   });
 
-  console.log("DEBUG: session", session);
-
   const hasBrand = !!brandData?.brand?.id;
   // Loading while checking auth or brand (if authenticated)
   const isLoading = status === "loading" || (isAuthenticated && brandLoading);
-
-  console.log("DEBUG: brandData", brandData);
-
-  console.log("DEBUG: hasBrand", hasBrand);
-  console.log("DEBUG: isLoading", isLoading);
 
   useEffect(() => {
     // Skip if already redirected or still loading
@@ -297,32 +281,4 @@ export function redirectToOnboarding(
   }
 }
 
-/**
- * Utility function to handle dashboard redirects
- */
-export function redirectToDashboard(
-  router: ReturnType<typeof useRouter>,
-  options?: { skipRedirect?: boolean }
-) {
-  if (options?.skipRedirect) return;
-  
-  // Ensure client-side before navigating
-  if (typeof window !== "undefined") {
-    router.push("/dashboard/discover");
-  }
-}
 
-/**
- * Utility function to handle signin redirects
- */
-export function redirectToSignIn(
-  router: ReturnType<typeof useRouter>,
-  options?: { skipRedirect?: boolean }
-) {
-  if (options?.skipRedirect) return;
-  
-  // Ensure client-side before navigating
-  if (typeof window !== "undefined") {
-    router.push("/auth/signin");
-  }
-}

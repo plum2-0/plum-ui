@@ -6,12 +6,10 @@ import { SubscriptionStatus } from '@/types/subscription';
 export function useSubscription() {
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchSubscriptionStatus = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
       
       const response = await fetch('/api/subscription/check');
       if (!response.ok) {
@@ -23,7 +21,6 @@ export function useSubscription() {
       return data;
     } catch (err) {
       console.error('Error fetching subscription status:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
       return null;
     } finally {
       setLoading(false);
@@ -41,15 +38,7 @@ export function useSubscription() {
 
 
   return {
-    status,
-    loading,
-    error,
     checkAccess,
-    refetch: fetchSubscriptionStatus,
     remainingJobs: status?.remainingJobs || 0,
-    monthlyLimit: status?.monthlyLimit || 5,
-    hasAccess: status?.hasAccess || false,
-    hasTesterAccess: status?.hasTesterAccess || false,
-    subscriptionStatus: status?.subscriptionStatus || 'none',
   };
 }

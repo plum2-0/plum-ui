@@ -42,6 +42,7 @@ export interface CheckoutSessionData {
   url: string;
 }
 
+// PricingPlan interface - keeping since it's used by PRICING_PLANS
 export interface PricingPlan {
   id: string;
   name: string;

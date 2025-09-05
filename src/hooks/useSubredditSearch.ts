@@ -12,7 +12,6 @@ export interface SubredditOption {
 interface UseSubredditSearchResult {
   options: SubredditOption[];
   isLoading: boolean;
-  error: Error | null;
   searchSubreddits: (query: string) => void;
 }
 
@@ -20,7 +19,7 @@ export function useSubredditSearch(): UseSubredditSearchResult {
   const [searchQuery, setSearchQuery] = useState('');
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['subreddit-search', searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) {
@@ -70,7 +69,6 @@ export function useSubredditSearch(): UseSubredditSearchResult {
   return {
     options,
     isLoading,
-    error: error as Error | null,
     searchSubreddits,
   };
 }

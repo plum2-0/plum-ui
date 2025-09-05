@@ -1,10 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useCallback } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 
 interface ReplyContextType {
   onReplySuccess?: () => void;
-  registerReplySuccessHandler: (handler: () => void) => void;
 }
 
 const ReplyContext = createContext<ReplyContextType | undefined>(undefined);
@@ -15,16 +14,8 @@ interface ReplyProviderProps {
 }
 
 export function ReplyProvider({ children, onReplySuccess }: ReplyProviderProps) {
-  const registerReplySuccessHandler = useCallback((handler: () => void) => {
-    // This allows child components to trigger the success handler
-    if (onReplySuccess) {
-      onReplySuccess();
-    }
-    handler();
-  }, [onReplySuccess]);
-
   return (
-    <ReplyContext.Provider value={{ onReplySuccess, registerReplySuccessHandler }}>
+    <ReplyContext.Provider value={{ onReplySuccess }}>
       {children}
     </ReplyContext.Provider>
   );

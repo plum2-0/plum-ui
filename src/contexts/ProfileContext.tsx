@@ -22,7 +22,6 @@ export function ProfileProvider({
 }: ProfileProviderProps) {
   // Extract active conversation ID and profile ID from selected profile
   const activeConvoId = selectedProfile?.active_convos?.[0]?.id || null;
-  console.log("selectedProfile", selectedProfile);
   const prospectProfileId = selectedProfile?.id || null;
 
   return (

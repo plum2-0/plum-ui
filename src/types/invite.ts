@@ -19,10 +19,7 @@ export interface InviteAcceptanceResult {
   brandId: string;
 }
 
-export interface InviteValidationError {
-  message: string;
-  status: number;
-}
+// InviteValidationError removed - unused (InviteError class is used instead)
 
 export class InviteError extends Error {
   constructor(
