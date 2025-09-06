@@ -44,27 +44,11 @@ export default function KeywordTooltip({
             <span className="text-white/70 text-xs">Posts:</span>
             <span className="text-white font-medium text-sm">{total}</span>
           </div>
-          {difference > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-white/70 text-xs">From top:</span>
-              <span className="text-orange-400 text-sm">-{difference}</span>
-            </div>
-          )}
         </div>
 
         {onViewPosts && (
-          <div className="pt-2 border-t border-white/10">
-            <LiquidButton
-              variant="primary"
-              size="sm"
-              className="w-full"
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewPosts(fullName);
-              }}
-            >
-              View Posts
-            </LiquidButton>
+          <div className="pt-2 border-t text-white/70 border-white/10">
+            Click Bar to View Posts
           </div>
         )}
       </div>

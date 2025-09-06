@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 // react imports intentionally minimal here
 import { Brand } from "@/types/brand";
 import { redirectToOnboarding } from "@/hooks/useRedirects";
+import { useUserContext } from "@/contexts/UserContext";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -109,6 +110,30 @@ async function fetchBrandIdByUser(userId: string): Promise<string> {
   return id;
 }
 
+async function fetchAllBrandIdsByUser(userId: string): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/api/brand/by-user/${userId}/all`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Plum-UI/1.0",
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return []; // User has no brands
+    }
+    const errorText = await response.text();
+    throw new BrandQueryError(
+      `Failed to resolve brands by user: ${errorText}`,
+      response.status
+    );
+  }
+
+  const data = (await response.json()) as { brand_ids?: string[] };
+  return data?.brand_ids || [];
+}
+
 // Main hook with modern TanStack Query patterns
 export function useBrandQuery(options?: {
   enabled?: boolean;
@@ -116,11 +141,20 @@ export function useBrandQuery(options?: {
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const brandId = getBrandId(session);
+  
+  // Try to get active brand from UserContext if available, fallback to legacy method
+  let activeBrandId: string | null = null;
+  try {
+    const userContext = useUserContext();
+    activeBrandId = userContext.activeBrandId;
+  } catch {
+    // UserContext not available, use legacy method
+    activeBrandId = getBrandId(session);
+  }
 
   const queryResult = useQuery({
-    // Include brandId in query key for better cache isolation
-    queryKey: brandId ? BRAND_QUERY_KEYS.detail(brandId) : BRAND_QUERY_KEYS.all,
+    // Include activeBrandId in query key for better cache isolation
+    queryKey: activeBrandId ? BRAND_QUERY_KEYS.detail(activeBrandId) : BRAND_QUERY_KEYS.all,
     queryFn: async (): Promise<{ brand: Brand }> => {
       // Check if user is authenticated
       if (!session?.user?.id) {
@@ -129,9 +163,9 @@ export function useBrandQuery(options?: {
 
       let brandData: Brand;
       try {
-        let effectiveBrandId = brandId;
+        let effectiveBrandId = activeBrandId;
         if (!effectiveBrandId) {
-          // Resolve brand id by user id
+          // Fallback: Resolve brand id by user id (legacy behavior)
           effectiveBrandId = await fetchBrandIdByUser(session.user.id);
           setBrandCookie(effectiveBrandId);
         }
@@ -490,6 +524,34 @@ export function useDeleteProspect() {
       queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
     },
   });
+}
+
+/**
+ * Hook to get all user brands from UserContext
+ * This is the preferred method for accessing user brands in multi-brand components
+ */
+export function useUserBrands() {
+  try {
+    const userContext = useUserContext();
+    return {
+      userBrands: userContext.userBrands,
+      activeBrandId: userContext.activeBrandId,
+      switchActiveBrand: userContext.switchActiveBrand,
+      isLoading: userContext.isLoading,
+      error: userContext.error,
+      refreshUserBrands: userContext.refreshUserBrands,
+    };
+  } catch {
+    // UserContext not available, return empty state
+    return {
+      userBrands: [],
+      activeBrandId: null,
+      switchActiveBrand: () => {},
+      isLoading: false,
+      error: "UserContext not available",
+      refreshUserBrands: async () => {},
+    };
+  }
 }
 
 // Types for add brand prospect mutation

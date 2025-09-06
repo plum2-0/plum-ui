@@ -3,106 +3,49 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useBrandQuery } from "./api/useBrandQuery";
 
-export interface SimpleRedirectState {
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  hasBrand: boolean;
-  brand: any;
-  user: any;
-}
-
-export interface SimpleRedirectOptions {
-  redirectIfAuthenticated?: string;
-  redirectIfUnauthenticated?: string;
-  redirectIfHasBrand?: string;
-  redirectIfNoBrand?: string;
-  skipRedirect?: boolean;
-}
+// Removed generic useRedirect in favor of explicit hooks below
 
 /**
- * Simplified redirect-centric auth hook
- *
- * Flow:
- * 1. Check if user is authenticated
- * 2. If authenticated, check if they have a brand
- * 3. Redirect based on options provided
+ * Hook for pages that require authentication but no brand (like onboarding)
  */
-export function useRedirect(
-  options: SimpleRedirectOptions = {}
-): SimpleRedirectState {
-  const {
-    redirectIfAuthenticated,
-    redirectIfUnauthenticated = "/auth/signin",
-    redirectIfHasBrand = "/dashboard/discover",
-    redirectIfNoBrand,
-    skipRedirect = false,
-  } = options;
+// export function useOnboardingRedirects() {
+//   return useRedirect({
+//     redirectIfUnauthenticated: "/auth/signin",
+//     redirectIfHasBrand: "/dashboard/discover",
+//   });
+// }
 
+/**
+ * Hook for multi-brand onboarding that allows existing users to create new brands
+ * Does not redirect users who already have brands - they can create additional brands
+ */
+export function useMultiBrandOnboardingRedirects() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const hasRedirectedRef = useRef(false);
 
   const isAuthenticated = status === "authenticated" && !!session?.user;
-  const isAuthLoading = status === "loading";
 
+  // Still fetch brand to provide hasBrand state to consumers, but do not redirect away
   const { data: brandData, isLoading: brandLoading } = useBrandQuery({
     enabled: isAuthenticated,
     skipRedirect: true,
   });
 
   const hasBrand = !!brandData?.brand?.id;
-  const isLoading = isAuthLoading || (isAuthenticated && brandLoading);
+  const isLoading = status === "loading" || (isAuthenticated && brandLoading);
 
   useEffect(() => {
-    if (hasRedirectedRef.current || isLoading || skipRedirect) {
-      return;
-    }
+    if (hasRedirectedRef.current || isLoading) return;
 
+    // If not authenticated, go to signin
     if (!isAuthenticated && status === "unauthenticated") {
-      if (redirectIfUnauthenticated) {
-        hasRedirectedRef.current = true;
-        router.push(redirectIfUnauthenticated);
-        return;
-      }
-    }
-
-    if (isAuthenticated && brandLoading) {
+      hasRedirectedRef.current = true;
+      router.push("/auth/signin");
       return;
     }
-
-    if (isAuthenticated && hasBrand) {
-      if (redirectIfHasBrand) {
-        hasRedirectedRef.current = true;
-        router.push(redirectIfHasBrand);
-        return;
-      }
-      if (redirectIfAuthenticated) {
-        hasRedirectedRef.current = true;
-        router.push(redirectIfAuthenticated);
-        return;
-      }
-    }
-
-    if (isAuthenticated && !hasBrand && !brandLoading) {
-      if (redirectIfNoBrand) {
-        hasRedirectedRef.current = true;
-        router.push(redirectIfNoBrand);
-        return;
-      }
-    }
-  }, [
-    isAuthenticated,
-    hasBrand,
-    isLoading,
-    brandLoading,
-    status,
-    skipRedirect,
-    redirectIfAuthenticated,
-    redirectIfUnauthenticated,
-    redirectIfHasBrand,
-    redirectIfNoBrand,
-    router,
-  ]);
+    // Authenticated users (with or without brand) remain on onboarding to allow creating additional brands
+  }, [isAuthenticated, isLoading, status, router]);
 
   return {
     isLoading,
@@ -114,24 +57,41 @@ export function useRedirect(
 }
 
 /**
- * Hook for pages that require authentication but no brand (like onboarding)
- */
-export function useOnboardingRedirects() {
-  return useRedirect({
-    redirectIfUnauthenticated: "/auth/signin",
-    redirectIfHasBrand: "/dashboard/discover",
-  });
-}
-
-
-/**
  * Hook for public pages that should redirect authenticated users
  */
 export function usePublicPageRedirects() {
-  return useRedirect({
-    redirectIfHasBrand: "/dashboard/discover",
-    redirectIfNoBrand: "/onboarding",
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const hasRedirectedRef = useRef(false);
+
+  const isAuthenticated = status === "authenticated" && !!session?.user;
+
+  const { data: brandData, isLoading: brandLoading } = useBrandQuery({
+    enabled: isAuthenticated,
+    skipRedirect: true,
   });
+
+  const hasBrand = !!brandData?.brand?.id;
+  const isLoading = status === "loading" || (isAuthenticated && brandLoading);
+
+  useEffect(() => {
+    if (hasRedirectedRef.current || isLoading) return;
+
+    // Unauthenticated: stay on public page
+    if (!isAuthenticated && status === "unauthenticated") return;
+
+    // Authenticated: route based on brand presence once brand is loaded
+    if (isAuthenticated && !brandLoading) {
+      hasRedirectedRef.current = true;
+      if (hasBrand) {
+        router.push("/dashboard/discover");
+      } else {
+        router.push("/onboarding");
+      }
+    }
+  }, [isAuthenticated, hasBrand, isLoading, brandLoading, status, router]);
+
+  return { isLoading };
 }
 
 /**
@@ -269,16 +229,14 @@ export function redirectToOnboarding(
   options?: { skipRedirect?: boolean; clearBrandCookie?: boolean }
 ) {
   if (options?.skipRedirect) return;
-  
+
   // Clear brand cookie if requested (default true for onboarding)
   if (options?.clearBrandCookie !== false && typeof document !== "undefined") {
     document.cookie = "brand_id=; Max-Age=0; path=/";
   }
-  
+
   // Ensure client-side before navigating
   if (typeof window !== "undefined") {
     router.push("/onboarding");
   }
 }
-
-

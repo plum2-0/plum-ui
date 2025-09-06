@@ -5,6 +5,7 @@ import { SessionProvider } from "@/components/SessionProvider";
 import { QueryProvider } from "@/components/QueryProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { BrandProvider } from "@/contexts/BrandContext";
+import { UserProvider } from "@/contexts/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +41,10 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/plum-favicon.svg?v=6" type="image/svg+xml" />
         <link rel="shortcut icon" href="/plum-favicon.svg?v=6" />
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-7Y0RT2J0PQ"></script>
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-7Y0RT2J0PQ"
+        ></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -57,9 +61,11 @@ export default function RootLayout({
       >
         <SessionProvider>
           <QueryProvider>
-            <BrandProvider>
-              <ToastProvider>{children}</ToastProvider>
-            </BrandProvider>
+            <UserProvider>
+              <BrandProvider>
+                <ToastProvider>{children}</ToastProvider>
+              </BrandProvider>
+            </UserProvider>
           </QueryProvider>
         </SessionProvider>
       </body>

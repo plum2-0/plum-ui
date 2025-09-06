@@ -117,9 +117,31 @@ export async function POST(request: NextRequest) {
     if (firestore && brandId) {
       try {
         const userRef = firestore.collection("users").doc(userId);
+        
+        // Get current user data to check if brand_ids array exists
+        const userDoc = await userRef.get();
+        const userData = userDoc.data() || {};
+        
+        // Convert existing brand_id to brand_ids array if needed
+        let brandIds: string[] = [];
+        if (userData.brand_ids && Array.isArray(userData.brand_ids)) {
+          // User already has brand_ids array
+          brandIds = userData.brand_ids;
+        } else if (userData.brand_id) {
+          // User has old single brand_id, convert to array
+          brandIds = [userData.brand_id];
+        }
+        
+        // Add new brand if not already present
+        if (!brandIds.includes(brandId)) {
+          brandIds.push(brandId);
+        }
+
         await userRef.set(
           {
             user_id: userId,
+            brand_ids: brandIds,
+            // Keep brand_id for backward compatibility during transition
             brand_id: brandId,
             updated_at: new Date(),
           },

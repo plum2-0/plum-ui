@@ -13,11 +13,15 @@ interface ProspectCardProps {
   post: RedditPost;
   className?: string;
   onReply?: () => void;
+  fitContent?: boolean;
+  flatBackground?: boolean;
 }
 
 export default function ProspectCard({
   post,
   className = "",
+  fitContent = false,
+  flatBackground = false,
 }: ProspectCardProps) {
   const [showScrollFade, setShowScrollFade] = useState(true);
   const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
@@ -48,8 +52,12 @@ export default function ProspectCard({
   const markdownComponents: Components = {
     a: (props) => <a {...props} className="text-[#4fbcff] hover:underline" />,
     p: (props) => <p {...props} className="mb-2 text-[#d7dadc]" />,
-    ul: (props) => <ul {...props} className="list-disc pl-5 mb-2 text-[#d7dadc]" />,
-    ol: (props) => <ol {...props} className="list-decimal pl-5 mb-2 text-[#d7dadc]" />,
+    ul: (props) => (
+      <ul {...props} className="list-disc pl-5 mb-2 text-[#d7dadc]" />
+    ),
+    ol: (props) => (
+      <ol {...props} className="list-decimal pl-5 mb-2 text-[#d7dadc]" />
+    ),
     li: (props) => <li {...props} className="mb-0.5" />,
     img: (props) => {
       const { src = "", alt = "" } =
@@ -101,9 +109,18 @@ export default function ProspectCard({
         </span>
       );
     },
-    h1: (props) => <h1 {...props} className="text-lg font-semibold mb-1.5 text-[#d7dadc]" />,
-    h2: (props) => <h2 {...props} className="text-base font-semibold mb-1.5 text-[#d7dadc]" />,
-    h3: (props) => <h3 {...props} className="text-sm font-semibold mb-1 text-[#d7dadc]" />,
+    h1: (props) => (
+      <h1 {...props} className="text-lg font-semibold mb-1.5 text-[#d7dadc]" />
+    ),
+    h2: (props) => (
+      <h2
+        {...props}
+        className="text-base font-semibold mb-1.5 text-[#d7dadc]"
+      />
+    ),
+    h3: (props) => (
+      <h3 {...props} className="text-sm font-semibold mb-1 text-[#d7dadc]" />
+    ),
   };
 
   // Sanitize schema allowing safe images and link attributes
@@ -121,26 +138,32 @@ export default function ProspectCard({
     <div
       className={`relative w-full max-w-4xl ${className}`}
       style={{
-        height: "100%",
+        height: fitContent ? "auto" : "100%",
         display: "flex",
         flexDirection: "column",
       }}
     >
       {/* Reddit-like card with Plum accent */}
       <div
-        className="absolute inset-0 rounded-xl"
+        className={`${
+          flatBackground ? "relative" : "absolute inset-0"
+        } rounded-xl`}
         style={{
           background: "#1a1a1b",
           border: "1px solid rgba(129, 102, 255, 0.15)",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(129, 102, 255, 0.05)",
+          boxShadow:
+            "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(129, 102, 255, 0.05)",
         }}
       >
         {/* Inner Container */}
-        <div className="w-full h-full rounded-xl relative overflow-hidden">
+        <div
+          className="w-full rounded-xl relative overflow-hidden"
+          style={{ height: fitContent ? "auto" : "100%" }}
+        >
           <div
-            className="w-full h-full px-4 py-3 flex flex-col rounded-xl relative overflow-visible"
+            className="w-full px-4 py-3 flex flex-col rounded-xl relative overflow-visible"
             style={{
-              height: "100%",
+              height: fitContent ? "auto" : "100%",
               display: "flex",
               flexDirection: "column",
             }}
@@ -193,14 +216,20 @@ export default function ProspectCard({
               </Link>
             </div>
 
-            {/* Content - Scrollable, fills available space */}
+            {/* Content - Scrollable or natural height based on fitContent */}
             {post.content && (
-              <div className="flex-1 mb-2 relative min-h-0">
+              <div
+                className={`${
+                  fitContent ? "" : "flex-1 min-h-0"
+                } mb-2 relative`}
+              >
                 <div
                   ref={setContentRef}
-                  className="overflow-y-auto text-[#d7dadc] text-sm leading-relaxed h-full pr-2"
+                  className={`text-[#d7dadc] text-sm leading-relaxed pr-2 ${
+                    fitContent ? "overflow-visible" : "overflow-y-auto h-full"
+                  }`}
                   style={{
-                    maxHeight: "100%",
+                    maxHeight: fitContent ? "none" : "100%",
                   }}
                 >
                   <ReactMarkdown
@@ -212,7 +241,7 @@ export default function ProspectCard({
                   </ReactMarkdown>
                 </div>
                 {/* Fade gradient indicator at bottom when content is scrollable */}
-                {showScrollFade && (
+                {!fitContent && showScrollFade && (
                   <div
                     className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
                     style={{
@@ -290,7 +319,11 @@ export default function ProspectCard({
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span className="text-xs font-medium text-[#8b5cf6]">
                     AI Suggested Reply

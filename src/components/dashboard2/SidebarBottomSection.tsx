@@ -6,10 +6,13 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import InviteTeammateModal from "./InviteTeammateModal";
 import SupportModal from "./SupportModal";
+import BrandSwitcher from "./BrandSwitcher";
+import { useUserBrands } from "@/hooks/api/useBrandQuery";
 
 export default function SidebarBottomSection() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { activeBrandId } = useUserBrands();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
@@ -17,12 +20,15 @@ export default function SidebarBottomSection() {
 
   const handleSignOut = async () => {
     // Clear all application-specific data before signing out
-    
+
     // Clear localStorage
     if (typeof window !== "undefined") {
       // Clear any onboarding data
       localStorage.removeItem("onboardingData");
-      
+
+      // Clear active brand selection
+      localStorage.removeItem("activeBrandId");
+
       // Clear all localStorage items with our app prefix (if any)
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -33,16 +39,16 @@ export default function SidebarBottomSection() {
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
     }
-    
+
     // Clear sessionStorage
     if (typeof window !== "undefined") {
       // Clear Reddit auth cache
       sessionStorage.removeItem("reddit_auth_cache");
-      
+
       // Clear onboarding redirect tracking
       sessionStorage.removeItem("lastOnboardingRedirect");
       sessionStorage.removeItem("lastOnboardingRedirectTime");
-      
+
       // Clear any draft data (agent reply drafts)
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
@@ -52,30 +58,30 @@ export default function SidebarBottomSection() {
         }
       }
       keysToRemove.forEach(key => sessionStorage.removeItem(key));
-      
+
       // Clear all sessionStorage
       sessionStorage.clear();
     }
-    
+
     // Clear cookies (brand_id, project_id, etc.)
     if (typeof document !== "undefined") {
       // Get all cookies
       const cookies = document.cookie.split(";");
-      
+
       // Clear each cookie by setting it with an expired date
       cookies.forEach(cookie => {
         const eqPos = cookie.indexOf("=");
         const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        
+
         // Clear cookie for current path
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        
+
         // Also try to clear for current domain and parent domains
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`;
       });
     }
-    
+
     // Sign out from NextAuth
     await signOut({ callbackUrl: "/" });
   };
@@ -92,6 +98,11 @@ export default function SidebarBottomSection() {
 
   const handleSupportClick = () => {
     setIsSupportOpen(true);
+    setIsMenuOpen(false);
+  };
+
+  const handleCreateBrandClick = () => {
+    router.push("/onboarding");
     setIsMenuOpen(false);
   };
 
@@ -128,6 +139,9 @@ export default function SidebarBottomSection() {
 
   return (
     <div className="px-4 py-4 border-t border-white/10 relative" ref={menuRef}>
+      {/* Brand Switcher */}
+      <BrandSwitcher />
+
       {/* User Profile Section - Clickable */}
       <button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -232,6 +246,27 @@ export default function SidebarBottomSection() {
               <span>Invite Teammate</span>
             </button>
 
+            {/* Create New Brand Option */}
+            <button
+              onClick={handleCreateBrandClick}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors text-sm font-body"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <span>Create New Brand</span>
+            </button>
+
             {/* Get Support Option */}
             <button
               onClick={handleSupportClick}
@@ -258,7 +293,7 @@ export default function SidebarBottomSection() {
               <>
                 {/* Divider */}
                 <div className="my-1 border-t border-white/10"></div>
-                
+
                 {/* Admin Section Label */}
                 <div className="px-4 py-1.5 text-xs text-white/40 uppercase tracking-wider font-body">
                   Admin
@@ -337,7 +372,7 @@ export default function SidebarBottomSection() {
 
       {/* Invite Modal */}
       <InviteTeammateModal
-        brandId={session?.user?.brandId || null}
+        brandId={activeBrandId || session?.user?.brandId || null}
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
       />
@@ -348,7 +383,7 @@ export default function SidebarBottomSection() {
         onClose={() => setIsSupportOpen(false)}
         userEmail={session?.user?.email || ""}
         userId={session?.user?.id || ""}
-        brandId={session?.user?.brandId || null}
+        brandId={activeBrandId || session?.user?.brandId || null}
       />
     </div>
   );

@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { SecondaryButton } from "@/components/ui/SecondaryButton";
-import { useOnboardingRedirects } from "@/hooks/useRedirects";
+import { useMultiBrandOnboardingRedirects } from "@/hooks/useRedirects";
+import { useUserBrands } from "@/hooks/api/useBrandQuery";
 
 interface BrandOffering {
   title: string;
@@ -19,9 +20,13 @@ interface BrandGenerationResponse {
 }
 
 function OnboardingContent() {
-  // Use simplified auth hook - redirects unauthenticated users to signin
-  // and users with brands to dashboard
-  const { isLoading, isAuthenticated, user } = useOnboardingRedirects();
+  // Use multi-brand auth hook - redirects unauthenticated users to signin
+  // but allows users with existing brands to create new ones
+  const { isLoading, isAuthenticated, user, hasBrand } =
+    useMultiBrandOnboardingRedirects();
+
+  // Get existing brands for users who already have them
+  const { userBrands } = useUserBrands();
 
   const [phase, setPhase] = useState<"website" | "details">("website");
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -348,6 +353,9 @@ function OnboardingContent() {
         document.cookie = `brand_id=${result.data.brand_id}; path=/; max-age=${
           60 * 60 * 24 * 30
         }`; // 30 days
+
+        // Set the new brand as active in localStorage
+        localStorage.setItem("activeBrandId", result.data.brand_id);
       }
 
       // Force a hard redirect to dashboard which will refresh the session
@@ -504,6 +512,55 @@ function OnboardingContent() {
         {user && <OnboardingHeader session={{ user }} />}
       </div>
 
+      {/* Existing Brands Notice */}
+      {userBrands.length > 0 && (
+        <div className="relative z-10 container mx-auto px-6 pt-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="glass-card rounded-2xl p-6 border border-blue-400/30">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                  <svg
+                    className="w-4 h-4 text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-heading font-bold text-lg mb-2">
+                    Creating Additional Brand
+                  </h3>
+                  <p className="text-white/80 font-body mb-4">
+                    You already have {userBrands.length} brand
+                    {userBrands.length !== 1 ? "s" : ""}:{" "}
+                    <span className="font-medium text-white">
+                      {userBrands.map((brand) => brand.name).join(", ")}
+                    </span>
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() =>
+                        (window.location.href = "/dashboard/discover")
+                      }
+                      className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/30 rounded-lg text-blue-300 hover:text-blue-200 transition-all text-sm font-medium"
+                    >
+                      ← Back to Dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading Overlay */}
       {(isSubmitting || isGenerating) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -531,15 +588,26 @@ function OnboardingContent() {
             <>
               <div className="text-center mb-12">
                 <h1 className="font-heading text-5xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
-                  Welcome to{" "}
-                  <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent">
-                    PlumSprout
-                  </span>
-                  ! 🚀
+                  {userBrands.length > 0 ? (
+                    <>
+                      <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent">
+                        Add Another Brand
+                      </span>
+                      ! ✨
+                    </>
+                  ) : (
+                    <>
+                      <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent">
+                        Let's understand your brand
+                      </span>
+                      ! 🚀
+                    </>
+                  )}
                 </h1>
                 <p className="font-body text-xl md:text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-                  Let's understand your brand better. Start by entering your
-                  website URL.
+                  {userBrands.length > 0
+                    ? "Let's set up your additional brand. Start by entering your website URL."
+                    : "Start by entering your website URL."}
                 </p>
               </div>
 

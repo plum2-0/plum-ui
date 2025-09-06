@@ -65,13 +65,13 @@ export default function KeywordPostsModal({
           />
 
           {/* Modal Container */}
-          <div className="flex items-center justify-center min-h-screen p-4">
+          <div className="flex items-start justify-center min-h-screen px-4 py-10">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="relative w-full max-w-6xl h-[85vh] rounded-2xl overflow-hidden"
+              className="relative w-full max-w-6xl rounded-2xl overflow-hidden"
               style={{
                 background: "rgba(17, 17, 27, 0.98)",
                 boxShadow:
@@ -83,7 +83,7 @@ export default function KeywordPostsModal({
               <div
                 className="sticky top-0 z-10 px-6 py-4 border-b"
                 style={{
-                  background: "rgba(17, 17, 27, 0.98)",
+                  background: "rgba(17, 17, 27, 1)",
                   backdropFilter: "blur(20px)",
                   borderColor: "rgba(255, 255, 255, 0.1)",
                 }}
@@ -136,25 +136,23 @@ export default function KeywordPostsModal({
               </div>
 
               {/* Posts Container */}
-              <div
-                ref={scrollContainerRef}
-                className="overflow-y-auto h-full pb-20 px-6"
-                style={{
-                  maxHeight: "calc(100% - 80px)",
-                }}
-              >
+              <div ref={scrollContainerRef} className="px-6 pt-16 pb-20">
                 {posts.length > 0 ? (
                   <div className="grid gap-6 py-6">
                     {posts.map((post, index) => (
                       <motion.div
-                        key={`${(post as any).id || post.thing_id || post.permalink || index}-${index}`}
+                        key={`${
+                          (post as any).id ||
+                          post.thing_id ||
+                          post.permalink ||
+                          index
+                        }-${index}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05, duration: 0.3 }}
                         className="w-full"
-                        style={{ height: "auto", minHeight: "200px" }}
                       >
-                        <ProspectCard post={post} />
+                        <ProspectCard post={post} fitContent flatBackground />
                       </motion.div>
                     ))}
                   </div>
@@ -176,7 +174,9 @@ export default function KeywordPostsModal({
                           />
                         </svg>
                       </div>
-                      <p className="text-white/60">No posts found for this keyword</p>
+                      <p className="text-white/60">
+                        No posts found for this keyword
+                      </p>
                     </div>
                   </div>
                 )}

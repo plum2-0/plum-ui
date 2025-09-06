@@ -32,7 +32,7 @@ const LOADING_MESSAGES = [
   "Harvesting fresh opportunities...",
   "Mining conversational gold...",
   "Distilling insights from the void...",
-  "Summoning the data spirits...",
+  "Summoning the data...",
   "Weaving threads of connection...",
 ];
 
