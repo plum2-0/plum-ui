@@ -137,6 +137,7 @@ function BrandSummary() {
 
           <div className="space-y-8">
             <ProspectTargetStat
+              brandId={brandData.id}
               posts={postsToReview}
               uniqueUsers={brandAggregates.totalPotentialCustomers}
               uniquePendingAuthors={brandAggregates.uniquePendingAuthors}
@@ -187,7 +188,10 @@ function BrandSummary() {
               <>
                 <ProspectAccordion prospects={brandData.prospects} />
                 <div className="mt-6">
-                  <VizSummaryView prospects={brandData.prospects} />
+                  <VizSummaryView
+                    brandId={brandData.id}
+                    prospects={brandData.prospects}
+                  />
                 </div>
               </>
             ) : (
@@ -713,37 +717,41 @@ function HelpHintSection() {
       {!isMinimized && (
         <motion.div
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
-          animate={{ 
-            opacity: 1, 
-            y: 0, 
+          animate={{
+            opacity: 1,
+            y: 0,
             scale: 1,
           }}
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
-          transition={{ 
+          transition={{
             duration: 0.5,
             type: "spring",
             stiffness: 200,
-            damping: 20
+            damping: 20,
           }}
         >
           <motion.div
             className="rounded-xl p-4 relative overflow-hidden"
-            animate={!hasInteracted ? {
-              boxShadow: [
-                "0 0 20px rgba(251, 146, 60, 0.3), 0 0 40px rgba(251, 146, 60, 0.1)",
-                "0 0 30px rgba(251, 146, 60, 0.5), 0 0 60px rgba(251, 146, 60, 0.2)",
-                "0 0 20px rgba(251, 146, 60, 0.3), 0 0 40px rgba(251, 146, 60, 0.1)",
-              ]
-            } : {}}
+            animate={
+              !hasInteracted
+                ? {
+                    boxShadow: [
+                      "0 0 20px rgba(251, 146, 60, 0.3), 0 0 40px rgba(251, 146, 60, 0.1)",
+                      "0 0 30px rgba(251, 146, 60, 0.5), 0 0 60px rgba(251, 146, 60, 0.2)",
+                      "0 0 20px rgba(251, 146, 60, 0.3), 0 0 40px rgba(251, 146, 60, 0.1)",
+                    ],
+                  }
+                : {}
+            }
             transition={{
               duration: 2,
               repeat: hasInteracted ? 0 : Infinity,
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
             onMouseEnter={() => setHasInteracted(true)}
             style={{
-              background: `linear-gradient(135deg, 
-                rgba(251, 146, 60, 0.15) 0%, 
+              background: `linear-gradient(135deg,
+                rgba(251, 146, 60, 0.15) 0%,
                 rgba(245, 158, 11, 0.12) 25%,
                 rgba(252, 211, 77, 0.08) 50%,
                 rgba(251, 146, 60, 0.1) 75%,
@@ -752,19 +760,20 @@ function HelpHintSection() {
               WebkitBackdropFilter: "blur(10px) saturate(1.5)",
               border: "1px solid transparent",
               backgroundImage: `
-                linear-gradient(135deg, 
-                  rgba(251, 146, 60, 0.15) 0%, 
+                linear-gradient(135deg,
+                  rgba(251, 146, 60, 0.15) 0%,
                   rgba(245, 158, 11, 0.12) 25%,
                   rgba(252, 211, 77, 0.08) 50%,
                   rgba(251, 146, 60, 0.1) 75%,
                   rgba(245, 158, 11, 0.08) 100%),
-                linear-gradient(135deg, 
-                  rgba(251, 146, 60, 0.6) 0%, 
+                linear-gradient(135deg,
+                  rgba(251, 146, 60, 0.6) 0%,
                   rgba(252, 211, 77, 0.4) 100%)
               `,
               backgroundOrigin: "border-box",
               backgroundClip: "padding-box, border-box",
-              boxShadow: "0 0 20px rgba(251, 146, 60, 0.3), 0 0 40px rgba(251, 146, 60, 0.1)",
+              boxShadow:
+                "0 0 20px rgba(251, 146, 60, 0.3), 0 0 40px rgba(251, 146, 60, 0.1)",
             }}
           >
             {/* Animated gradient overlay */}
@@ -775,12 +784,12 @@ function HelpHintSection() {
                   "radial-gradient(circle at 0% 50%, rgba(251, 146, 60, 0.3) 0%, transparent 50%)",
                   "radial-gradient(circle at 100% 50%, rgba(252, 211, 77, 0.3) 0%, transparent 50%)",
                   "radial-gradient(circle at 0% 50%, rgba(251, 146, 60, 0.3) 0%, transparent 50%)",
-                ]
+                ],
               }}
               transition={{
                 duration: 4,
                 repeat: Infinity,
-                ease: "linear"
+                ease: "linear",
               }}
             />
 
@@ -793,13 +802,14 @@ function HelpHintSection() {
                 duration: 3,
                 repeat: hasInteracted ? 0 : Infinity,
                 repeatDelay: 2,
-                ease: "easeInOut"
+                ease: "easeInOut",
               }}
             >
               <div
                 className="h-full w-1/2"
                 style={{
-                  background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
                   transform: "skewX(-20deg)",
                 }}
               />
@@ -830,11 +840,15 @@ function HelpHintSection() {
 
             <div className="flex items-center gap-4 relative z-10">
               {/* Animated Icon */}
-              <motion.div 
+              <motion.div
                 className="flex-shrink-0"
-                animate={!hasInteracted ? {
-                  rotate: [0, -10, 10, -10, 0],
-                } : {}}
+                animate={
+                  !hasInteracted
+                    ? {
+                        rotate: [0, -10, 10, -10, 0],
+                      }
+                    : {}
+                }
                 transition={{
                   duration: 0.5,
                   repeat: hasInteracted ? 0 : Infinity,
@@ -851,19 +865,22 @@ function HelpHintSection() {
                     transition={{
                       duration: 2,
                       repeat: Infinity,
-                      ease: "easeInOut"
+                      ease: "easeInOut",
                     }}
                     style={{
-                      background: "linear-gradient(135deg, rgba(251, 146, 60, 0.3), rgba(252, 211, 77, 0.2))",
+                      background:
+                        "linear-gradient(135deg, rgba(251, 146, 60, 0.3), rgba(252, 211, 77, 0.2))",
                       filter: "blur(8px)",
                     }}
                   />
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center relative"
                     style={{
-                      background: "linear-gradient(135deg, rgba(251, 146, 60, 0.4), rgba(252, 211, 77, 0.3))",
+                      background:
+                        "linear-gradient(135deg, rgba(251, 146, 60, 0.4), rgba(252, 211, 77, 0.3))",
                       border: "1px solid rgba(251, 146, 60, 0.5)",
-                      boxShadow: "inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(251, 146, 60, 0.3)",
+                      boxShadow:
+                        "inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(251, 146, 60, 0.3)",
                     }}
                   >
                     <div className="text-orange-300">{hintConfig.icon}</div>
@@ -875,7 +892,7 @@ function HelpHintSection() {
               <div className="flex-1 flex items-center justify-between pr-6">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <motion.span 
+                    <motion.span
                       className="text-sm font-bold"
                       animate={{
                         color: ["#fb923c", "#fcd34d", "#fb923c"],
@@ -883,7 +900,7 @@ function HelpHintSection() {
                       transition={{
                         duration: 3,
                         repeat: Infinity,
-                        ease: "easeInOut"
+                        ease: "easeInOut",
                       }}
                     >
                       ✨ We're Here to Help!
@@ -907,16 +924,19 @@ function HelpHintSection() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   style={{
-                    background: "linear-gradient(135deg, rgba(251, 146, 60, 0.8), rgba(245, 158, 11, 0.8))",
+                    background:
+                      "linear-gradient(135deg, rgba(251, 146, 60, 0.8), rgba(245, 158, 11, 0.8))",
                     color: "white",
-                    boxShadow: "0 4px 15px rgba(251, 146, 60, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+                    boxShadow:
+                      "0 4px 15px rgba(251, 146, 60, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
                   }}
                 >
                   {/* Button shimmer */}
                   <motion.div
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{
-                      background: "linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
+                      background:
+                        "linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.3), transparent)",
                     }}
                   />
                   <span className="relative flex items-center gap-2">
@@ -932,7 +952,7 @@ function HelpHintSection() {
                       transition={{
                         duration: 1.5,
                         repeat: Infinity,
-                        ease: "easeInOut"
+                        ease: "easeInOut",
                       }}
                     >
                       <path

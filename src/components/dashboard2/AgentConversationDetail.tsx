@@ -26,7 +26,6 @@ export default function AgentConversationDetail({
   >(new Set());
 
   const conversations = agent?.redditAgentConvos || [];
-  const metrics = agent?.metrics;
 
   const handleConversationExpand = (conversationId: string) => {
     setExpandedConversations((prev) => new Set(prev).add(conversationId));
@@ -178,76 +177,6 @@ export default function AgentConversationDetail({
         </div>
       </GlassPanel>
 
-      {/* Metrics Dashboard */}
-      {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%)",
-              backdropFilter: "blur(15px)",
-              border: "1px solid rgba(168, 85, 247, 0.2)",
-            }}
-          >
-            <p className="text-white/60 text-xs font-body mb-1">
-              Total Conversations
-            </p>
-            <p className="text-2xl font-heading font-bold text-white">
-              {metrics.totalConversations ?? 0}
-            </p>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)",
-              backdropFilter: "blur(15px)",
-              border: "1px solid rgba(34, 197, 94, 0.2)",
-            }}
-          >
-            <p className="text-white/60 text-xs font-body mb-1">
-              Response Rate
-            </p>
-            <p className="text-2xl font-heading font-bold text-white">
-              {Math.round((metrics.responseRate ?? 0) * 100)}%
-            </p>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%)",
-              backdropFilter: "blur(15px)",
-              border: "1px solid rgba(255, 193, 7, 0.2)",
-            }}
-          >
-            <p className="text-white/60 text-xs font-body mb-1">
-              Engagement Rate
-            </p>
-            <p className="text-2xl font-heading font-bold text-white">
-              {Math.round((metrics.engagementRate ?? 0) * 100)}%
-            </p>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(255, 79, 0, 0.1) 0%, rgba(255, 79, 0, 0.05) 100%)",
-              backdropFilter: "blur(15px)",
-              border: "1px solid rgba(255, 79, 0, 0.2)",
-            }}
-          >
-            <p className="text-white/60 text-xs font-body mb-1">Reddit Karma</p>
-            <p className="text-2xl font-heading font-bold text-white">
-              {metrics.redditMetrics?.totalKarma ?? 0}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Divider */}
       <div className="p-6 border-t border-white/10" />

@@ -7,6 +7,7 @@ import ProspectCard from "./ProspectCard";
 import { RedditPost } from "@/types/brand";
 
 interface KeywordPostsModalProps {
+  brandId: string;
   isOpen: boolean;
   onClose: () => void;
   keyword: string;
@@ -14,6 +15,7 @@ interface KeywordPostsModalProps {
 }
 
 export default function KeywordPostsModal({
+  brandId,
   isOpen,
   onClose,
   keyword,
@@ -138,7 +140,7 @@ export default function KeywordPostsModal({
               {/* Posts Container */}
               <div ref={scrollContainerRef} className="px-6 pt-16 pb-20">
                 {posts.length > 0 ? (
-                  <div className="grid gap-6 py-6">
+                  <div className="grid flex justify-center gap-6 py-6">
                     {posts.map((post, index) => (
                       <motion.div
                         key={`${
@@ -152,7 +154,12 @@ export default function KeywordPostsModal({
                         transition={{ delay: index * 0.05, duration: 0.3 }}
                         className="w-full"
                       >
-                        <ProspectCard post={post} fitContent flatBackground />
+                        <ProspectCard
+                          brandId={brandId}
+                          post={post}
+                          fitContent
+                          flatBackground
+                        />
                       </motion.div>
                     ))}
                   </div>

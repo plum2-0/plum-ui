@@ -13,6 +13,7 @@ import {
 } from "@/utils/chartDataTransformations";
 
 interface VizSummaryViewProps {
+  brandId: string;
   prospects: Prospect[];
 }
 
@@ -82,7 +83,10 @@ function FilterToggle({
   );
 }
 
-export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
+export default function VizSummaryView({
+  brandId,
+  prospects,
+}: VizSummaryViewProps) {
   const [filter, setFilter] = useState<"all" | "accepted">("all");
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
   const [selectedPosts, setSelectedPosts] = useState<RedditPost[]>([]);
@@ -159,7 +163,7 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
       (acc, p) => {
         const postsScraped = Number(p.total_posts_scraped ?? 0);
         const leadsDiscovered = Number(
-        
+
             (p as any).total_leads_tagged ??
             (() => {
               const pendingAuthors = new Set(
@@ -352,6 +356,7 @@ export default function VizSummaryView({ prospects }: VizSummaryViewProps) {
           onClose={handleCloseModal}
           keyword={selectedKeyword}
           posts={selectedPosts}
+          brandId={brandId}
         />
       )}
     </div>

@@ -28,6 +28,7 @@ interface SwipeState {
 }
 
 interface SwipeableProspectModalProps {
+  brandId: string;
   isOpen: boolean;
   posts: RedditPostUI[];
   onSwipe?: (data: {
@@ -223,6 +224,7 @@ const Counter = memo(function Counter({
 
 // Component: CardStack
 function CardStack({
+  brandId,
   posts,
   currentIndex,
   isAnimating,
@@ -231,6 +233,7 @@ function CardStack({
   onDragEnd,
   onAnimationComplete,
 }: {
+  brandId: string;
   posts: RedditPostUI[];
   currentIndex: number;
   isAnimating: boolean;
@@ -351,7 +354,11 @@ function CardStack({
                   willChange: "transform",
                 }}
               >
-                <ProspectCard post={post} className="h-full" />
+                <ProspectCard
+                  brandId={brandId}
+                  post={post}
+                  className="h-full"
+                />
                 <SwipeStamp
                   type={swipeDirection === "right" ? "like" : "nope"}
                   opacity={1}
@@ -401,7 +408,11 @@ function CardStack({
                 }}
                 transition={SWIPE_CONFIG.DRAG_SPRING}
               >
-                <ProspectCard post={post} className="h-full" />
+                <ProspectCard
+                  brandId={brandId}
+                  post={post}
+                  className="h-full"
+                />
                 <SwipeStamp type="like" opacity={likeOpacity} />
                 <SwipeStamp type="nope" opacity={nopeOpacity} />
               </motion.div>
@@ -454,7 +465,7 @@ function CardStack({
                 transform: "translateZ(0)", // Force GPU acceleration
               }}
             >
-              <ProspectCard post={post} className="h-full" />
+              <ProspectCard brandId={brandId} post={post} className="h-full" />
             </motion.div>
           );
         })}
@@ -468,6 +479,7 @@ function CardStack({
 // ============================================================================
 
 export default function SwipeableProspectModal({
+  brandId,
   isOpen,
   posts,
   onSwipe,
@@ -717,6 +729,7 @@ export default function SwipeableProspectModal({
             {/* Card Stack */}
             {state.currentIndex < posts.length && (
               <CardStack
+                brandId={brandId}
                 posts={posts}
                 currentIndex={state.currentIndex}
                 isAnimating={state.isAnimating}

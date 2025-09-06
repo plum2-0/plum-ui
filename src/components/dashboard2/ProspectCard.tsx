@@ -8,13 +8,20 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import Link from "next/link";
+import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
 
 interface ProspectCardProps {
-  post: RedditPost;
+  post: any;
   className?: string;
   onReply?: () => void;
   fitContent?: boolean;
   flatBackground?: boolean;
+  brandId?: string;
+  prospectId?: string;
+  brandName?: string;
+  brandDetail?: string;
+  problem?: string;
 }
 
 export default function ProspectCard({
@@ -22,9 +29,73 @@ export default function ProspectCard({
   className = "",
   fitContent = false,
   flatBackground = false,
+  brandId,
+  brandName,
+  brandDetail,
+  problem,
 }: ProspectCardProps) {
   const [showScrollFade, setShowScrollFade] = useState(true);
   const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
+  const postActionMutation = useProspectPostAction();
+
+  // Debug logging
+  console.log("ProspectCard debug:", {
+    brandId,
+    postKeys: Object.keys(post),
+    prospectId: post,
+  });
+
+  // Handle queue action
+  const handleQueue = async () => {
+    if (!brandId || !post.prospect_id) {
+      console.warn("Missing brandId or prospectId for queue action", {
+        brandId,
+        prospectId: post.prospect_id,
+        postKeys: Object.keys(post),
+      });
+      return;
+    }
+
+    try {
+      await postActionMutation.mutateAsync({
+        post,
+        action: "queue",
+        brandId,
+        prospectId: post.prospect_id,
+        brandName,
+        brandDetail,
+        problem,
+      });
+    } catch (error) {
+      console.error("Failed to queue post:", error);
+    }
+  };
+
+  // Handle ignore action
+  const handleIgnore = async () => {
+    if (!brandId || !post.prospect_id) {
+      console.warn("Missing brandId or prospectId for ignore action", {
+        brandId,
+        prospectId: post.prospect_id,
+        postKeys: Object.keys(post),
+      });
+      return;
+    }
+
+    try {
+      await postActionMutation.mutateAsync({
+        post,
+        action: "ignore",
+        brandId,
+        prospectId: post.prospect_id,
+        brandName,
+        brandDetail,
+        problem,
+      });
+    } catch (error) {
+      console.error("Failed to ignore post:", error);
+    }
+  };
 
   // Format timestamp
   const timeAgo = formatDistanceToNow(new Date(post.created_utc * 1000), {
@@ -290,6 +361,33 @@ export default function ProspectCard({
                 </svg>
                 <span className="text-xs font-medium">{post.reply_count}</span>
               </button>
+
+              {/* Action buttons - Queue and Ignore */}
+              {brandId && post.prospect_id && (
+                <>
+                  {/* Queue/Check button */}
+                  <button
+                    onClick={handleQueue}
+                    disabled={postActionMutation.isPending}
+                    className="flex items-center gap-1 text-[#818384] hover:text-green-500 transition-colors group disabled:opacity-50"
+                    title="Queue for response"
+                  >
+                    <CheckCircleIcon className="w-5 h-5" />
+                    <span className="text-xs font-medium">Queue</span>
+                  </button>
+
+                  {/* Ignore/X button */}
+                  <button
+                    onClick={handleIgnore}
+                    disabled={postActionMutation.isPending}
+                    className="flex items-center gap-1 text-[#818384] hover:text-red-500 transition-colors group disabled:opacity-50"
+                    title="Ignore this post"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                    <span className="text-xs font-medium">Ignore</span>
+                  </button>
+                </>
+              )}
 
               {/* Share */}
               <button className="flex items-center gap-1 text-[#818384] hover:text-[#8b5cf6] transition-colors group ml-auto">

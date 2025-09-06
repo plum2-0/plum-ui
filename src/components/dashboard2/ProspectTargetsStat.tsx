@@ -11,6 +11,7 @@ import { useBrand } from "@/contexts/BrandContext";
 const MONTHLY_SCRAPE_LIMIT = 100; // Pro tier monthly limit
 
 interface ProspectTargetsProps {
+  brandId: string;
   posts?: RedditPostUI[];
   // Precomputed stats passed from callers (BrandContext/DiscoverPage)
   uniqueUsers: number;
@@ -30,6 +31,7 @@ interface ProspectTargetsProps {
 
 export default function ProspectTargetStat({
   posts = [],
+  brandId,
   uniqueUsers,
   uniquePendingAuthors,
   uniqueActionedAuthors,
@@ -48,17 +50,17 @@ export default function ProspectTargetStat({
   const handleCardClick = async () => {
     if (posts.length > 0) {
       // Check subscription status
-      console.log('Checking subscription access...');
+      console.log("Checking subscription access...");
       const hasAccess = await checkAccess();
-      console.log('Has access:', hasAccess);
-      console.log('Remaining jobs:', remainingJobs);
-      
+      console.log("Has access:", hasAccess);
+      console.log("Remaining jobs:", remainingJobs);
+
       if (hasAccess) {
         // User has access, open the modal
-        console.log('User has access, opening modal...');
+        console.log("User has access, opening modal...");
         setIsModalOpen(true);
       } else {
-        console.log('User does not have access, showing paywall...');
+        console.log("User does not have access, showing paywall...");
         setShowPaywall(true);
       }
     }
@@ -179,6 +181,7 @@ export default function ProspectTargetStat({
 
       {/* Swipeable Modal */}
       <SwipeableProspectModal
+        brandId={brandId}
         isOpen={isModalOpen}
         posts={posts}
         onSwipe={onSwipe}
@@ -188,7 +191,7 @@ export default function ProspectTargetStat({
         }}
         onStackCompleted={handleStackCompleted}
       />
-      
+
       {/* Paywall Modal */}
       <PaywallModal
         isOpen={showPaywall}
