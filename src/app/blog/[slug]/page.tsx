@@ -95,164 +95,199 @@ const SANITIZE_SCHEMA = {
 };
 
 const PMF_CONTENT = `
-# Validating Product–Market Fit on Reddit: A Field Guide for Builders
+## The D.E.C. Framework: Discover → Engage → Convert
 
-Most products fail because we validate *solutions* instead of validating *problems*. Reddit flips that dynamic. It’s where people confess frustrations in plain language, compare tools, and ask for help—at scale. Treat it like a living focus group and you can de-risk your roadmap *before* you write code.
+A senior-level, field-tested guide to landing your first 100 customers from Reddit
 
-This guide gives you a practical system to use Reddit for product validation: where to look, what to listen for, how to run lightweight experiments, and how to decide—persevere, pivot, or pause.
+Reddit isn’t a billboard—it’s a dense grid of micro-communities where people solve specific problems in public. Treat it like a live, searchable customer-interview pipeline and it becomes the highest-leverage engine for early customers you’ll run. The D.E.C. framework—Discover, Engage, Convert—is a tight, three-step operating model I use with founders and small teams to turn threads into trials and trials into paying users without spam or gray-hat tricks.
 
 ---
 
-## 1) Build Your Validation Foundation
+## 1) DISCOVER — Locate high-intent conversations, not just high-traffic subreddits
 
-Think of your market in three layers:
+Discovery starts by translating your product’s value into the language your prospects already use when they complain, compare tools, and ask for workarounds. Write 3–5 problem statements as direct user quotes (e.g., “Zapier is getting too expensive for basic automations,” “Clients ghost invoices; I need a polite nudge that actually works”). Build keyword clusters around those quotes (synonyms, adjacent tools, failure modes) and run them daily through Reddit’s native search plus site:reddit.com on Google. Prioritize threads that score on recency (last 3–30 days), specificity (clear context), and stakes (time, money, reputation).
 
-- **Primary problem communities** — where your exact users hang out (e.g., r/freelance for a time-tracking tool).
-- **Workflow neighbors** — adjacent spaces that reveal upstream/downstream pains (e.g., r/smallbusiness, r/consulting).
-- **Outcome communities** — where users talk about the *result* they want (e.g., r/personalfinance for cash-flow tools).
+### 1.1 Problem Space → Keyword Taxonomy (5 Categories)
 
-Your goal: map problems → jobs-to-be-done → early hypotheses.
+Think of a prospect’s situation as five parts you can mix into precise queries: Symptoms, Situations, Stack, Attempts, Decisions. Combine 2–3 per search to collapse noise and surface high intent.
 
-**Problem → JTBD → Hypothesis mapping**
-
-| What you hear on Reddit | Underlying job | Testable hypothesis | What to build next |
+| Category | What to capture | Examples (copy into a “phrase bank”) | Query stems (mix & match) |
 |---|---|---|---|
-| “I forget to log billable hours.” | *Capture work without thinking.* | Users will adopt passive time capture if they can edit later. | Prototype passive tracker + edit flow; measure edit completion & exports. |
-| “Telehealth wait times are brutal.” | *Get care quickly when it matters.* | Users will pay for guaranteed 15-min slots at off-peak times. | Landing page + waitlist for “fast lane” scheduling; measure opt-in rate. |
-| “Spreadsheet CRM is chaos.” | *Keep deals organized with minimal setup.* | Users will switch if onboarding stays under 10 minutes. | 3-step import wizard demo; time-to-first-value as key metric. |
+| Symptoms | Raw pain language | “too expensive”, “keeps breaking”, “manual”, “rate limited”, “ghosting invoices”, “SPF failing” | "too expensive" OR "pricing is insane"; "manual" OR "copy paste" |
+| Situations | Persona, scale, timing, industry | freelancer, agency, nonprofit, seed stage, Q4, renewal, HIPAA, EU VAT | freelance OR "solo founder"; "renewal" OR "license expiring" |
+| Stack | Named tools, APIs, features | Zapier, Make, n8n, Shopify, Stripe, GA4, Webhooks, UTM, CSV, Pixel | "zapier" AND (pricing OR alternative); "shopify" AND ("csv export" OR bulk) |
+| Attempts | Workarounds tried | script, cron, csv export, regex, apps script, “Make scenario”, “n8n flow” | "workaround" OR "script"; "retry logic" OR "rate limit" |
+| Decisions | Comparison / constraints | alternative, vs, switch, migrate, self-hosted, open source, GDPR, SOC2, SLA, seat pricing | title:(alternative OR "vs"); "self-hosted" OR "open source" |
+
+Operator toolkit: exact phrase "...", native subreddit:, title:"..."; OR groups (a OR b); exclusions -hiring -homework; add time filters (“past month”) in Reddit UI; on Google stick to site:reddit.com.
+
+Composite examples to save:
+
+- Symptom + Stack + Decision: title:"too expensive" (zapier OR "zap") (alternative OR switch) site:reddit.com
+- Symptom + Situation + Attempt: "late invoices" (freelance OR solo) ("email template" OR "polite nudge" OR script) site:reddit.com
+- Stack + Attempt + Constraint: ("shopify" AND "csv export") (bulk OR inventory) (GDPR OR "data retention") site:reddit.com
+
+### 1.2 Score Subreddits by Fit (keep 6–10 “home” subs)
+
+Don’t chase size. Score by Lead Density × Rules Leniency × Relevance (1–5 each). A 200k-member, rule-friendly niche sub with weekly, high-signal threads beats a 5M-member generalist sub that bans practical links.
+
+| Subreddit | Lead Density | Rules Leniency | Relevance | Fit |
+|---|---:|---:|---:|---:|
+| r/freelance | 5 | 4 | 5 | 14 |
+| r/smallbusiness | 4 | 4 | 5 | 13 |
+| r/marketing | 3 | 2 | 4 | 9 |
+| r/zapier | 4 | 3 | 4 | 11 |
+| r/Shopify | 3 | 3 | 4 | 10 |
+
+Lead Density signals: recurring “how do I…” posts, pain rants, “is there a tool for…”, comparisons, workaround threads.
+
+### 1.3 Qualify Threads Fast (the Q-P-C pass)
+
+Open a candidate thread and scan for: Quote (copy-able pain line), Pain (stakes are real), Context (enough stack/situation to prescribe steps). If 2 of 3 are present, engage. Otherwise skip.
+
+### 1.4 Lightweight Signals Sheet (your discovery CRM)
+
+Track: Date • Subreddit • Link • Pain Quote • Persona • Stack • Fit (1–5) • Status (Ignore / Engage / Follow-Up). Patterns you see after a week become your standard prospecting routes and later your onboarding presets.
 
 ---
 
-## 2) Find the Right Conversations (Without Boiling the Ocean)
+## 2) ENGAGE — Be the most useful person in the room, with transparent intent
 
-Prioritize communities by **volume × specificity × mod friendliness**.
+Your job is to be unreasonably helpful in public. Reply like a practitioner who happens to build a tool—not a vendor hunting clicks. Lead with the user’s language and offer a fix that works even without your product; then disclose affiliation plainly.
 
-| Community type | What it tells you | Examples | Priority |
-|---|---|---|---|
-| Problem-centric subs | Raw pain points & workaround hacks | r/freelance, r/startups, r/EntrepreneurRideAlong | ★★★★ |
-| Tool/vendor subs | Feature gaps & migration moments | r/nocode, r/Notion, r/ObsidianMD | ★★★ |
-| Role-based subs | Buying committee dynamics | r/sales, r/ops, r/ITManagers | ★★☆ |
-| Outcome subs | Value language & success metrics | r/personalfinance, r/careerguidance | ★★☆ |
+### 2.1 Comment Anatomy (the 2–2–1 rule)
 
-**Quick triage:** open top posts (last 30–90 days), sort by “Top” and “New,” scan for: “wish,” “struggle,” “workaround,” “alternatives,” “moved from X to Y,” “is there a tool that…”.
+- 2 lines of empathy that mirror the poster’s words
+- 2 concrete steps they can do today with their current stack
+- 1 optional tool note + disclosure (plain, non-pushy)
 
----
+Drop-in template:
 
-## 3) Turn Noise Into Signals (What to Actually Log)
+You’re not overreacting—late invoices wreck runway.
 
-Don’t collect *everything*. Code the conversation.
+What works today:
+- Send a “polite nudge” 3 days before due + 3 days after (I can share my copy).
+- Add a “paid” label so replies don’t get buried.
 
-**Qualitative coding schema (simple, powerful):**
+FWIW I built a lightweight nudge tool that automates those two steps. Happy to share a 60s walkthrough if useful. Want the templates?
 
-- **Problem theme:** onboarding friction, data import, pricing confusion, speed, reliability.
-- **Trigger:** new job, new client, month-end, crisis, policy change.
-- **Workaround:** spreadsheets, Zapier, manual scripts, “ask a friend.”
-- **Switch moment:** vendor fail, price hike, team growth, new integration need.
-- **Outcome language:** “faster,” “less stress,” “billable accuracy,” “fewer steps.”
+### 2.2 Five Engagement Patterns that Win
 
-**Capture structure (use a sheet or Notion):**
+- Recipe — 3–5 steps + expected result.
+- Trade-off Table — pros/cons of options already mentioned.
+- Tiny Script/Template — copy-paste value in-thread.
+- Decision Tree — “If solo → A; 5–20 team → B.”
+- Mini Case — “After X we saw 37% faster replies (n=14).”
 
-| URL | Subreddit | Quote (verbatim) | Code(s) | My interpretation | Hypothesis | Next action |
-|---|---|---|---|---|---|---|
+### 2.3 DM Etiquette & Cadence
 
-Two hours of disciplined coding beats ten hours of doom-scrolling.
+DM only when invited (or rules permit). First DM delivers the promised asset—no pitch. Follow up once at 48–72h with a concise nudge anchored to their goal (“Did the nudge copy speed up payments? If not, send a screenshot—I’ll record a 1-min fix.”). This cadence respects norms and builds reputation.
 
----
+### 2.4 Tone, Ethics, and Reuse
 
-## 4) Engage the Right Way (Earn Trust, Don’t Get Banned)
-
-**Do**
-- Ask clarifying questions: “What did you try? Where did it break?”
-- Share neutral comparisons or decision frameworks.
-- Offer a *no-link* summary of how you’d solve it and ask if helpful.
-- When appropriate, invite opt-in: “Happy to DM a quick mockup if you’d like.”
-
-**Don’t**
-- Drop links without context (fastest path to removal).
-- Astroturf or misrepresent affiliation.
-- Debate moderators. If unsure, message mods and ask for guidelines.
-
-**Comment patterns that work**
-- *Diagnostic follow-up:* “If you had a magic button here, what would it do?”
-- *Trade-off framing:* “Speed vs. accuracy—what matters more for you?”
-- *Mini-prototype in text:* “Imagine a button that auto-captures time when VS Code is active; you can edit before invoice—helpful or annoying?”
+Disclose every time you reference your product; never astroturf; don’t carpet-paste the same reply. Turn winning replies into reusable patterns (trade-off, decision tree, post-mortem). Over time you’ll build a library mapped to problem archetypes.
 
 ---
 
-## 5) Run Lightweight Experiments (The Validation Ladder)
+## 3) CONVERT — Remove friction, prove value fast, follow up like a human
 
-Move up the ladder only when the prior rung shows signal.
+Reddit conversion is won in the first 60 seconds after the click. Your landing must feel like a continuation of the help you gave, not a trap.
 
-1) **Concept comment** (zero build)
-   - *Goal:* Gauge resonance.
-   - *Signal:* Replies asking for specifics; users volunteering use cases.
+### 3.1 “Reddit Mode” Landing Page (10-point checklist)
 
-2) **Screenshot/micro-prototype** (Figma or text mock)
-   - *Goal:* Validate *how* it should work.
-   - *Signal:* Users debating details; “When can I try this?”
+- Loads in <2s on mobile
+- One-sentence promise in user words
+- Transparent pricing (or “free forever / paid for teams”)
+- No forced signup to watch demo/read docs
+- 60-sec demo; time-to-value < 60s post-signup
+- Pre-filled example tailored to the thread’s context (e.g., “Freelance invoice nudge”)
+- Clear refund/guarantee line
+- UTM on all Reddit links
+- Optional: “Found us via r/freelance?” preset
+- Email-less trial if possible
 
-3) **One-screen landing page**
-   - *Goal:* Measure intent.
-   - *Signal:* Email opt-ins ≥ 15–25% from relevant traffic.
+### 3.2 Offer Ladder (ethical & effective)
 
-4) **Concierge test** (manual service behind the scenes)
-   - *Goal:* Validate willingness to *depend* on you.
-   - *Signal:* 2–5 users ask you to run it again next week.
+- Free helper (template/checklist) → immediate win
+- Interactive help (10-min teardown; office hours)
+- Trial with preset that mirrors their thread (one click to value)
 
-5) **Wizard-of-Oz MVP** (fake the hard part)
-   - *Goal:* Validate repeatable usage.
-   - *Signal:* 3+ consecutive weeks of usage by the same user(s).
+### 3.3 Minimal Metrics to Hit 100 Customers
 
----
-
-## 6) Measure Intent, Not Vanity
-
-**Signal > Metric > Thresholds**
-
-| Signal | Metric | Green | Yellow | Red |
-|---|---|---:|---:|---:|
-| Resonance | Comment reply rate to your concept | ≥ 20% | 10–19% | < 10% |
-| Problem intensity | “I’ve tried 3+ tools” mentions | Frequent | Occasional | Rare |
-| Willingness to switch | Waitlist opt-in (qualified traffic) | ≥ 20% | 10–19% | < 10% |
-| Dependence | Repeat concierge usage (3 wks) | 3+ users | 1–2 users | 0 |
-| Value clarity | “When can I pay/try?” DMs | Weekly | Monthly | Never |
-
-Numbers are heuristics—direction matters more than precision.
-
----
-
-## 7) A 14-Day Operating Cadence for Agencies
-
-- **Days 1–2: Discover** → shortlist 8–12 subreddits by ICP and service line
-- **Days 3–4: Synthesize** → create 3 value props per service (copy + proof)
-- **Days 5–7: Engage** → 10 thoughtful comments; 2 case‑study teardowns
-- **Days 8–10: Experiment** → one‑screen CTA per service; book calls
-- **Days 11–14: Decide** → double‑down on the highest‑intent thread styles
-
----
-
-## Proven playbooks that win on Reddit (for agencies)
-
-- **Problem teardown**: deconstruct a post and share the 3‑step fix (no links)
-- **Side‑by‑side comparison**: neutral rubric for tools/approaches, invite DMs
-- **Before/after audit**: show 3 screenshots of a micro‑improvement (on request)
-- **Office hours**: offer 20‑min async advice in a thread, gather patterns
-
----
-
-## Example calendar (B2B lead‑gen agency)
-
-| Day | Thread type | Goal |
+| Stage | Target (solo founder pace) | What to adjust if low |
 |---|---|---|
-| Tue | Problem teardown | Earn trust; get specifics |
-| Thu | Comparison rubric | Identify high‑intent buyers |
-| Sat | Audit preview | Book 2 intro calls |
+| Helpful comments posted | 200–300 in 4 weeks (10–15/day) | Specificity, pattern match |
+| Comment → Click/DM | 10–20% | Offer clarity, asset relevance |
+| Click/DM → Trial | 40–60% | Landing friction, preset fit |
+| Trial → Paid | 40–60% | Time-to-value, follow-up quality |
+
+Fix in order: comment specificity → onboarding friction → time-to-value → follow-up.
+
+### 3.4 Follow-Up Playbook (copy this)
+
+- T+5 min: Deliver asset promised in-thread + 60s setup.
+- T+48–72h: 1-min Loom addressing their likely snag; one micro-CTA.
+- T+7 days: Outcome check (“Did invoices clear faster?”) → offer help or bow out.
 
 ---
 
-## TL;DR
+## A 21-Day D.E.C. Sprint (summary)
 
-Reddit can be your highest‑signal channel if you play long‑game trust: log problems, respond with useful specifics, and test tiny offers that lead to booked calls.
+| Phase | Focus | Daily/Weekly Actions |
+|---|---|---|
+| Days 1–3 | Discover | Build taxonomy; pick 6–10 home subs; seed 8–10 non-promo helpful comments |
+| Days 4–10 | Engage | 10 helpful comments/day using 2–2–1; publish 3 micro-assets; log everything |
+| Days 11–17 | Engage → Convert | Host office hours (if allowed); add Reddit presets to onboarding; invited DMs only |
+| Days 18–21 | Convert → Scale | Double down on top 3 keyword × 2 sub pairs; compile “Best of Reddit” guide; optional tiny ad on that guide |
+
+---
+
+## Working Examples & Ready-to-Use Blocks
+
+Trade-off table (paste into a comment):
+
+Quick compare from what folks mentioned:
+
+- Zapier — easiest to start; gets pricey at scale.
+- Make — flexible scenarios; learning curve.
+- n8n — cheapest/self-hosted; needs ops time.
+
+If you’re <5 zaps/day → Zapier free is fine.
+Weekly reports → Make shines.
+Budget tight + dev handy → n8n wins.
+
+FWIW, I built a prebuilt “invoice chaser” flow. Happy to share a 60s walkthrough if helpful.
+
+Mod outreach (when rules are unclear):
+
+Hi mods — OPs often ask about late invoice nudges. I have a 1-page checklist (no signup) that directly answers this. OK to share if I disclose I built a related tool?
+
+First DM (after invite):
+
+Here’s the invoice nudge template (copy → tweak names → done).
+If you try it, this 60s walkthrough shows a one-click “auto-remind” version.
+No pressure—curious if it helps by tomorrow; happy to adjust tone.
+
+---
+
+## Appendix: One-Page Discovery Worksheet
+
+Use this once per sprint; it becomes your prospecting engine.
+
+| Section | Target Count | Your Entries |
+|---|---:|---|
+| Symptoms (direct quotes) | 10–20 |  |
+| Situations (persona, scale, timing, industry) | 8–12 |  |
+| Stack (tools, APIs, features) | 15–30 |  |
+| Attempts (workarounds) | 8–15 |  |
+| Decisions (compares/constraints) | 10–15 |  |
+| Saved searches (mix 2–3 categories each) | 15–25 |  |
+
+---
+
+## Closing Thought
+
+Reddit rewards practitioners. If you run this D.E.C. loop with crisp discovery, generous public help, and a first-minute product experience that delivers value, you won’t need gimmicks to reach your first 100 customers—you’ll earn them thread by thread, with a reputation that compounds long after this sprint ends.
 `;
 
 const PCV_CONTENT = `

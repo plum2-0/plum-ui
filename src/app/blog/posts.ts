@@ -19,7 +19,7 @@ export type BlogPostMeta = {
 export const posts: BlogPostMeta[] = [
   {
     slug: "validating-product-market-fit-on-reddit",
-    title: "Validating Product–Market Fit on Reddit: A Field Guide for Builders",
+    title: "How to Find Your First 100 Customers on Reddit - Discover, Engage, Convert Leads",
     date: "2025-02-12",
     image: "/reddit.svg",
     seoDescription: "Learn how to validate product ideas using Reddit insights. Get real customer feedback, identify pain points, and test product concepts before building. Complete guide with frameworks and examples.",
