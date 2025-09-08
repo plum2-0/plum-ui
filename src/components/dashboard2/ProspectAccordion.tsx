@@ -407,42 +407,42 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                     }}
                   >
                     {/* Keywords Section */}
-                    {prospect.keywordCounts.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                      >
-                        <div className="flex items-center gap-2 mb-4">
-                          <div
-                            className="w-6 h-6 rounded-lg flex items-center justify-center"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.2))",
-                              border: "1px solid rgba(168, 85, 247, 0.3)",
-                              boxShadow:
-                                "0 2px 8px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                            }}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <div className="flex items-center gap-2 mb-4">
+                        <div
+                          className="w-6 h-6 rounded-lg flex items-center justify-center"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.2))",
+                            border: "1px solid rgba(168, 85, 247, 0.3)",
+                            boxShadow:
+                              "0 2px 8px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                          }}
+                        >
+                          <svg
+                            className="w-3.5 h-3.5 text-purple-300"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                           >
-                            <svg
-                              className="w-3.5 h-3.5 text-purple-300"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                              />
-                            </svg>
-                          </div>
-                          <h4 className="text-white/90 font-heading text-sm font-semibold">
-                            Top Keywords
-                          </h4>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                            />
+                          </svg>
                         </div>
-                        <div className="flex flex-wrap gap-2 items-center">
+                        <h4 className="text-white/90 font-heading text-sm font-semibold">
+                          Keywords
+                        </h4>
+                      </div>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        {prospect.keywordCounts.length > 0 && (
                           <TagListWithMore
                             items={prospect.keywordCounts.map(
                               (item: { keyword: string; count: number }) => ({
@@ -471,9 +471,17 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               />
                             }
                           />
-                        </div>
-                      </motion.div>
-                    )}
+                        )}
+                        {prospect.keywordCounts.length === 0 && (
+                          <QuickAddKeyword
+                            prospectId={prospect.id}
+                            problemToSolve={prospect.problem_to_solve}
+                            existingKeywords={[]}
+                            insights={prospect.insights}
+                          />
+                        )}
+                      </div>
+                    </motion.div>
 
                     {/* Subreddits Section */}
                     {prospect.subredditCounts.length > 0 && (

@@ -9,6 +9,19 @@ import { useUserContext } from "@/contexts/UserContext";
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+/*
+ * OPTIMIZATION NOTES:
+ * 
+ * 1. Cache Coordination: useBrandQuery now leverages UserContext cache to avoid redundant API calls
+ * 2. Improved Query Keys: More specific query keys for better cache isolation
+ * 3. Request Deduplication: React Query automatically deduplicates identical concurrent requests
+ * 4. Smart Caching: UserContext caches individual brand data in React Query cache
+ * 5. Reduced Mount Refetching: Only refetch when truly necessary, not on every mount
+ * 6. Better Error Handling: Graceful degradation when contexts are unavailable
+ * 
+ * Expected Result: Significant reduction in redundant API calls on page refresh
+ */
+
 // Error types for better error handling
 class BrandQueryError extends Error {
   constructor(
@@ -21,9 +34,11 @@ class BrandQueryError extends Error {
   }
 }
 
-// Modern query keys pattern with proper typing
+// Modern query keys pattern with proper typing - OPTIMIZED for cache coordination
 export const BRAND_QUERY_KEYS = {
   all: ["brand"] as const,
+  byUser: (userId: string) => [...BRAND_QUERY_KEYS.all, "by-user", userId] as const,
+  allByUser: (userId: string) => [...BRAND_QUERY_KEYS.all, "by-user", userId, "all"] as const,
   details: () => [...BRAND_QUERY_KEYS.all, "detail"] as const,
   detail: (brandId: string) =>
     [...BRAND_QUERY_KEYS.details(), brandId] as const,
@@ -111,13 +126,16 @@ async function fetchBrandIdByUser(userId: string): Promise<string> {
 }
 
 async function fetchAllBrandIdsByUser(userId: string): Promise<string[]> {
-  const response = await fetch(`${API_BASE_URL}/api/brand/by-user/${userId}/all`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": "Plum-UI/1.0",
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/brand/by-user/${userId}/all`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Plum-UI/1.0",
+      },
+    }
+  );
 
   if (!response.ok) {
     if (response.status === 404) {
@@ -141,12 +159,16 @@ export function useBrandQuery(options?: {
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  
-  // Try to get active brand from UserContext if available, fallback to legacy method
+
   let activeBrandId: string | null = null;
+  let userBrands: Brand[] = [];
+  let userContextAvailable = false;
+  
   try {
     const userContext = useUserContext();
     activeBrandId = userContext.activeBrandId;
+    userBrands = userContext.userBrands;
+    userContextAvailable = true;
   } catch {
     // UserContext not available, use legacy method
     activeBrandId = getBrandId(session);
@@ -154,7 +176,9 @@ export function useBrandQuery(options?: {
 
   const queryResult = useQuery({
     // Include activeBrandId in query key for better cache isolation
-    queryKey: activeBrandId ? BRAND_QUERY_KEYS.detail(activeBrandId) : BRAND_QUERY_KEYS.all,
+    queryKey: activeBrandId
+      ? BRAND_QUERY_KEYS.detail(activeBrandId)
+      : BRAND_QUERY_KEYS.all,
     queryFn: async (): Promise<{ brand: Brand }> => {
       // Check if user is authenticated
       if (!session?.user?.id) {
@@ -164,6 +188,16 @@ export function useBrandQuery(options?: {
       let brandData: Brand;
       try {
         let effectiveBrandId = activeBrandId;
+        
+        // OPTIMIZATION: Try to get brand from UserContext cache first
+        if (userContextAvailable && effectiveBrandId && userBrands.length > 0) {
+          const cachedBrand = userBrands.find(brand => brand.id === effectiveBrandId);
+          if (cachedBrand) {
+            // Return cached brand data, avoiding API call
+            return { brand: cachedBrand };
+          }
+        }
+        
         if (!effectiveBrandId) {
           // Fallback: Resolve brand id by user id (legacy behavior)
           effectiveBrandId = await fetchBrandIdByUser(session.user.id);
@@ -171,12 +205,12 @@ export function useBrandQuery(options?: {
         }
         brandData = await fetchBrandData(effectiveBrandId as string);
       } catch (error) {
-        if (
-          error instanceof BrandQueryError &&
-          (error.needsOnboarding || error.statusCode === 404)
-        ) {
-          redirectToOnboarding(router, { skipRedirect: options?.skipRedirect });
-        }
+        // if (
+        //   error instanceof BrandQueryError &&
+        //   (error.needsOnboarding || error.statusCode === 404)
+        // ) {
+        //   redirectToOnboarding(router, { skipRedirect: options?.skipRedirect });
+        // }
         throw error;
       }
 
@@ -186,13 +220,13 @@ export function useBrandQuery(options?: {
     },
     // Run when session is ready and user is authenticated
     enabled:
-      (options?.enabled ?? true) && status !== "loading" && !!session?.user?.id,
-    // Modern cache settings
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (replaces cacheTime in v5)
+      (options?.enabled ?? true) && status !== "loading" && !!session?.user?.id && !!activeBrandId,
+    // OPTIMIZATION: Improved cache settings for deduplication
+    staleTime: 10 * 60 * 1000, // 10 minutes - increased to reduce refetches
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    refetchOnMount: true,
+    refetchOnMount: false, // OPTIMIZATION: Don't refetch on mount if we have cache
     retry: (failureCount, error) => {
       // Don't retry if user needs onboarding or is not authenticated
       if (error instanceof BrandQueryError && error.needsOnboarding) {
@@ -326,12 +360,28 @@ export function useFetchNewPosts() {
 
 /**
  * Hook to invalidate brand queries manually
+ * OPTIMIZED: More granular invalidation options
  */
 export function useInvalidateBrandQuery() {
   const queryClient = useQueryClient();
 
-  return () => {
-    queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+  return {
+    // Invalidate all brand queries
+    invalidateAll: () => {
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+    },
+    // Invalidate specific brand
+    invalidateBrand: (brandId: string) => {
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.detail(brandId) });
+    },
+    // Invalidate user brands
+    invalidateUserBrands: (userId: string) => {
+      queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.allByUser(userId) });
+    },
+    // Remove stale data and force refetch
+    reset: () => {
+      queryClient.resetQueries({ queryKey: BRAND_QUERY_KEYS.all });
+    },
   };
 }
 
@@ -529,8 +579,12 @@ export function useDeleteProspect() {
 /**
  * Hook to get all user brands from UserContext
  * This is the preferred method for accessing user brands in multi-brand components
+ * OPTIMIZED: Better error handling and fallback behavior
  */
 export function useUserBrands() {
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  
   try {
     const userContext = useUserContext();
     return {
@@ -542,14 +596,31 @@ export function useUserBrands() {
       refreshUserBrands: userContext.refreshUserBrands,
     };
   } catch {
-    // UserContext not available, return empty state
+    // UserContext not available, provide basic fallback with cache check
+    const cachedBrandData = queryClient.getQueryData(BRAND_QUERY_KEYS.all) as { brand: Brand } | undefined;
+    const fallbackBrands = cachedBrandData ? [cachedBrandData.brand] : [];
+    const fallbackActiveBrandId = cachedBrandData?.brand?.id || getBrandId(session);
+    
     return {
-      userBrands: [],
-      activeBrandId: null,
-      switchActiveBrand: () => {},
+      userBrands: fallbackBrands,
+      activeBrandId: fallbackActiveBrandId,
+      switchActiveBrand: (brandId: string) => {
+        // Update cookie and localStorage as fallback
+        if (typeof document !== "undefined") {
+          document.cookie = `brand_id=${brandId}; Max-Age=${7 * 24 * 60 * 60}; path=/`;
+        }
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("activeBrandId", brandId);
+        }
+        // Invalidate queries to trigger refetch
+        queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+      },
       isLoading: false,
-      error: "UserContext not available",
-      refreshUserBrands: async () => {},
+      error: null, // Don't show error when UserContext is not available
+      refreshUserBrands: async () => {
+        // Invalidate all brand-related queries as fallback
+        queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+      },
     };
   }
 }

@@ -14,9 +14,9 @@ export async function POST(request: NextRequest, context: any) {
       email: session?.user?.email,
       name: session?.user?.name,
       provider: (session as any)?.user?.provider,
-      fullSession: JSON.stringify(session)
+      fullSession: JSON.stringify(session),
     });
-    
+
     const firestore = adminDb();
     const inviteService = new InviteService(firestore);
 
@@ -34,12 +34,13 @@ export async function POST(request: NextRequest, context: any) {
       name: session?.user?.name || (session as any)?.user?.email || null,
       image: session?.user?.image || null,
       auth_type: ((session as any)?.user as any)?.provider || "unknown",
+      email: (session?.user?.email || null)?.toLowerCase?.() || null,
     };
 
     console.log("[INVITE_DEBUG] Calling acceptInvite with:", {
       token,
       userId,
-      userProfile
+      userProfile,
     });
     const result = await inviteService.acceptInvite(token, userId, userProfile);
     console.log("[INVITE_DEBUG] AcceptInvite result:", result);
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest, context: any) {
       userId,
       userExists,
       userData,
-      hasBrandId: !!userData?.brand_id
+      hasBrandId: !!userData?.brand_id,
     });
 
     if (result.brandId) {
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest, context: any) {
         brandId: result.brandId,
         brandExists,
         userIdsInBrand: brandData?.user_ids,
-        userInBrand: brandData?.user_ids?.includes(userId)
+        userInBrand: brandData?.user_ids?.includes(userId),
       });
     }
 

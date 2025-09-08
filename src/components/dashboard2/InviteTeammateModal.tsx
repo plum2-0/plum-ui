@@ -17,7 +17,7 @@ export default function InviteTeammateModal({
   const [loading, setLoading] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [expiresInHours, setExpiresInHours] = useState<number>(72);
+  const [expiresInHours, setExpiresInHours] = useState<number>(168);
   const [copiedVisible, setCopiedVisible] = useState(false);
   const [copiedFading, setCopiedFading] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -91,10 +91,7 @@ export default function InviteTeammateModal({
 
   const overlay = (
     <div className="fixed inset-0 z-[10000]">
-      <div
-        className="absolute inset-0 bg-black/60"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur p-6 rounded-lg w-full max-w-md text-white shadow-xl">
           <div className="flex items-center justify-between mb-4">
@@ -118,7 +115,7 @@ export default function InviteTeammateModal({
                 max={336}
                 value={expiresInHours}
                 onChange={(e) =>
-                  setExpiresInHours(parseInt(e.target.value || "72", 10))
+                  setExpiresInHours(parseInt(e.target.value || "168", 10))
                 }
                 className="mt-1 w-full px-3 py-2 rounded bg-white/20 placeholder-white/40 outline-none"
               />
@@ -184,5 +181,7 @@ export default function InviteTeammateModal({
     </div>
   );
 
-  return typeof document !== "undefined" && createPortal(overlay, document.body);
+  return (
+    typeof document !== "undefined" && createPortal(overlay, document.body)
+  );
 }

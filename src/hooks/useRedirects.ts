@@ -119,6 +119,19 @@ export function useHomePageRedirect() {
     // Skip if already redirected or still loading
     if (hasRedirected.current || isLoading) return;
 
+    // If there's a pending invite path cookie, prefer redirecting to it first
+    if (typeof document !== "undefined" && isAuthenticated) {
+      const m = document.cookie.match(/(?:^|; )pending_invite_path=([^;]+)/);
+      const pendingInvitePath = m ? decodeURIComponent(m[1]) : null;
+      if (pendingInvitePath && pendingInvitePath.startsWith("/invite/")) {
+        hasRedirected.current = true;
+        // Clear the cookie to avoid loops
+        document.cookie = "pending_invite_path=; Max-Age=0; path=/";
+        router.replace(pendingInvitePath);
+        return;
+      }
+    }
+
     // Not authenticated - stay on home page
     if (!isAuthenticated && status === "unauthenticated") {
       return;

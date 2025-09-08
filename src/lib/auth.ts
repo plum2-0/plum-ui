@@ -41,11 +41,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const userDoc = await userRef.get();
           const userData = userDoc.data();
 
+          const userBrandIds: string[] = Array.isArray(userData?.brand_ids)
+            ? userData.brand_ids
+            : userData?.brand_id
+            ? [userData.brand_id]
+            : [];
           return {
             ...token,
             id: user.id,
             provider: account.provider,
-            brandId: userData?.brand_id || null,
+            brandId: userBrandIds[0] || null,
           };
         } catch (error) {
           console.error("Failed to load user data in JWT callback:", error);
@@ -66,9 +71,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const userRef = firestore.collection("users").doc(String(userId));
             const userDoc = await userRef.get();
             const userData = userDoc.data();
+            const userBrandIds: string[] = Array.isArray(userData?.brand_ids)
+              ? userData.brand_ids
+              : userData?.brand_id
+              ? [userData.brand_id]
+              : [];
             return {
               ...token,
-              brandId: userData?.brand_id || null,
+              brandId: userBrandIds[0] || null,
             };
           }
         } catch (error) {

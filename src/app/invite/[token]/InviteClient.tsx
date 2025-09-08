@@ -39,31 +39,31 @@ export default function InviteClient({ token }: { token: string }) {
           hasSession: !!session,
           userId: (session as any)?.user?.id,
           email: session?.user?.email,
-          status
+          status,
         });
-        
+
         setIsAccepting(true);
         const res = await fetch(`/api/invites/${token}`, { method: "POST" });
         const data = await res.json().catch(() => ({}));
         console.log("[CLIENT_DEBUG] Invite API response:", {
           status: res.status,
           ok: res.ok,
-          data
+          data,
         });
-        
+
         if (!res.ok) {
           throw new Error(
             data?.error || `Failed to accept invite (${res.status})`
           );
         }
-        
+
         // Force NextAuth session update to refresh the JWT token with new brandId
         if (update) {
           console.log("[CLIENT_DEBUG] Calling session update");
           await update();
           console.log("[CLIENT_DEBUG] Session update complete");
         }
-        
+
         // Wait until /api/user/brand reflects the new brand, then navigate
         const maxWaitMs = 4000;
         const start = Date.now();
@@ -80,21 +80,28 @@ export default function InviteClient({ token }: { token: string }) {
               console.log("[CLIENT_DEBUG] Brand check:", {
                 brandId: brandData?.brandId,
                 source: brandData?.source,
-                elapsed: Date.now() - start
+                elapsed: Date.now() - start,
               });
-              // Check if brandId is from Firestore (most reliable source)
-              if (brandData?.brandId && brandData?.source === "firestore") {
-                console.log("[CLIENT_DEBUG] Brand confirmed, navigating to dashboard");
+              // Accept either Firestore-confirmed brand or cookie/session source if present
+              if (
+                brandData?.brandId &&
+                ["firestore", "cookie", "session"].includes(brandData?.source)
+              ) {
+                console.log(
+                  "[CLIENT_DEBUG] Brand confirmed, navigating to dashboard"
+                );
                 router.replace("/dashboard/discover");
                 return;
               }
             }
           } catch {}
-          await new Promise((r) => setTimeout(r, 200));
+          await new Promise((r) => setTimeout(r, 500));
         }
-        
+
         // If we couldn't confirm via API, still navigate since the invite was accepted
-        console.log("[CLIENT_DEBUG] Timeout waiting for brand confirmation, navigating anyway");
+        console.log(
+          "[CLIENT_DEBUG] Timeout waiting for brand confirmation, navigating anyway"
+        );
         router.replace("/dashboard/discover");
       } catch (e: any) {
         if (retries > 0) {
@@ -161,10 +168,8 @@ export default function InviteClient({ token }: { token: string }) {
     );
   }
 
-  const absoluteCallbackUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/invite/${token}`
-      : `/invite/${token}`;
+  // Use a relative, same-origin callback URL to ensure NextAuth returns here after sign-in
+  const relativeCallbackUrl = `/invite/${token}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
@@ -176,13 +181,20 @@ export default function InviteClient({ token }: { token: string }) {
           You have been invited to collaborate. Accepting will link your account
           to this brand.
         </p>
-        {/* No restricted email messaging */}
         {requiresAuth ? (
           <a
             href={`/auth/signin?callbackUrl=${encodeURIComponent(
-              absoluteCallbackUrl
+              relativeCallbackUrl
             )}`}
             className="px-4 py-2 rounded bg-purple-600 hover:bg-purple-700 inline-block"
+            onClick={() => {
+              // Set a short-lived cookie so post-auth we can resume invite flow from home or any landing
+              if (typeof document !== "undefined") {
+                document.cookie = `pending_invite_path=${encodeURIComponent(
+                  relativeCallbackUrl
+                )}; Max-Age=900; path=/`; // 15 minutes
+              }
+            }}
           >
             Sign in to Accept
           </a>

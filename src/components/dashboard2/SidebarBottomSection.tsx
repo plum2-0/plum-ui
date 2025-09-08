@@ -168,22 +168,24 @@ export default function SidebarBottomSection() {
             {session?.user?.email}
           </p>
         </div>
-        {/* Dropdown Indicator */}
-        <svg
-          className={`w-4 h-4 text-white/50 transition-transform duration-200 ${
-            isMenuOpen ? "rotate-180" : ""
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        {/* Liquid Dots Indicator */}
+        <div className="flex gap-0.5">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className={`w-1 h-1 rounded-full bg-white/50 transition-all duration-300 ${
+                isMenuOpen 
+                  ? `transform translate-y-${i === 1 ? '0.5' : i === 2 ? '1' : '0'} scale-110` 
+                  : 'transform translate-y-0 scale-100'
+              }`}
+              style={{
+                animationDelay: `${i * 100}ms`,
+                filter: "blur(0.2px)",
+                boxShadow: "0 0 4px rgba(255, 255, 255, 0.3)",
+              }}
+            />
+          ))}
+        </div>
       </button>
 
       {/* Popover Menu */}

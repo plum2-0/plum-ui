@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-
     const body = (await request
       .json()
       .catch(() => ({}))) as CreateInviteRequest;
@@ -30,8 +29,13 @@ export async function POST(request: NextRequest) {
         userId,
       });
       const userDoc = await firestore.collection("users").doc(userId).get();
-      const userData = userDoc.data();
-      brandId = userData?.brand_id || null;
+      const userData: any = userDoc.data();
+      const brandIds: string[] = Array.isArray(userData?.brand_ids)
+        ? userData.brand_ids
+        : userData?.brand_id
+        ? [userData.brand_id]
+        : [];
+      brandId = brandIds[0] || null;
     }
 
     if (!brandId) {
@@ -58,7 +62,12 @@ export async function POST(request: NextRequest) {
     }
     const userData = userDoc.data();
     const brandData = brandDoc.data() as any;
-    const isMemberByUserDoc = userData?.brand_id === brandId;
+    const userBrandIds: string[] = Array.isArray(userData?.brand_ids)
+      ? userData.brand_ids
+      : userData?.brand_id
+      ? [userData.brand_id]
+      : [];
+    const isMemberByUserDoc = userBrandIds.includes(brandId);
     const isMemberBySession = session.user.brandId === brandId;
     const isMemberByBrandDoc = Array.isArray(brandData?.user_ids)
       ? brandData.user_ids.includes(userId)
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest) {
     const expiresInHours =
       typeof body.expiresInHours === "number" ? body.expiresInHours : 72;
     const expiresAt = new Date(now.getTime() + expiresInHours * 60 * 60 * 1000);
-    const maxUses = body.maxUses && body.maxUses > 0 ? body.maxUses : 1;
+    const maxUses = body.maxUses && body.maxUses > 0 ? body.maxUses : 100;
 
     // Create invite doc with random id as token
     const invitesCol = firestore.collection("brand_invites");

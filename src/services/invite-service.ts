@@ -75,13 +75,15 @@ export class InviteService {
       userId: session?.user?.id,
       email: session?.user?.email,
       sessionKeys: session ? Object.keys(session) : [],
-      userKeys: session?.user ? Object.keys(session.user) : []
+      userKeys: session?.user ? Object.keys(session.user) : [],
     });
-    
+
     let userId = session?.user?.id as string | undefined;
 
     if (!userId) {
-      console.log("[INVITE_DEBUG] No userId in session, attempting email fallback");
+      console.log(
+        "[INVITE_DEBUG] No userId in session, attempting email fallback"
+      );
       // Fallback: resolve userId by email from NextAuth users collection
       try {
         const email = session?.user?.email as string | undefined;
@@ -96,9 +98,9 @@ export class InviteService {
           console.log("[INVITE_DEBUG] Email query result:", {
             empty: snap.empty,
             docCount: snap.docs.length,
-            firstDocId: !snap.empty ? snap.docs[0].id : null
+            firstDocId: !snap.empty ? snap.docs[0].id : null,
           });
-          
+
           if (!snap.empty) {
             userId = snap.docs[0].id;
             console.warn("[InviteService] Resolved userId by email fallback", {
@@ -146,82 +148,88 @@ export class InviteService {
       userId,
       brandId,
     });
-    
+
     try {
       await this.firestore.runTransaction(async (tx) => {
         console.log("[INVITE_DEBUG] Inside transaction");
-      const userRef = this.firestore.collection("users").doc(userId);
-      const brandRef = this.firestore.collection("brands").doc(brandId);
-      const inviteRef = this.firestore.collection("brand_invites").doc(token);
+        const userRef = this.firestore.collection("users").doc(userId);
+        const brandRef = this.firestore.collection("brands").doc(brandId);
+        const inviteRef = this.firestore.collection("brand_invites").doc(token);
 
-      // 1. Check if brand exists
-      const brandSnap = await tx.get(brandRef);
-      console.log("[INVITE_DEBUG] Brand check:", {
-        brandId,
-        exists: brandSnap.exists
-      });
-      if (!brandSnap.exists) {
-        throw new InviteError("Brand not found", 404);
-      }
+        // 1. Check if brand exists
+        const brandSnap = await tx.get(brandRef);
+        console.log("[INVITE_DEBUG] Brand check:", {
+          brandId,
+          exists: brandSnap.exists,
+        });
+        if (!brandSnap.exists) {
+          throw new InviteError("Brand not found", 404);
+        }
 
-      // 2. Check if user already linked to a different brand
-      const userSnap = await tx.get(userRef);
-      const existing = userSnap.exists ? userSnap.data()?.brand_id : null;
-      console.log("[INVITE_DEBUG] User check:", {
-        userId,
-        exists: userSnap.exists,
-        existingBrandId: existing,
-        userData: userSnap.exists ? userSnap.data() : null
-      });
+        // 2. Check if user already linked to a different brand
+        const userSnap = await tx.get(userRef);
+        const userData = userSnap.exists ? (userSnap.data() as any) : null;
+        const existingBrandIds: string[] = Array.isArray(userData?.brand_ids)
+          ? userData.brand_ids
+          : userData?.brand_id
+          ? [userData.brand_id]
+          : [];
+        const alreadyInBrand = existingBrandIds.includes(brandId);
+        console.log("[INVITE_DEBUG] User check:", {
+          userId,
+          exists: userSnap.exists,
+          existingBrandIds,
+          alreadyInBrand,
+          userData,
+        });
 
-      if (existing && existing !== brandId) {
-        throw new InviteError("User already linked to another brand", 409);
-      }
+        // 3. Update user document with brand_ids array and profile info
+        const updateData = {
+          brand_ids: FieldValue.arrayUnion(brandId),
+          name: userProfile.name,
+          image: userProfile.image,
+          auth_type: userProfile.auth_type,
+          ...(userProfile.email ? { email: userProfile.email } : {}),
+          updated_at: new Date(),
+        } as Record<string, any>;
+        console.log("[INVITE_DEBUG] Setting user data:", {
+          userId,
+          updateData,
+        });
+        tx.set(userRef, updateData, { merge: true });
 
-      // 3. Update user document with brand_id and profile info
-      const updateData = {
-        brand_id: brandId,
-        name: userProfile.name,
-        image: userProfile.image,
-        auth_type: userProfile.auth_type,
-        updated_at: new Date(),
-      };
-      console.log("[INVITE_DEBUG] Setting user data:", {
-        userId,
-        updateData
-      });
-      tx.set(userRef, updateData, { merge: true });
+        // 4. Add user to brand's user_ids array (automatically deduplicates)
+        console.log("[INVITE_DEBUG] Adding user to brand's user_ids:", userId);
+        tx.update(brandRef, {
+          user_ids: FieldValue.arrayUnion(userId),
+          updated_at: new Date(),
+        });
 
-      // 4. Add user to brand's user_ids array (automatically deduplicates)
-      console.log("[INVITE_DEBUG] Adding user to brand's user_ids:", userId);
-      tx.update(brandRef, {
-        user_ids: FieldValue.arrayUnion(userId),
-        updated_at: new Date(),
-      });
+        // 5. Mark invite as used
+        const newUsedBy = usedBy.includes(userId)
+          ? usedBy
+          : [...usedBy, userId];
+        const newStatus = newUsedBy.length >= maxUses ? "consumed" : "active";
 
-      // 5. Mark invite as used
-      const newUsedBy = usedBy.includes(userId) ? usedBy : [...usedBy, userId];
-      const newStatus = newUsedBy.length >= maxUses ? "consumed" : "active";
+        tx.update(inviteRef, {
+          used_by: newUsedBy,
+          status: newStatus,
+          updated_at: new Date(),
+        });
 
-      tx.update(inviteRef, {
-        used_by: newUsedBy,
-        status: newStatus,
-        updated_at: new Date(),
-      });
-
-      console.log("[InviteService] Transaction completed successfully", {
-        token,
-        userId,
-        brandId,
-        usedCount: newUsedBy.length,
-        status: newStatus,
-      });
+        console.log("[InviteService] Transaction completed successfully", {
+          token,
+          userId,
+          brandId,
+          usedCount: newUsedBy.length,
+          status: newStatus,
+        });
       });
     } catch (txError: any) {
       console.error("[INVITE_DEBUG] Transaction failed:", {
         error: txError,
         message: txError?.message,
-        stack: txError?.stack
+        stack: txError?.stack,
       });
       throw txError;
     }
@@ -240,7 +248,9 @@ export class InviteService {
 
     console.log("[InviteService] Post-transaction verification", {
       userExists: verifyUserDoc.exists,
-      userBrandId: verifyUserDoc.exists ? verifyUserDoc.data()?.brand_id : null,
+      userBrandIds: verifyUserDoc.exists
+        ? verifyUserDoc.data()?.brand_ids
+        : null,
       brandUserIds: verifyBrandDoc.exists
         ? verifyBrandDoc.data()?.user_ids
         : null,

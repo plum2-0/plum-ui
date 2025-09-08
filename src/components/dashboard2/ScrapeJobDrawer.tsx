@@ -56,7 +56,7 @@ function useLoadingProgress(isPending: boolean, isSuccess: boolean) {
       }, 2000);
 
       const progressInterval = setInterval(() => {
-        currentProgress += Math.random() * 15;
+        currentProgress += Math.random() * 5;
         if (currentProgress > 90) currentProgress = 90;
         setProgress(currentProgress);
       }, 500);

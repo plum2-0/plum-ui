@@ -1,8 +1,10 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Brand } from "@/types/brand";
+import { BRAND_QUERY_KEYS } from "@/hooks/api/useBrandQuery";
 
 interface UserContextType {
   userBrands: Brand[];
@@ -32,54 +34,39 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export function UserProvider({ children }: UserProviderProps) {
   const { data: session, status } = useSession();
-  const [userBrands, setUserBrands] = useState<Brand[]>([]);
-  const [activeBrandId, setActiveBrandId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  
+  // OPTIMIZED: Get initial active brand from storage
+  const getInitialActiveBrand = (): string | null => {
+    if (typeof window === "undefined") return null;
+    
+    // Try localStorage first (user's last selection)
+    const savedBrandId = localStorage.getItem("activeBrandId");
+    if (savedBrandId) return savedBrandId;
 
-  // Initialize active brand from localStorage or session
-  useEffect(() => {
-    if (status === "loading") return;
-
-    const initializeActiveBrand = () => {
-      // Try localStorage first (user's last selection)
-      const savedBrandId = localStorage.getItem("activeBrandId");
-      if (savedBrandId) {
-        setActiveBrandId(savedBrandId);
-        return;
-      }
-
-      // Try cookie (from onboarding or legacy)
-      const cookies = document.cookie.split("; ");
-      const brandIdCookie = cookies.find(cookie => cookie.startsWith("brand_id="));
-      if (brandIdCookie) {
-        const brandId = brandIdCookie.split("=")[1];
-        setActiveBrandId(brandId);
-        localStorage.setItem("activeBrandId", brandId);
-        return;
-      }
-
-      // Fallback to session brandId (legacy)
-      if (session?.user?.brandId) {
-        setActiveBrandId(session.user.brandId);
-        localStorage.setItem("activeBrandId", session.user.brandId);
-      }
-    };
-
-    initializeActiveBrand();
-  }, [session, status]);
-
-  // Fetch user brands when session is ready
-  const fetchUserBrands = async (): Promise<void> => {
-    if (!session?.user?.id) {
-      setUserBrands([]);
-      setIsLoading(false);
-      return;
+    // Try cookie (from onboarding or legacy)
+    const cookies = document.cookie.split("; ");
+    const brandIdCookie = cookies.find(cookie => cookie.startsWith("brand_id="));
+    if (brandIdCookie) {
+      const brandId = brandIdCookie.split("=")[1];
+      localStorage.setItem("activeBrandId", brandId);
+      return brandId;
     }
 
-    try {
-      setIsLoading(true);
-      setError(null);
+    // Fallback to session brandId (legacy)
+    if (session?.user?.brandId) {
+      localStorage.setItem("activeBrandId", session.user.brandId);
+      return session.user.brandId;
+    }
+    
+    return null;
+  };
+
+  // OPTIMIZED: Use React Query for user brands fetching with proper caching
+  const userBrandsQuery = useQuery({
+    queryKey: session?.user?.id ? BRAND_QUERY_KEYS.allByUser(session.user.id) : ["user-brands-disabled"],
+    queryFn: async (): Promise<Brand[]> => {
+      if (!session?.user?.id) return [];
 
       // Fetch all brand IDs for the user
       const brandIdsResponse = await fetch(`${API_BASE_URL}/api/brand/by-user/${session.user.id}/all`, {
@@ -92,11 +79,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
       if (!brandIdsResponse.ok) {
         if (brandIdsResponse.status === 404) {
-          // User has no brands yet
-          setUserBrands([]);
-          setActiveBrandId(null);
-          setIsLoading(false);
-          return;
+          return []; // User has no brands yet
         }
         throw new Error(`Failed to fetch user brands: ${brandIdsResponse.statusText}`);
       }
@@ -104,15 +87,17 @@ export function UserProvider({ children }: UserProviderProps) {
       const brandIdsData = await brandIdsResponse.json();
       const brandIds: string[] = brandIdsData.brand_ids || [];
 
-      if (brandIds.length === 0) {
-        setUserBrands([]);
-        setActiveBrandId(null);
-        setIsLoading(false);
-        return;
-      }
+      if (brandIds.length === 0) return [];
 
-      // Fetch full brand data for each brand
+      // OPTIMIZATION: Check cache first for individual brands to avoid redundant requests
       const brandPromises = brandIds.map(async (brandId) => {
+        // Try to get from React Query cache first
+        const cachedBrand = queryClient.getQueryData(BRAND_QUERY_KEYS.detail(brandId)) as { brand: Brand } | undefined;
+        if (cachedBrand?.brand) {
+          return cachedBrand.brand;
+        }
+
+        // Fetch if not in cache
         const response = await fetch(`${API_BASE_URL}/api/brand/${brandId}`, {
           method: "GET",
           headers: {
@@ -126,39 +111,48 @@ export function UserProvider({ children }: UserProviderProps) {
           return null;
         }
 
-        return response.json();
+        const brandData = await response.json();
+        
+        // OPTIMIZATION: Cache individual brand data for future use
+        queryClient.setQueryData(BRAND_QUERY_KEYS.detail(brandId), { brand: brandData });
+        
+        return brandData;
       });
 
       const brands = await Promise.all(brandPromises);
-      const validBrands = brands.filter((brand): brand is Brand => brand !== null);
-      
-      setUserBrands(validBrands);
+      return brands.filter((brand): brand is Brand => brand !== null);
+    },
+    enabled: status === "authenticated" && !!session?.user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // OPTIMIZATION: Don't refetch on mount if cached
+  });
 
-      // Set active brand if not already set
-      if (!activeBrandId && validBrands.length > 0) {
-        const firstBrandId = validBrands[0].id;
-        setActiveBrandId(firstBrandId);
+  const userBrands = userBrandsQuery.data || [];
+  
+  // REACTIVE: Use state for activeBrandId to make it reactive to changes
+  const [activeBrandId, setActiveBrandId] = useState<string | null>(() => 
+    getInitialActiveBrand()
+  );
+
+  // REACTIVE: Update activeBrandId when localStorage changes or userBrands load
+  useEffect(() => {
+    const currentStoredBrandId = getInitialActiveBrand();
+    
+    // If we have a stored brand ID, use it
+    if (currentStoredBrandId) {
+      setActiveBrandId(currentStoredBrandId);
+    } 
+    // If no stored brand but we have brands loaded, use the first one
+    else if (userBrands.length > 0 && !currentStoredBrandId) {
+      const firstBrandId = userBrands[0].id;
+      setActiveBrandId(firstBrandId);
+      if (typeof window !== "undefined") {
         localStorage.setItem("activeBrandId", firstBrandId);
       }
-
-      setIsLoading(false);
-    } catch (err) {
-      console.error("Error fetching user brands:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch user brands");
-      setIsLoading(false);
     }
-  };
-
-  // Fetch brands when session is ready
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchUserBrands();
-    } else if (status === "unauthenticated") {
-      setUserBrands([]);
-      setActiveBrandId(null);
-      setIsLoading(false);
-    }
-  }, [session, status]);
+  }, [userBrands]);
 
   // Switch active brand
   const switchActiveBrand = (brandId: string) => {
@@ -169,24 +163,30 @@ export function UserProvider({ children }: UserProviderProps) {
       return;
     }
 
+    // REACTIVE: Update React state immediately for UI responsiveness
     setActiveBrandId(brandId);
-    localStorage.setItem("activeBrandId", brandId);
 
-    // Update cookie for backward compatibility
-    document.cookie = `brand_id=${brandId}; Max-Age=${7 * 24 * 60 * 60}; path=/`;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("activeBrandId", brandId);
+      // Update cookie for backward compatibility
+      document.cookie = `brand_id=${brandId}; Max-Age=${7 * 24 * 60 * 60}; path=/`;
+    }
+    
+    // OPTIMIZATION: Invalidate related queries to trigger re-renders
+    queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
   };
 
   // Refresh user brands
   const refreshUserBrands = async () => {
-    await fetchUserBrands();
+    await userBrandsQuery.refetch();
   };
 
   const contextValue: UserContextType = {
     userBrands,
     activeBrandId,
     switchActiveBrand,
-    isLoading,
-    error,
+    isLoading: userBrandsQuery.isLoading || status === "loading",
+    error: userBrandsQuery.error ? String(userBrandsQuery.error) : null,
     refreshUserBrands,
   };
 

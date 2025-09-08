@@ -12,6 +12,7 @@ export interface UserProfile {
   name: string | null;
   image: string | null;
   auth_type: string;
+  email?: string | null;
 }
 
 export interface InviteAcceptanceResult {
@@ -22,11 +23,8 @@ export interface InviteAcceptanceResult {
 // InviteValidationError removed - unused (InviteError class is used instead)
 
 export class InviteError extends Error {
-  constructor(
-    message: string,
-    public status: number = 500
-  ) {
+  constructor(message: string, public status: number = 500) {
     super(message);
-    this.name = 'InviteError';
+    this.name = "InviteError";
   }
 }

@@ -38,11 +38,22 @@ export async function GET(request: NextRequest) {
       try {
         const userRef = firestore.collection("users").doc(userId);
         const userDoc = await userRef.get();
-        const userData = userDoc.data();
+        const userData: any = userDoc.data();
+        const userBrandIds: string[] = Array.isArray(userData?.brand_ids)
+          ? userData.brand_ids
+          : userData?.brand_id
+          ? [userData.brand_id]
+          : [];
 
-        if (userData?.brand_id) {
+        if (userBrandIds.length > 0) {
+          // If cookie brandId exists and is among user's brands, prefer it
+          const cookiePreferred = getBrandIdFromRequest(request);
+          const selected =
+            cookiePreferred && userBrandIds.includes(cookiePreferred)
+              ? cookiePreferred
+              : userBrandIds[0];
           return NextResponse.json({
-            brandId: userData.brand_id,
+            brandId: selected,
             source: "firestore",
           });
         }

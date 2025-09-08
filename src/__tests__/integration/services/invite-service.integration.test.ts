@@ -284,7 +284,8 @@ describe("InviteService Integration Tests", () => {
       const userDoc = await firestore.collection("users").doc(userId).get();
       expect(userDoc.exists).toBe(true);
       const userData = userDoc.data();
-      expect(userData.brand_id).toBe(brandId);
+      expect(Array.isArray(userData.brand_ids)).toBe(true);
+      expect(userData.brand_ids).toContain(brandId);
       expect(userData.name).toBe(userProfile.name);
       expect(userData.image).toBe(userProfile.image);
       expect(userData.auth_type).toBe(userProfile.auth_type);
@@ -371,29 +372,49 @@ describe("InviteService Integration Tests", () => {
       ).rejects.toThrow(new InviteError("Brand not found", 404));
     });
 
-    it("should throw error if user already linked to different brand", async () => {
+    it("should allow user already linked to different brand to join another brand", async () => {
       const otherBrandId = "other-test-brand-123";
       testDataIds.push(otherBrandId);
 
-      // Create user already linked to different brand
-      await firestore.collection("users").doc(userId).set({
-        brand_id: otherBrandId,
-        name: "Existing User",
+      // Create other brand and user linked to that brand
+      await firestore.collection("brands").doc(otherBrandId).set({
+        name: "Other Test Brand",
+        user_ids: [],
       });
 
-      await expect(
-        inviteService.acceptInvite(token, userId, userProfile)
-      ).rejects.toThrow(
-        new InviteError("User already linked to another brand", 409)
+      await firestore
+        .collection("users")
+        .doc(userId)
+        .set({
+          brand_ids: [otherBrandId],
+          name: "Existing User",
+        });
+
+      // Accept invite to current brandId in addition to otherBrandId
+      const result = await inviteService.acceptInvite(
+        token,
+        userId,
+        userProfile
+      );
+      expect(result.success).toBe(true);
+      expect(result.brandId).toBe(brandId);
+
+      const updatedUser = await firestore.collection("users").doc(userId).get();
+      const updatedUserData = updatedUser.data();
+      expect(updatedUserData.brand_ids).toEqual(
+        expect.arrayContaining([otherBrandId, brandId])
       );
     });
 
     it("should allow user to accept invite for same brand they're already linked to", async () => {
       // Create user already linked to same brand
-      await firestore.collection("users").doc(userId).set({
-        brand_id: brandId,
-        name: "Existing User",
-      });
+      await firestore
+        .collection("users")
+        .doc(userId)
+        .set({
+          brand_ids: [brandId],
+          name: "Existing User",
+        });
 
       // Should not throw error
       const result = await inviteService.acceptInvite(
@@ -492,7 +513,8 @@ describe("InviteService Integration Tests", () => {
         const userDoc = await firestore.collection("users").doc(user.id).get();
         expect(userDoc.exists).toBe(true);
         const userData = userDoc.data();
-        expect(userData.brand_id).toBe(brandId);
+        expect(Array.isArray(userData.brand_ids)).toBe(true);
+        expect(userData.brand_ids).toContain(brandId);
         expect(userData.name).toBe(user.profile.name);
         expect(userData.auth_type).toBe(user.profile.auth_type);
       }
@@ -533,15 +555,16 @@ describe("InviteService Integration Tests", () => {
         expect(userDoc.exists).toBe(true);
 
         const userData = userDoc.data();
-        expect(userData.brand_id).toBe(brandId);
+        expect(Array.isArray(userData.brand_ids)).toBe(true);
+        expect(userData.brand_ids).toContain(brandId);
 
         // Find the corresponding user profile to verify data integrity
         const correspondingUser = uniqueUsers.find(
           (u) => u.id === fetchedUserId
         );
         expect(correspondingUser).toBeDefined();
-        expect(userData.name).toBe(correspondingUser.profile.name);
-        expect(userData.auth_type).toBe(correspondingUser.profile.auth_type);
+        expect(userData.name).toBe(correspondingUser!.profile.name);
+        expect(userData.auth_type).toBe(correspondingUser!.profile.auth_type);
 
         console.log(
           `✅ User ${fetchedUserId} verified: ${userData.name} (${userData.auth_type})`
@@ -552,7 +575,9 @@ describe("InviteService Integration Tests", () => {
         `✅ Successfully added and verified ${uniqueUsers.length} unique users to brand ${brandId}`
       );
       console.log("Final brand user_ids:", finalBrandData.user_ids);
-      console.log("All users exist in database and have correct brand_id");
+      console.log(
+        "All users exist in database and include correct brand_id in brand_ids"
+      );
     }, 15000); // 15 second timeout
 
     it("should prevent duplicate user IDs when same user tries to accept multiple times", async () => {
