@@ -7,15 +7,17 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const tourSteps = [
   {
-    selector: 'body',
+    selector: "body",
     content: (
       <div className="space-y-3">
         <h3 className="text-lg font-bold text-white">Welcome to Plum! 🌱</h3>
         <p className="text-sm text-white/80 leading-relaxed">
-          Let's take a quick tour to help you discover and engage with potential customers on Reddit.
+          Let's take a quick tour to help you discover and engage with potential
+          customers on Reddit.
         </p>
         <p className="text-xs text-white/60 mt-2">
-          💡 Tip: You can use the arrow keys to navigate or click "Next" to continue
+          💡 Tip: You can use the arrow keys to navigate or click "Next" to
+          continue
         </p>
       </div>
     ),
@@ -30,10 +32,12 @@ const tourSteps = [
         </p>
         <div className="bg-white/5 rounded-lg p-2 mt-2">
           <p className="text-xs text-white/70">
-            <span className="text-emerald-400">✓ Swipe Right</span> on relevant posts
+            <span className="text-emerald-400">✓ Swipe Right</span> on relevant
+            posts
           </p>
           <p className="text-xs text-white/70 mt-1">
-            <span className="text-red-400">✗ Swipe Left</span> to skip irrelevant ones
+            <span className="text-red-400">✗ Swipe Left</span> to skip
+            irrelevant ones
           </p>
         </div>
       </div>
@@ -48,7 +52,8 @@ const tourSteps = [
           Click here to access all the people you've swiped right on.
         </p>
         <p className="text-xs text-white/60 mt-2">
-          📬 This is where you'll craft personalized messages and engage with your leads
+          📬 This is where you'll craft personalized messages and engage with
+          your leads
         </p>
       </div>
     ),
@@ -59,18 +64,19 @@ const tourSteps = [
       <div className="space-y-3">
         <h3 className="text-base font-bold text-white">Expand Your Search</h3>
         <p className="text-sm text-white/80 leading-relaxed">
-          Click the + button to add new keywords and find more leads across Reddit.
+          Click the + button to add new keywords and find more leads across
+          Reddit.
         </p>
         <div className="bg-white/5 rounded-lg p-2 mt-2">
           <p className="text-xs text-white/70">
-            💡 Pro tip: Use specific keywords related to problems your product solves
+            💡 Pro tip: Use specific keywords related to problems your product
+            solves
           </p>
         </div>
       </div>
     ),
   },
   {
-    selector: 'body',
     content: (
       <div className="space-y-3">
         <h3 className="text-lg font-bold text-white">You're All Set! 🎉</h3>
@@ -90,6 +96,7 @@ const tourSteps = [
         </p>
       </div>
     ),
+    selector: "body",
   },
 ];
 
@@ -97,11 +104,13 @@ const tourSteps = [
 const tourStyles = {
   popover: (base: any, { currentStep }: any) => ({
     ...base,
-    background: "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+    background:
+      "linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.10) 100%)",
     backdropFilter: "blur(20px) saturate(1.2)",
     WebkitBackdropFilter: "blur(20px) saturate(1.2)",
-    border: "1px solid rgba(255, 255, 255, 0.2)",
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+    border: "2px solid rgba(255, 255, 255, 0.38)",
+    boxShadow:
+      "0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
     borderRadius: "16px",
     padding: "24px",
     paddingBottom: "20px",
@@ -111,13 +120,18 @@ const tourStyles = {
     // Add left margin for step 2 (sidebar leads - index 2)
     marginLeft: currentStep === 2 ? "20px" : "0",
   }),
+  mask: (base: any) => ({
+    ...base,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  }),
   maskArea: (base: any) => ({
     ...base,
     rx: 12,
   }),
   badge: (base: any) => ({
     ...base,
-    background: "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(34, 197, 94, 0.3) 100%)",
+    background:
+      "linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(34, 197, 94, 0.3) 100%)",
     color: "white",
     border: "1px solid rgba(255, 255, 255, 0.2)",
     fontWeight: "bold",
@@ -247,9 +261,11 @@ function CustomNavigation({
               onClick={() => setCurrentStep(currentStep - 1)}
               className="px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all hover:transform hover:-translate-y-0.5"
               style={{
-                background: "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+                background:
+                  "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
                 border: "1px solid rgba(255, 255, 255, 0.15)",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                boxShadow:
+                  "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
               }}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -257,13 +273,11 @@ function CustomNavigation({
             </button>
           )}
         </div>
-        
+
         <div className="flex items-center gap-3">
           {/* Keyboard hint */}
           {!isLastStep && (
-            <span className="text-xs text-white/30">
-              Press → or Enter
-            </span>
+            <span className="text-xs text-white/30">Press → or Enter</span>
           )}
           <button
             onClick={handleNext}
@@ -283,7 +297,9 @@ function CustomNavigation({
             <span className="text-sm font-bold">
               {isLastStep ? "Finish Tour" : isFirstStep ? "Start Tour" : "Next"}
             </span>
-            {!isLastStep && <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />}
+            {!isLastStep && (
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            )}
           </button>
         </div>
       </div>
@@ -293,25 +309,21 @@ function CustomNavigation({
 
 // Inner component that uses the tour hook
 function TourContent() {
-  const { setIsOpen, currentStep, setCurrentStep, steps } = useTour();
-  const { isActive, setIsActive, completeTour } = useAppTour();
+  const { setIsOpen } = useTour();
+  const { isActive } = useAppTour();
 
   useEffect(() => {
     setIsOpen(isActive);
   }, [isActive, setIsOpen]);
 
-  const handleClose = () => {
-    completeTour();
-    setIsActive(false);
-    setIsOpen(false);
-  };
+  // no-op: handled via provider components
 
   return null; // The tour UI is handled by the TourProvider
 }
 
 // Main tour component
 export default function AppTour({ children }: { children: React.ReactNode }) {
-  const { shouldShowTour, completeTour, setIsActive } = useAppTour();
+  const { shouldShowTour } = useAppTour();
 
   return (
     <TourProvider
@@ -324,6 +336,7 @@ export default function AppTour({ children }: { children: React.ReactNode }) {
       disableFocusLock={false}
       disableDotsNavigation={false}
       disableKeyboardNavigation={false}
+      maskClassName="!bg-black/60"
       onClickMask={() => {}}
       components={{
         Content: ({ currentStep, content, setCurrentStep, setIsOpen }) => {
