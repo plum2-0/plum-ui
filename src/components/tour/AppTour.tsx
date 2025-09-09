@@ -7,7 +7,7 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const tourSteps = [
   {
-    selector: null,
+    selector: '[data-tour="navbar-logo"]',
     position: [32, 50] as [number, number], // Custom positioning: [top%, left%]
     content: (
       <div className="tour-step-centered">
@@ -80,7 +80,7 @@ const tourSteps = [
     ),
   },
   {
-    selector: null,
+    selector: '[data-tour="navbar-logo"]',
     position: [32, 50] as [number, number], // Custom positioning: [top%, left%]
     content: (
       <div className="tour-step-centered space-y-3">
