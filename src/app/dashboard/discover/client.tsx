@@ -8,7 +8,6 @@ import { useBrand } from "@/contexts/BrandContext";
 import GlassPanel from "@/components/ui/GlassPanel";
 import ProspectAccordion from "@/components/dashboard2/ProspectAccordion";
 import ProspectTargetStat from "@/components/dashboard2/ProspectTargetsStat";
-import VizSummaryView from "@/components/dashboard2/VizSummaryView";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProspectPostAction } from "@/hooks/api/useProspectPostAction";
@@ -100,114 +99,72 @@ function BrandSummary() {
 
   if (!brandData) return null;
   return (
-    <GlassPanel
-      className="rounded-2xl p-6"
-      variant="medium"
-      style={{
-        background:
-          "linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)",
-        boxShadow:
-          "0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.05)",
-        backdropFilter: "blur(20px) saturate(1.2)",
-        WebkitBackdropFilter: "blur(20px) saturate(1.2)",
-        border: "1px solid rgba(255, 255, 255, 0.15)",
-      }}
-    >
-      <div className="flex items-start gap-4">
-        <div className="flex-1">
+    <div className="flex items-start gap-4">
+      <div className="flex-1">
+        <div className="flex items-center justify-between mb-2">
+          <BrandHeader name={brandData.name} website={brandData.website} />
+          {/* Tour Help Button */}
+          <button
+            onClick={startTour}
+            className="p-2 rounded-lg transition-all hover:transform hover:-translate-y-0.5 group"
+            style={{
+              background:
+                "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              boxShadow:
+                "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+            }}
+            title="Start app tour"
+          >
+            <Info className="w-5 h-5 text-white/60 group-hover:text-white/80 transition-colors" />
+          </button>
+        </div>
+        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent backdrop-blur-sm mt-2 mb-6" />
+
+        <div className="space-y-8">
+          <ProspectTargetStat
+            brandId={brandData.id}
+            posts={postsToReview}
+            uniqueUsers={brandAggregates.totalPotentialCustomers}
+            uniquePendingAuthors={brandAggregates.uniquePendingAuthors}
+            uniqueActionedAuthors={brandAggregates.uniqueActionedAuthors}
+            totalPostsScraped={totalPostsScraped}
+            totalKeywordCounts={totalKeywordsCounts}
+            onSwipe={handleSwipe}
+            problemToSolve="Overview - All Use Cases"
+            onStackCompleted={() => {
+              console.log("All prospects reviewed! Refreshing brand data...");
+              refetch();
+            }}
+            onModalClose={() => {
+              console.log("Modal closed, refreshing brand data...");
+              refetch();
+            }}
+          />
+
+          {/* Help Hint Section */}
+          <HelpHintSection />
+        </div>
+
+        {/* Prospect Accordion */}
+        <div>
+          <div className="content-divider my-8"></div>
           <div className="flex items-center justify-between mb-2">
-            <BrandHeader name={brandData.name} website={brandData.website} />
-            {/* Tour Help Button */}
-            <button
-              onClick={startTour}
-              className="p-2 rounded-lg transition-all hover:transform hover:-translate-y-0.5 group"
-              style={{
-                background:
-                  "linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                boxShadow:
-                  "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-              }}
-              title="Start app tour"
-            >
-              <Info className="w-5 h-5 text-white/60 group-hover:text-white/80 transition-colors" />
-            </button>
+            {/* <AddProspectButton brandId={brandData.id} /> */}
           </div>
-          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent backdrop-blur-sm mt-2 mb-6" />
-
-          <div className="space-y-8">
-            <ProspectTargetStat
-              brandId={brandData.id}
-              posts={postsToReview}
-              uniqueUsers={brandAggregates.totalPotentialCustomers}
-              uniquePendingAuthors={brandAggregates.uniquePendingAuthors}
-              uniqueActionedAuthors={brandAggregates.uniqueActionedAuthors}
-              totalPostsScraped={totalPostsScraped}
-              totalKeywordCounts={totalKeywordsCounts}
-              onSwipe={handleSwipe}
-              problemToSolve="Overview - All Use Cases"
-              onStackCompleted={() => {
-                console.log("All prospects reviewed! Refreshing brand data...");
-                refetch();
-              }}
-              onModalClose={() => {
-                console.log("Modal closed, refreshing brand data...");
-                refetch();
-              }}
-            />
-
-            {/* Help Hint Section */}
-            <HelpHintSection />
-          </div>
-
-          {/* Prospect Accordion */}
-          <div>
-            <div className="content-divider my-8"></div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="heading-3 my-4 flex items-center gap-3 eyebrow">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-400/20 to-green-400/20 border border-purple-400/30 flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-purple-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-                Researching Problems
-              </h3>
-              <AddProspectButton brandId={brandData.id} />
+          {brandData.prospects && brandData.prospects.length > 0 ? (
+            <ProspectAccordion prospects={brandData.prospects} />
+          ) : (
+            <div className="mt-4 text-center py-8">
+              <p className="text-white/50 text-sm">
+                No prospects defined yet. Click the + button to add your first
+                problem to validate.
+              </p>
             </div>
-            {brandData.prospects && brandData.prospects.length > 0 ? (
-              <>
-                <ProspectAccordion prospects={brandData.prospects} />
-                <div className="mt-6">
-                  <VizSummaryView
-                    brandId={brandData.id}
-                    prospects={brandData.prospects}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="mt-4 text-center py-8">
-                <p className="text-white/50 text-sm">
-                  No prospects defined yet. Click the + button to add your first
-                  problem to validate.
-                </p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
-
-      {/* Power Wielding Section */}
-    </GlassPanel>
+    </div>
   );
 }
 

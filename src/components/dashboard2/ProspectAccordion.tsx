@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TagListWithMore from "./TagListWithMore";
 import QuickAddKeyword from "./QuickAddKeyword";
+import VizSummaryView from "./VizSummaryView";
 import { useBrand } from "@/contexts/BrandContext";
 import {
   useDeleteProspectKeywords,
@@ -15,6 +16,107 @@ import { LiquidButton } from "@/components/ui/LiquidButton";
 
 interface ProspectAccordionProps {
   prospects: any;
+}
+
+interface ProspectTabsProps {
+  activeTab: "data" | "insights";
+  onTabChange: (tab: "data" | "insights") => void;
+  hasInsights: boolean;
+}
+
+function ProspectTabs({
+  activeTab,
+  onTabChange,
+  hasInsights,
+}: ProspectTabsProps) {
+  return (
+    <div className="flex items-center gap-1 my-6">
+      <div
+        className="flex rounded-xl p-1"
+        style={{
+          background: "rgba(255, 255, 255, 0.05)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        <button
+          onClick={() => onTabChange("data")}
+          className={`px-4 py-2 rounded-lg font-body font-medium text-sm transition-all duration-300 ${
+            activeTab === "data"
+              ? "text-white shadow-lg"
+              : "text-white/60 hover:text-white/80"
+          }`}
+          style={{
+            background:
+              activeTab === "data"
+                ? "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(147, 51, 234, 0.8))"
+                : "transparent",
+            boxShadow:
+              activeTab === "data"
+                ? "0 4px 12px rgba(168, 85, 247, 0.3)"
+                : "none",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            Data
+          </div>
+        </button>
+
+        <button
+          onClick={() => onTabChange("insights")}
+          disabled={!hasInsights}
+          className={`px-4 py-2 rounded-lg font-body font-medium text-sm transition-all duration-300 ${
+            activeTab === "insights"
+              ? "text-white shadow-lg"
+              : hasInsights
+              ? "text-white/60 hover:text-white/80"
+              : "text-white/30 cursor-not-allowed"
+          }`}
+          style={{
+            background:
+              activeTab === "insights"
+                ? "linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(147, 51, 234, 0.8))"
+                : "transparent",
+            boxShadow:
+              activeTab === "insights"
+                ? "0 4px 12px rgba(168, 85, 247, 0.3)"
+                : "none",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
+            </svg>
+            Insights
+            {!hasInsights && <span className="text-xs opacity-60">(N/A)</span>}
+          </div>
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // Helper function to format the refresh time
@@ -57,6 +159,19 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
   const [deletingProspects, setDeletingProspects] = useState<Set<string>>(
     new Set()
   );
+  const [activeTabByProspect, setActiveTabByProspect] = useState<
+    Record<string, "data" | "insights">
+  >({});
+
+  // Helper function to get active tab for a prospect
+  const getActiveTab = (prospectId: string): "data" | "insights" => {
+    return activeTabByProspect[prospectId] || "data";
+  };
+
+  // Helper function to set active tab for a prospect
+  const setActiveTab = (prospectId: string, tab: "data" | "insights") => {
+    setActiveTabByProspect((prev) => ({ ...prev, [prospectId]: tab }));
+  };
 
   // Effect to open the first prospect by default
   useEffect(() => {
@@ -168,7 +283,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
   return (
     <div className="space-y-4">
       {prospectsDisplay.map((prospect) => {
-        const isExpanded = expandedItems.has(prospect.id);
+        const isExpanded = true;
         const totalPosts =
           prospect.pendingPosts.length + prospect.actionedPosts.length;
         const actionedPercentage =
@@ -232,10 +347,10 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                   transparent 50%
                 )`,
               }}
-              animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
+              // animate={{
+              //   scale: [1, 1.05, 1],
+              //   opacity: [0.3, 0.5, 0.3],
+              // }}
               transition={{
                 duration: 8,
                 repeat: Infinity,
@@ -308,7 +423,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                               {prospect.pendingPosts.length}
                             </span>
                             <span className="text-yellow-600 text-xs font-semibold uppercase tracking-wide">
-                              To Review
+                              Posts To Review
                             </span>
                           </div>
                         }
@@ -356,7 +471,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                 </div>
 
                 {/* Expand icon with glow */}
-                <motion.div
+                {/* <motion.div
                   className="relative flex-shrink-0 ml-4"
                   animate={{ rotate: isExpanded ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -384,7 +499,7 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                       />
                     </svg>
                   </div>
-                </motion.div>
+                </motion.div> */}
               </div>
             </button>
 
@@ -399,353 +514,432 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                   className="overflow-hidden"
                 >
                   <div
-                    className="p-6 pt-2 space-y-6 border-t"
+                    className="p-6 pt-2 border-t"
                     style={{
                       borderColor: "rgba(255, 255, 255, 0.08)",
                       background:
                         "linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, transparent 100%)",
                     }}
                   >
-                    {/* Keywords Section */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <div className="flex items-center gap-2 mb-4">
-                        <div
-                          className="w-6 h-6 rounded-lg flex items-center justify-center"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.2))",
-                            border: "1px solid rgba(168, 85, 247, 0.3)",
-                            boxShadow:
-                              "0 2px 8px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                          }}
+                    {/* Tabs */}
+                    <ProspectTabs
+                      activeTab={getActiveTab(prospect.id)}
+                      onTabChange={(tab) => setActiveTab(prospect.id, tab)}
+                      hasInsights={!!prospect.insights}
+                    />
+
+                    {/* Tab Content */}
+                    <AnimatePresence mode="wait">
+                      {getActiveTab(prospect.id) === "data" && (
+                        <motion.div
+                          key="data"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ duration: 0.3 }}
+                          className="space-y-6"
                         >
-                          <svg
-                            className="w-3.5 h-3.5 text-purple-300"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                          {/* Keywords Section */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                            />
-                          </svg>
-                        </div>
-                        <h4 className="text-white/90 font-heading text-sm font-semibold">
-                          Keywords
-                        </h4>
-                      </div>
-                      <div className="flex flex-wrap gap-2 items-center">
-                        {prospect.keywordCounts.length > 0 && (
-                          <TagListWithMore
-                            items={prospect.keywordCounts.map(
-                              (item: { keyword: string; count: number }) => ({
-                                key: `${prospect.id}-${item.keyword}`,
-                                label: item.keyword,
-                                count: item.count,
-                                disabled: deletingKeywords.has(
-                                  `${prospect.id}-${item.keyword}`
-                                ),
-                              })
-                            )}
-                            initialVisible={5}
-                            variant="keyword"
-                            showDelete={true}
-                            onDeleteItem={(item) =>
-                              handleDeleteKeyword(prospect.id, item.label)
-                            }
-                            trailingNode={
-                              <QuickAddKeyword
-                                prospectId={prospect.id}
-                                problemToSolve={prospect.problem_to_solve}
-                                existingKeywords={prospect.keywordCounts.map(
-                                  (item: { keyword: string }) => item.keyword
+                            <div className="flex items-center gap-2 mb-4">
+                              <div
+                                className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.2))",
+                                  border: "1px solid rgba(168, 85, 247, 0.3)",
+                                  boxShadow:
+                                    "0 2px 8px rgba(168, 85, 247, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                }}
+                              >
+                                <svg
+                                  className="w-3.5 h-3.5 text-purple-300"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                  />
+                                </svg>
+                              </div>
+                              <h4 className="text-white/90 font-heading text-sm font-semibold">
+                                Keywords
+                              </h4>
+                            </div>
+                            <div className="flex flex-wrap gap-2 items-center">
+                              {prospect.keywordCounts.length > 0 && (
+                                <TagListWithMore
+                                  items={prospect.keywordCounts.map(
+                                    (item: {
+                                      keyword: string;
+                                      count: number;
+                                    }) => ({
+                                      key: `${prospect.id}-${item.keyword}`,
+                                      label: item.keyword,
+                                      count: item.count,
+                                      disabled: deletingKeywords.has(
+                                        `${prospect.id}-${item.keyword}`
+                                      ),
+                                    })
+                                  )}
+                                  initialVisible={5}
+                                  variant="keyword"
+                                  showDelete={true}
+                                  onDeleteItem={(item) =>
+                                    handleDeleteKeyword(prospect.id, item.label)
+                                  }
+                                  trailingNode={
+                                    <QuickAddKeyword
+                                      prospectId={prospect.id}
+                                      problemToSolve={prospect.problem_to_solve}
+                                      existingKeywords={prospect.keywordCounts.map(
+                                        (item: { keyword: string }) =>
+                                          item.keyword
+                                      )}
+                                      insights={prospect.insights}
+                                    />
+                                  }
+                                />
+                              )}
+                              {prospect.keywordCounts.length === 0 && (
+                                <QuickAddKeyword
+                                  prospectId={prospect.id}
+                                  problemToSolve={prospect.problem_to_solve}
+                                  existingKeywords={[]}
+                                  insights={prospect.insights}
+                                />
+                              )}
+                            </div>
+                          </motion.div>
+
+                          {/* Subreddits Section */}
+                          {prospect.subredditCounts.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.2 }}
+                            >
+                              <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-6" />
+                              <div className="flex items-center gap-2 mb-4">
+                                <div
+                                  className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2))",
+                                    border: "1px solid rgba(34, 197, 94, 0.3)",
+                                    boxShadow:
+                                      "0 2px 8px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                  }}
+                                >
+                                  <svg
+                                    className="w-3.5 h-3.5 text-green-300"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                                    />
+                                  </svg>
+                                </div>
+                                <h4 className="text-white/90 font-heading text-sm font-semibold">
+                                  Top Subreddits
+                                </h4>
+                              </div>
+                              <TagListWithMore
+                                items={prospect.subredditCounts.map(
+                                  (item: {
+                                    subreddit: string;
+                                    count: number;
+                                  }) => ({
+                                    key: `${prospect.id}-r/${item.subreddit}`,
+                                    label: `r/${item.subreddit}`,
+                                    count: item.count,
+                                  })
                                 )}
-                                insights={prospect.insights}
+                                initialVisible={5}
+                                variant="subreddit"
                               />
-                            }
-                          />
-                        )}
-                        {prospect.keywordCounts.length === 0 && (
-                          <QuickAddKeyword
-                            prospectId={prospect.id}
-                            problemToSolve={prospect.problem_to_solve}
-                            existingKeywords={[]}
-                            insights={prospect.insights}
-                          />
-                        )}
-                      </div>
-                    </motion.div>
-
-                    {/* Subreddits Section */}
-                    {prospect.subredditCounts.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-6" />
-                        <div className="flex items-center gap-2 mb-4">
-                          <div
-                            className="w-6 h-6 rounded-lg flex items-center justify-center"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2))",
-                              border: "1px solid rgba(34, 197, 94, 0.3)",
-                              boxShadow:
-                                "0 2px 8px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <svg
-                              className="w-3.5 h-3.5 text-green-300"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                              />
-                            </svg>
-                          </div>
-                          <h4 className="text-white/90 font-heading text-sm font-semibold">
-                            Top Subreddits
-                          </h4>
-                        </div>
-                        <TagListWithMore
-                          items={prospect.subredditCounts.map(
-                            (item: { subreddit: string; count: number }) => ({
-                              key: `${prospect.id}-r/${item.subreddit}`,
-                              label: `r/${item.subreddit}`,
-                              count: item.count,
-                            })
-                          )}
-                          initialVisible={5}
-                          variant="subreddit"
-                        />
-                      </motion.div>
-                    )}
-
-                    {/* Insights Section */}
-                    {prospect.insights && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-6" />
-                        <div className="flex items-center gap-2 mb-4">
-                          <div
-                            className="w-6 h-6 rounded-lg flex items-center justify-center"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2))",
-                              border: "1px solid rgba(59, 130, 246, 0.3)",
-                              boxShadow:
-                                "0 2px 8px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                            }}
-                          >
-                            <svg
-                              className="w-3.5 h-3.5 text-blue-300"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                              />
-                            </svg>
-                          </div>
-                          <h4 className="text-white/90 font-heading text-sm font-semibold">
-                            Insights
-                          </h4>
-                        </div>
-
-                        <div className="space-y-4">
-                          {/* General Summary */}
-                          {prospect.insights.general_summary && (
-                            <p className="text-white/80 font-body text-sm leading-relaxed">
-                              {prospect.insights.general_summary}
-                            </p>
+                            </motion.div>
                           )}
 
-                          {/* Quick stats row */}
-                          <div className="flex flex-wrap items-center gap-3">
-                            {prospect.insights.willingness_to_pay && (
-                              <span
-                                className="px-3 py-1.5 rounded-full text-sm font-body"
-                                style={{
-                                  background: "rgba(59, 130, 246, 0.15)",
-                                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                                }}
-                              >
-                                <span className="text-blue-300">
-                                  Willingness to pay:
-                                </span>
-                                <span className="text-white/80 ml-1">
-                                  {prospect.insights.willingness_to_pay}
-                                </span>
-                              </span>
-                            )}
+                          {/* VizSummaryView Section */}
+                          {brand && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.3 }}
+                            >
+                              <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-6" />
+                              <VizSummaryView
+                                brandId={brand.id}
+                                prospects={brand.prospects || []}
+                              />
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      )}
 
-                            {prospect.insights.tag_counts && (
-                              <span
-                                className="px-3 py-1.5 rounded-full text-sm font-body"
-                                style={{
-                                  background: "rgba(16, 185, 129, 0.15)",
-                                  border: "1px solid rgba(16, 185, 129, 0.3)",
-                                }}
-                              >
-                                <span className="text-emerald-300">
-                                  Potential customers:
-                                </span>
-                                <span className="text-white/80 ml-1">
-                                  {
-                                    prospect.insights.tag_counts
-                                      .potential_customer
-                                  }
-                                </span>
-                              </span>
-                            )}
-
-                            {prospect.insights.tag_counts && (
-                              <span
-                                className="px-3 py-1.5 rounded-full text-sm font-body"
-                                style={{
-                                  background: "rgba(234, 179, 8, 0.15)",
-                                  border: "1px solid rgba(234, 179, 8, 0.3)",
-                                }}
-                              >
-                                <span className="text-yellow-300">
-                                  Competitor mentions:
-                                </span>
-                                <span className="text-white/80 ml-1">
-                                  {
-                                    prospect.insights.tag_counts
-                                      .competitor_mention
-                                  }
-                                </span>
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Identified Solutions */}
-                          {Array.isArray(
-                            prospect.insights.identified_solutions
-                          ) &&
-                            prospect.insights.identified_solutions.length >
-                              0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
-                                    Identified Solutions
-                                  </h5>
+                      {getActiveTab(prospect.id) === "insights" && (
+                        <motion.div
+                          key="insights"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ duration: 0.3 }}
+                          className="space-y-6"
+                        >
+                          {/* Insights Content */}
+                          {prospect.insights && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.1 }}
+                            >
+                              <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-6" />
+                              <div className="flex items-center gap-2 mb-4">
+                                <div
+                                  className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2))",
+                                    border: "1px solid rgba(59, 130, 246, 0.3)",
+                                    boxShadow:
+                                      "0 2px 8px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                                  }}
+                                >
+                                  <svg
+                                    className="w-3.5 h-3.5 text-blue-300"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                                    />
+                                  </svg>
                                 </div>
-                                <div className="flex flex-wrap gap-3">
-                                  {prospect.insights.identified_solutions
-                                    .slice(0, 6)
-                                    .map((solution: string, index: number) => (
-                                      <span
-                                        key={index}
-                                        className="px-3 py-1.5 rounded-full text-sm font-body"
-                                        style={{
-                                          background:
-                                            "rgba(255, 255, 255, 0.05)",
-                                          border:
-                                            "1px solid rgba(255, 255, 255, 0.1)",
-                                        }}
-                                      >
-                                        <span className="text-white/70">
-                                          {solution}
-                                        </span>
+                                <h4 className="text-white/90 font-heading text-sm font-semibold">
+                                  Insights
+                                </h4>
+                              </div>
+
+                              <div className="space-y-4">
+                                {/* General Summary */}
+                                {prospect.insights.general_summary && (
+                                  <p className="text-white/80 font-body text-sm leading-relaxed">
+                                    {prospect.insights.general_summary}
+                                  </p>
+                                )}
+
+                                {/* Quick stats row */}
+                                <div className="flex flex-wrap items-center gap-3">
+                                  {prospect.insights.willingness_to_pay && (
+                                    <span
+                                      className="px-3 py-1.5 rounded-full text-sm font-body"
+                                      style={{
+                                        background: "rgba(59, 130, 246, 0.15)",
+                                        border:
+                                          "1px solid rgba(59, 130, 246, 0.3)",
+                                      }}
+                                    >
+                                      <span className="text-blue-300">
+                                        Willingness to pay:
                                       </span>
-                                    ))}
-                                </div>
-                              </div>
-                            )}
-
-                          {/* Demographics */}
-                          {Array.isArray(
-                            prospect.insights.demographic_breakdown
-                          ) &&
-                            prospect.insights.demographic_breakdown.length >
-                              0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
-                                    Demographics
-                                  </h5>
-                                </div>
-                                <div className="flex flex-wrap gap-3">
-                                  {prospect.insights.demographic_breakdown
-                                    .slice(0, 8)
-                                    .map((demo: string, index: number) => (
-                                      <span
-                                        key={index}
-                                        className="px-3 py-1.5 rounded-full text-sm font-body"
-                                        style={{
-                                          background:
-                                            "rgba(255, 255, 255, 0.05)",
-                                          border:
-                                            "1px solid rgba(255, 255, 255, 0.1)",
-                                        }}
-                                      >
-                                        <span className="text-white/70">
-                                          {demo}
-                                        </span>
+                                      <span className="text-white/80 ml-1">
+                                        {prospect.insights.willingness_to_pay}
                                       </span>
-                                    ))}
-                                </div>
-                              </div>
-                            )}
+                                    </span>
+                                  )}
 
-                          {/* Top Competitors */}
-                          {Array.isArray(prospect.insights.top_competitors) &&
-                            prospect.insights.top_competitors.length > 0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
-                                    Top Competitors
-                                  </h5>
+                                  {prospect.insights.tag_counts && (
+                                    <span
+                                      className="px-3 py-1.5 rounded-full text-sm font-body"
+                                      style={{
+                                        background: "rgba(16, 185, 129, 0.15)",
+                                        border:
+                                          "1px solid rgba(16, 185, 129, 0.3)",
+                                      }}
+                                    >
+                                      <span className="text-emerald-300">
+                                        Potential customers:
+                                      </span>
+                                      <span className="text-white/80 ml-1">
+                                        {
+                                          prospect.insights.tag_counts
+                                            .potential_customer
+                                        }
+                                      </span>
+                                    </span>
+                                  )}
+
+                                  {prospect.insights.tag_counts && (
+                                    <span
+                                      className="px-3 py-1.5 rounded-full text-sm font-body"
+                                      style={{
+                                        background: "rgba(234, 179, 8, 0.15)",
+                                        border:
+                                          "1px solid rgba(234, 179, 8, 0.3)",
+                                      }}
+                                    >
+                                      <span className="text-yellow-300">
+                                        Competitor mentions:
+                                      </span>
+                                      <span className="text-white/80 ml-1">
+                                        {
+                                          prospect.insights.tag_counts
+                                            .competitor_mention
+                                        }
+                                      </span>
+                                    </span>
+                                  )}
                                 </div>
-                                <div className="flex flex-wrap gap-3">
-                                  {prospect.insights.top_competitors
-                                    .slice(0, 6)
-                                    .map(
-                                      (competitor: string, index: number) => (
-                                        <span
-                                          key={index}
-                                          className="px-3 py-1.5 rounded-full text-sm font-body"
-                                          style={{
-                                            background:
-                                              "rgba(255, 255, 255, 0.05)",
-                                            border:
-                                              "1px solid rgba(255, 255, 255, 0.1)",
-                                          }}
-                                        >
-                                          <span className="text-white/70">
-                                            {competitor}
-                                          </span>
-                                        </span>
-                                      )
-                                    )}
-                                </div>
+
+                                {/* Identified Solutions */}
+                                {Array.isArray(
+                                  prospect.insights.identified_solutions
+                                ) &&
+                                  prospect.insights.identified_solutions
+                                    .length > 0 && (
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
+                                          Identified Solutions
+                                        </h5>
+                                      </div>
+                                      <div className="flex flex-wrap gap-3">
+                                        {prospect.insights.identified_solutions
+                                          .slice(0, 6)
+                                          .map(
+                                            (
+                                              solution: string,
+                                              index: number
+                                            ) => (
+                                              <span
+                                                key={index}
+                                                className="px-3 py-1.5 rounded-full text-sm font-body"
+                                                style={{
+                                                  background:
+                                                    "rgba(255, 255, 255, 0.05)",
+                                                  border:
+                                                    "1px solid rgba(255, 255, 255, 0.1)",
+                                                }}
+                                              >
+                                                <span className="text-white/70">
+                                                  {solution}
+                                                </span>
+                                              </span>
+                                            )
+                                          )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* Demographics */}
+                                {Array.isArray(
+                                  prospect.insights.demographic_breakdown
+                                ) &&
+                                  prospect.insights.demographic_breakdown
+                                    .length > 0 && (
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
+                                          Demographics
+                                        </h5>
+                                      </div>
+                                      <div className="flex flex-wrap gap-3">
+                                        {prospect.insights.demographic_breakdown
+                                          .slice(0, 8)
+                                          .map(
+                                            (demo: string, index: number) => (
+                                              <span
+                                                key={index}
+                                                className="px-3 py-1.5 rounded-full text-sm font-body"
+                                                style={{
+                                                  background:
+                                                    "rgba(255, 255, 255, 0.05)",
+                                                  border:
+                                                    "1px solid rgba(255, 255, 255, 0.1)",
+                                                }}
+                                              >
+                                                <span className="text-white/70">
+                                                  {demo}
+                                                </span>
+                                              </span>
+                                            )
+                                          )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* Top Competitors */}
+                                {Array.isArray(
+                                  prospect.insights.top_competitors
+                                ) &&
+                                  prospect.insights.top_competitors.length >
+                                    0 && (
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <h5 className="text-white/80 font-heading text-xs font-semibold uppercase tracking-wide">
+                                          Top Competitors
+                                        </h5>
+                                      </div>
+                                      <div className="flex flex-wrap gap-3">
+                                        {prospect.insights.top_competitors
+                                          .slice(0, 6)
+                                          .map(
+                                            (
+                                              competitor: string,
+                                              index: number
+                                            ) => (
+                                              <span
+                                                key={index}
+                                                className="px-3 py-1.5 rounded-full text-sm font-body"
+                                                style={{
+                                                  background:
+                                                    "rgba(255, 255, 255, 0.05)",
+                                                  border:
+                                                    "1px solid rgba(255, 255, 255, 0.1)",
+                                                }}
+                                              >
+                                                <span className="text-white/70">
+                                                  {competitor}
+                                                </span>
+                                              </span>
+                                            )
+                                          )}
+                                      </div>
+                                    </div>
+                                  )}
                               </div>
-                            )}
-                        </div>
-                      </motion.div>
-                    )}
+                            </motion.div>
+                          )}
+
+                          {/* No insights message */}
+                          {!prospect.insights && (
+                            <div className="text-center py-8">
+                              <p className="text-white/50 text-sm">
+                                No insights available for this prospect yet.
+                              </p>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Settings with Danger Zone */}
                     <motion.div
@@ -815,7 +1009,6 @@ export default function ProspectAccordion({}: ProspectAccordionProps) {
                             associated data including scraped posts, keywords,
                             and insights. This action cannot be undone.
                           </p>
-                          
 
                           {confirmDeleteProspect === prospect.id ? (
                             <div className="flex items-center gap-3">

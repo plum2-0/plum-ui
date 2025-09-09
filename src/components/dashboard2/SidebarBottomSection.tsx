@@ -37,7 +37,7 @@ export default function SidebarBottomSection() {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
     }
 
     // Clear sessionStorage
@@ -53,11 +53,14 @@ export default function SidebarBottomSection() {
       const keysToRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const key = sessionStorage.key(i);
-        if (key && (key.startsWith("agent_draft_") || key.startsWith("draft_"))) {
+        if (
+          key &&
+          (key.startsWith("agent_draft_") || key.startsWith("draft_"))
+        ) {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach(key => sessionStorage.removeItem(key));
+      keysToRemove.forEach((key) => sessionStorage.removeItem(key));
 
       // Clear all sessionStorage
       sessionStorage.clear();
@@ -69,9 +72,10 @@ export default function SidebarBottomSection() {
       const cookies = document.cookie.split(";");
 
       // Clear each cookie by setting it with an expired date
-      cookies.forEach(cookie => {
+      cookies.forEach((cookie) => {
         const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        const name =
+          eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
 
         // Clear cookie for current path
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
@@ -118,7 +122,8 @@ export default function SidebarBottomSection() {
 
   // Check if user is admin
   const adminEmails = ["lamtomoki@gmail.com", "truedrju@gmail.com"];
-  const isAdmin = session?.user?.email && adminEmails.includes(session.user.email);
+  const isAdmin =
+    session?.user?.email && adminEmails.includes(session.user.email);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -174,9 +179,11 @@ export default function SidebarBottomSection() {
             <div
               key={i}
               className={`w-1 h-1 rounded-full bg-white/50 transition-all duration-300 ${
-                isMenuOpen 
-                  ? `transform translate-y-${i === 1 ? '0.5' : i === 2 ? '1' : '0'} scale-110` 
-                  : 'transform translate-y-0 scale-100'
+                isMenuOpen
+                  ? `transform translate-y-${
+                      i === 1 ? "0.5" : i === 2 ? "1" : "0"
+                    } scale-110`
+                  : "transform translate-y-0 scale-100"
               }`}
               style={{
                 animationDelay: `${i * 100}ms`,
@@ -248,27 +255,6 @@ export default function SidebarBottomSection() {
               <span>Invite Teammate</span>
             </button>
 
-            {/* Create New Brand Option */}
-            <button
-              onClick={handleCreateBrandClick}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors text-sm font-body"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              <span>Create New Brand</span>
-            </button>
-
             {/* Get Support Option */}
             <button
               onClick={handleSupportClick}
@@ -288,6 +274,27 @@ export default function SidebarBottomSection() {
                 />
               </svg>
               <span>Get Support</span>
+            </button>
+
+            {/* Create New Brand Option */}
+            <button
+              onClick={handleCreateBrandClick}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors text-sm font-body"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              <span>Create New Brand</span>
             </button>
 
             {/* Admin Options - Only visible to admins */}

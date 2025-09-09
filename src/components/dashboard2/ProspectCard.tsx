@@ -38,13 +38,6 @@ export default function ProspectCard({
   const [contentRef, setContentRef] = useState<HTMLDivElement | null>(null);
   const postActionMutation = useProspectPostAction();
 
-  // Debug logging
-  console.log("ProspectCard debug:", {
-    brandId,
-    postKeys: Object.keys(post),
-    prospectId: post,
-  });
-
   // Handle queue action
   const handleQueue = async () => {
     if (!brandId || !post.prospect_id) {

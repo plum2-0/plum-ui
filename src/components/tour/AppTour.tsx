@@ -7,18 +7,21 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const tourSteps = [
   {
-    selector: "body",
+    selector: null,
+    position: [32, 50] as [number, number], // Custom positioning: [top%, left%]
     content: (
-      <div className="space-y-3">
-        <h3 className="text-lg font-bold text-white">Welcome to Plum! 🌱</h3>
-        <p className="text-sm text-white/80 leading-relaxed">
-          Let's take a quick tour to help you discover and engage with potential
-          customers on Reddit.
-        </p>
-        <p className="text-xs text-white/60 mt-2">
-          💡 Tip: You can use the arrow keys to navigate or click "Next" to
-          continue
-        </p>
+      <div className="tour-step-centered">
+        <div className="space-y-3 text-center">
+          <h3 className="text-lg font-bold text-white">Welcome to Plum! 🌱</h3>
+          <p className="text-sm text-white/80 leading-relaxed">
+            Let's take a quick tour to help you discover and engage with
+            potential customers on Reddit.
+          </p>
+          <p className="text-xs text-white/60 mt-2">
+            💡 Tip: You can use the arrow keys to navigate or click "Next" to
+            continue
+          </p>
+        </div>
       </div>
     ),
   },
@@ -77,8 +80,10 @@ const tourSteps = [
     ),
   },
   {
+    selector: null,
+    position: [32, 50] as [number, number], // Custom positioning: [top%, left%]
     content: (
-      <div className="space-y-3">
+      <div className="tour-step-centered space-y-3">
         <h3 className="text-lg font-bold text-white">You're All Set! 🎉</h3>
         <p className="text-sm text-white/80 leading-relaxed">
           You now know the basics of finding and engaging with leads on Plum.
@@ -96,30 +101,43 @@ const tourSteps = [
         </p>
       </div>
     ),
-    selector: "body",
   },
 ];
 
 // Custom styles matching the glassmorphism design
 const tourStyles = {
-  popover: (base: any, { currentStep }: any) => ({
-    ...base,
-    background:
-      "linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.10) 100%)",
-    backdropFilter: "blur(20px) saturate(1.2)",
-    WebkitBackdropFilter: "blur(20px) saturate(1.2)",
-    border: "2px solid rgba(255, 255, 255, 0.38)",
-    boxShadow:
-      "0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
-    borderRadius: "16px",
-    padding: "24px",
-    paddingBottom: "20px",
-    color: "white",
-    maxWidth: "420px",
-    minWidth: "380px",
-    // Add left margin for step 2 (sidebar leads - index 2)
-    marginLeft: currentStep === 2 ? "20px" : "0",
-  }),
+  popover: (base: any, { currentStep }: any) => {
+    // Steps that should be centered (first and last step)
+    const shouldCenter =
+      currentStep === 0 || currentStep === tourSteps.length - 1;
+
+    return {
+      ...base,
+      background:
+        "linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.10) 100%)",
+      backdropFilter: "blur(20px) saturate(1.2)",
+      WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+      border: "2px solid rgba(255, 255, 255, 0.38)",
+      boxShadow:
+        "0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
+      borderRadius: "16px",
+      padding: "24px",
+      paddingBottom: "20px",
+      color: "white",
+      maxWidth: "420px",
+      minWidth: "380px",
+      // Center positioning for welcome and completion steps
+      ...(shouldCenter && {
+        position: "fixed",
+        top: "32%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 9999,
+      }),
+      // Add left margin for step 2 (sidebar leads - index 2)
+      marginLeft: currentStep === 2 ? "20px" : "0",
+    };
+  },
   mask: (base: any) => ({
     ...base,
     backgroundColor: "rgba(0, 0, 0, 0.6)",

@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { BRAND_QUERY_KEYS } from "@/hooks/api/useBrandQuery";
 
 export default function InviteClient({ token }: { token: string }) {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<any>(null);
@@ -64,6 +67,18 @@ export default function InviteClient({ token }: { token: string }) {
           console.log("[CLIENT_DEBUG] Session update complete");
         }
 
+        // Invalidate React Query cache to prevent stale brand data
+        console.log("[CLIENT_DEBUG] Invalidating brand query cache");
+        queryClient.invalidateQueries({ queryKey: BRAND_QUERY_KEYS.all });
+        queryClient.removeQueries({ queryKey: BRAND_QUERY_KEYS.all });
+        
+        // Also clear any cached user context data to force a fresh fetch
+        queryClient.invalidateQueries({ queryKey: ['userContext'] });
+        queryClient.removeQueries({ queryKey: ['userContext'] });
+        
+        // Clear all brand-related queries completely
+        queryClient.clear();
+
         // Wait until /api/user/brand reflects the new brand, then navigate
         const maxWaitMs = 4000;
         const start = Date.now();
@@ -113,7 +128,7 @@ export default function InviteClient({ token }: { token: string }) {
         setIsAccepting(false);
       }
     },
-    [router, token, update]
+    [router, token, update, queryClient]
   );
 
   // Auto-accept invite when user becomes authenticated

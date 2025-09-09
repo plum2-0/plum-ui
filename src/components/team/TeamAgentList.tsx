@@ -338,7 +338,7 @@ export default function TeamAgentList({
           <button
             onClick={handleGenerateAgent}
             disabled={isGenerating}
-            className="shrink-0 snap-start w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+            className="shrink-0 snap-start rounded-2xl px-6 py-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-110"
             style={{
               background:
                 "linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(147, 51, 234, 0.4))",
@@ -351,7 +351,7 @@ export default function TeamAgentList({
           >
             {isGenerating ? (
               <svg
-                className="w-8 h-8 text-white animate-spin"
+                className="w-6 h-6 text-white animate-spin mb-2"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -371,7 +371,7 @@ export default function TeamAgentList({
               </svg>
             ) : (
               <svg
-                className="w-8 h-8 text-white"
+                className="w-6 h-6 text-white mb-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -384,34 +384,9 @@ export default function TeamAgentList({
                 />
               </svg>
             )}
-          </button>
-
-          {/* Add Agent Button */}
-          <button
-            onClick={() => setIsCreating(true)}
-            className="shrink-0 snap-start w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:rotate-90"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3))",
-              backdropFilter: "blur(15px)",
-              border: "2px dashed rgba(34, 197, 94, 0.4)",
-              boxShadow: "0 8px 32px rgba(34, 197, 94, 0.2)",
-            }}
-            title="Create Agent Manually"
-          >
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
+            <span className="text-white text-sm font-semibold font-body">
+              {isGenerating ? "Generating..." : "Generate With Agent"}
+            </span>
           </button>
         </div>
       </div>

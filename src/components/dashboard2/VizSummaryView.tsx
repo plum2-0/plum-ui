@@ -99,7 +99,9 @@ export default function VizSummaryView({
       sourced_reddit_posts:
         prospect.sourced_reddit_posts?.filter((post) =>
           filter === "all"
-            ? post.status === "ACTIONED" || post.status === "PENDING" || post.status === "ignore"
+            ? post.status === "ACTIONED" ||
+              post.status === "PENDING" ||
+              post.status === "ignore"
             : post.status === "ACTIONED"
         ) || [],
     }));
@@ -163,8 +165,7 @@ export default function VizSummaryView({
       (acc, p) => {
         const postsScraped = Number(p.total_posts_scraped ?? 0);
         const leadsDiscovered = Number(
-
-            (p as any).total_leads_tagged ??
+          (p as any).total_leads_tagged ??
             (() => {
               const pendingAuthors = new Set(
                 (p.sourced_reddit_posts ?? [])
@@ -239,24 +240,6 @@ export default function VizSummaryView({
     <div className="space-y-6">
       {/* Filter Toggle */}
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <span className="icon-badge">
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z"
-              />
-            </svg>
-          </span>
-          <span className="eyebrow">Brand Data Visualization</span>
-        </div>
         <FilterToggle value={filter} onChange={setFilter} />
       </div>
       <div className="content-divider my-6" />
