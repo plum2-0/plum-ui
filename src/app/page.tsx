@@ -5,6 +5,7 @@ import { PlumSproutLogo } from "@/components/PlumSproutLogo";
 import { useState } from "react";
 import { PricingModal, PricingDialogTrigger } from "@/components/PricingModal";
 import { useHomePageRedirect } from "@/hooks/useRedirects";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 export default function Home() {
   const [pricingOpen, setPricingOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function Home() {
   if (isLoading || isRedirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 to-indigo-900">
-        <div className="text-white text-xl">Loading...</div>
+        <LoadingIndicator />
       </div>
     );
   }

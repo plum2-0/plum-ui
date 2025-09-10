@@ -7,6 +7,7 @@ import ScrapeJobDrawer from "@/components/dashboard2/ScrapeJobDrawer";
 import { TourProvider } from "@/contexts/TourContext";
 import AppTour from "@/components/tour/AppTour";
 import { useProtectedPageLoading } from "@/hooks/useRedirects";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 export default function DashboardLayout({
   children,
@@ -30,8 +31,12 @@ export default function DashboardLayout({
             `,
           }}
         />
-        <div className="animate-pulse text-white text-xl relative z-10 font-body">
-          Loading Dashboard...
+        <div className="relative z-10">
+          <LoadingIndicator
+            primaryText="Loading Dashboard…"
+            secondaryText={null}
+            size="md"
+          />
         </div>
       </div>
     );
