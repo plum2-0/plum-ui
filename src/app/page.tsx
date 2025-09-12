@@ -209,7 +209,7 @@ export default function Home() {
             <div className="space-y-4">
               <h1 className="font-heading font-extrabold text-3xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight text-white drop-shadow-2xl tracking-tight">
                 <span className="bg-gradient-to-r from-purple-400 via-green-400 to-white bg-clip-text text-transparent">
-                  Validate and Grow Your Business
+                  Find Your First 100 Customers
                 </span>
               </h1>
               <div className="flex flex-col">
@@ -361,7 +361,7 @@ export default function Home() {
       {/* -------------- FOOTER -------------- */}
       <footer className="text-center py-4 font-body text-sm text-white/60 relative z-10">
         <div className="glass-card inline-block px-6 py-3 rounded-full">
-          © 2025 PlumSprout – Never miss a conversation about your brand
+          © 2025 PlumSprout – Find Your First 100 Customers
         </div>
       </footer>
 

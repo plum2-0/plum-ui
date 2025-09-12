@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PlumSprout - Amplify your Brand's Presence",
+  title: "PlumSprout - Find Your First 100 Customers",
   description:
-    "Multiply your marketing team with PlumSprout AI to listen and sprout your Brand's Community",
+    "Engage Reddit communities to find leads and validate your product.",
   icons: {
     icon: [
       { url: "/plum-favicon.svg", type: "image/svg+xml" },
