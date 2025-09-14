@@ -91,6 +91,12 @@ const SANITIZE_SCHEMA = {
     "tr",
     "th",
     "td",
+    "ul",
+    "ol",
+    "li",
+    "blockquote",
+    "code",
+    "pre",
   ],
 };
 
@@ -107,9 +113,9 @@ Reddit isn’t a billboard—it’s a dense grid of micro-communities where peop
 
 Discovery starts by translating your product’s value into the language your prospects already use when they complain, compare tools, and ask for workarounds. Write 3–5 problem statements as direct user quotes (e.g., “Zapier is getting too expensive for basic automations,” “Clients ghost invoices; I need a polite nudge that actually works”). Build keyword clusters around those quotes (synonyms, adjacent tools, failure modes) and run them daily through Reddit’s native search plus site:reddit.com on Google. Prioritize threads that score on recency (last 3–30 days), specificity (clear context), and stakes (time, money, reputation).
 
-### 1.1 Problem Space → Keyword Taxonomy (5 Categories)
+### 1.1 Map your problem space → translate to keywords (5 categories)
 
-Think of a prospect’s situation as five parts you can mix into precise queries: Symptoms, Situations, Stack, Attempts, Decisions. Combine 2–3 per search to collapse noise and surface high intent.
+Start by stating, in plain language, what problem your brand solves and for whom. Turn that statement into a reusable “phrase bank,” then assemble precise searches from five ingredient categories. Mix 2–3 categories per search to reduce noise and surface high intent.
 
 | Category | What to capture | Examples (copy into a “phrase bank”) | Query stems (mix & match) |
 |---|---|---|---|
@@ -119,13 +125,21 @@ Think of a prospect’s situation as five parts you can mix into precise queries
 | Attempts | Workarounds tried | script, cron, csv export, regex, apps script, “Make scenario”, “n8n flow” | "workaround" OR "script"; "retry logic" OR "rate limit" |
 | Decisions | Comparison / constraints | alternative, vs, switch, migrate, self-hosted, open source, GDPR, SOC2, SLA, seat pricing | title:(alternative OR "vs"); "self-hosted" OR "open source" |
 
-Operator toolkit: exact phrase "...", native subreddit:, title:"..."; OR groups (a OR b); exclusions -hiring -homework; add time filters (“past month”) in Reddit UI; on Google stick to site:reddit.com.
+Operator toolkit (apply these after you build the query):
+
+- Exact phrase "..."
+- Subreddit scoping: subreddit:Name
+- Title search: title:"..."
+- OR groups: (a OR b)
+- Exclusions: -hiring -homework
+- Time filters: set “past month” in Reddit UI for freshness
+- On Google, prefix with site:reddit.com for web search
 
 Composite examples to save:
 
-- Symptom + Stack + Decision: title:"too expensive" (zapier OR "zap") (alternative OR switch) site:reddit.com
-- Symptom + Situation + Attempt: "late invoices" (freelance OR solo) ("email template" OR "polite nudge" OR script) site:reddit.com
-- Stack + Attempt + Constraint: ("shopify" AND "csv export") (bulk OR inventory) (GDPR OR "data retention") site:reddit.com
+- Symptom + Stack + Decision: \`title:"too expensive" (zapier OR "zap") (alternative OR switch) site:reddit.com\`
+- Symptom + Situation + Attempt: \`"late invoices" (freelance OR solo) ("email template" OR "polite nudge" OR script) site:reddit.com\`
+- Stack + Attempt + Constraint: \`("shopify" AND "csv export") (bulk OR inventory) (GDPR OR "data retention") site:reddit.com\`
 
 ### 1.2 Score Subreddits by Fit (keep 6–10 “home” subs)
 
@@ -139,15 +153,51 @@ Don’t chase size. Score by Lead Density × Rules Leniency × Relevance (1–5 
 | r/zapier | 4 | 3 | 4 | 11 |
 | r/Shopify | 3 | 3 | 4 | 10 |
 
-Lead Density signals: recurring “how do I…” posts, pain rants, “is there a tool for…”, comparisons, workaround threads.
+Lead Density signals:
 
-### 1.3 Qualify Threads Fast (the Q-P-C pass)
+- Recurring “how do I…” posts
+- Pain rants
+- “Is there a tool for…” questions
+- Comparisons
+- Workaround threads
 
-Open a candidate thread and scan for: Quote (copy-able pain line), Pain (stakes are real), Context (enough stack/situation to prescribe steps). If 2 of 3 are present, engage. Otherwise skip.
+### 1.3 Qualify Threads Fast (the P.A.S.S. check)
 
-### 1.4 Lightweight Signals Sheet (your discovery CRM)
+You have 60 seconds to decide. Use P.A.S.S.—Problem, Audience, Stakes, Specifics. If all four are present, engage. If three are present, engage with a clarifier. If two or fewer, skip and move on.
 
-Track: Date • Subreddit • Link • Pain Quote • Persona • Stack • Fit (1–5) • Status (Ignore / Engage / Follow-Up). Patterns you see after a week become your standard prospecting routes and later your onboarding presets.
+| P.A.S.S. | What to look for | Engage? |
+|---|---|---|
+| Problem | A clear, copy‑able pain in the poster’s words | Required |
+| Audience | Who they are or the environment they’re in (role, tool, scale) | Required |
+| Stakes | Why it matters now (time, money, risk, deadline) | Strongly preferred |
+| Specifics | Concrete details that make advice actionable (tools, volume, constraints) | Strongly preferred |
+
+Fast decision tree:
+
+- All four: Engage now. Post a 2–2–1 reply (empathy, two steps, optional tool note).
+- Three: Engage, but include one clarifying question to fill the gap.
+- Two or fewer: Skip. Save time for higher‑intent threads.
+
+Practical reads in under a minute:
+
+- Title: does it state a problem and hint at stakes? If yes, P and S likely present.
+- First paragraph: look for role/tool/scale. That’s your Audience.
+- Mentions of tools or numbers: those are the Specifics that make advice executable.
+- Comment velocity and freshness: last 3–30 days with active replies is worth your time.
+
+Hard skip rules (don’t overthink):
+
+- Hiring, homework, marketplace, or link‑only posts.
+- Opinion polls without an owner of the problem.
+- Threads where any helpful reply would break sub rules (e.g., strict no self‑promo).
+
+When you do engage, make the first reply do the heavy lifting:
+
+- Mirror the Problem and Stakes in one sentence, in their language.
+- Offer two concrete steps they can run today with their current stack.
+- Ask one clarifying question that surfaces constraints (integration, privacy, budget).
+- Close with a low‑friction, opt‑in next step you can deliver in‑thread (template, checklist).
+
 
 ---
 
@@ -157,21 +207,21 @@ Your job is to be unreasonably helpful in public. Reply like a practitioner who 
 
 ### 2.1 Comment Anatomy (the 2–2–1 rule)
 
-- 2 lines of empathy that mirror the poster’s words
-- 2 concrete steps they can do today with their current stack
-- 1 optional tool note + disclosure (plain, non-pushy)
+Write a reply that starts with empathy, gives actionable steps the poster can take right now, and ends with a low-friction, clearly disclosed next step.
 
 Drop-in template:
 
-You’re not overreacting—late invoices wreck runway.
-
-What works today:
-- Send a “polite nudge” 3 days before due + 3 days after (I can share my copy).
-- Add a “paid” label so replies don’t get buried.
-
-FWIW I built a lightweight nudge tool that automates those two steps. Happy to share a 60s walkthrough if useful. Want the templates?
+> You’re not overreacting—late invoices wreck runway.
+>
+> What works today:
+> - Send a “polite nudge” 3 days before due + 3 days after (I can share my copy).
+> - Add a “paid” label so replies don’t get buried.
+>
+> FWIW I built a lightweight nudge tool that automates those two steps. Happy to share a 60s walkthrough if useful. Want the templates?
 
 ### 2.2 Five Engagement Patterns that Win
+
+These patterns earn replies and opt-ins without dropping links upfront.
 
 - Recipe — 3–5 steps + expected result.
 - Trade-off Table — pros/cons of options already mentioned.
@@ -181,11 +231,11 @@ FWIW I built a lightweight nudge tool that automates those two steps. Happy to s
 
 ### 2.3 DM Etiquette & Cadence
 
-DM only when invited (or rules permit). First DM delivers the promised asset—no pitch. Follow up once at 48–72h with a concise nudge anchored to their goal (“Did the nudge copy speed up payments? If not, send a screenshot—I’ll record a 1-min fix.”). This cadence respects norms and builds reputation.
+DM only when invited (or rules permit). The first DM delivers the promised asset—no pitch. Follow up once at 48–72h with a concise nudge anchored to their goal (“Did the nudge copy speed up payments? If not, send a screenshot—I’ll record a 1‑min fix.”). This cadence respects norms and builds reputation.
 
 ### 2.4 Tone, Ethics, and Reuse
 
-Disclose every time you reference your product; never astroturf; don’t carpet-paste the same reply. Turn winning replies into reusable patterns (trade-off, decision tree, post-mortem). Over time you’ll build a library mapped to problem archetypes.
+Disclose every time you reference your product; never astroturf; don’t carpet‑paste the same reply. Turn winning replies into reusable patterns (trade‑off, decision tree, post‑mortem). Over time you’ll build a library mapped to problem archetypes.
 
 ---
 
@@ -195,21 +245,23 @@ Reddit conversion is won in the first 60 seconds after the click. Your landing m
 
 ### 3.1 “Reddit Mode” Landing Page (10-point checklist)
 
+Use this checklist to make the click‑to‑value path feel like a continuation of your helpful reply.
+
 - Loads in <2s on mobile
-- One-sentence promise in user words
+- One‑sentence promise in user words
 - Transparent pricing (or “free forever / paid for teams”)
 - No forced signup to watch demo/read docs
-- 60-sec demo; time-to-value < 60s post-signup
-- Pre-filled example tailored to the thread’s context (e.g., “Freelance invoice nudge”)
+- 60‑sec demo; time‑to‑value < 60s post‑signup
+- Pre‑filled example tailored to the thread’s context (e.g., “Freelance invoice nudge”)
 - Clear refund/guarantee line
 - UTM on all Reddit links
 - Optional: “Found us via r/freelance?” preset
-- Email-less trial if possible
+- Email‑less trial if possible
 
 ### 3.2 Offer Ladder (ethical & effective)
 
 - Free helper (template/checklist) → immediate win
-- Interactive help (10-min teardown; office hours)
+- Interactive help (10‑min teardown; office hours)
 - Trial with preset that mirrors their thread (one click to value)
 
 ### 3.3 Minimal Metrics to Hit 100 Customers
@@ -219,14 +271,19 @@ Reddit conversion is won in the first 60 seconds after the click. Your landing m
 | Helpful comments posted | 200–300 in 4 weeks (10–15/day) | Specificity, pattern match |
 | Comment → Click/DM | 10–20% | Offer clarity, asset relevance |
 | Click/DM → Trial | 40–60% | Landing friction, preset fit |
-| Trial → Paid | 40–60% | Time-to-value, follow-up quality |
+| Trial → Paid | 40–60% | Time‑to‑value, follow‑up quality |
 
-Fix in order: comment specificity → onboarding friction → time-to-value → follow-up.
+Fix in order:
+
+- Comment specificity
+- Onboarding friction
+- Time‑to‑value
+- Follow‑up
 
 ### 3.4 Follow-Up Playbook (copy this)
 
-- T+5 min: Deliver asset promised in-thread + 60s setup.
-- T+48–72h: 1-min Loom addressing their likely snag; one micro-CTA.
+- T+5 min: Deliver asset promised in‑thread + 60s setup.
+- T+48–72h: 1‑min Loom addressing their likely snag; one micro‑CTA.
 - T+7 days: Outcome check (“Did invoices clear faster?”) → offer help or bow out.
 
 ---
@@ -235,8 +292,8 @@ Fix in order: comment specificity → onboarding friction → time-to-value → 
 
 | Phase | Focus | Daily/Weekly Actions |
 |---|---|---|
-| Days 1–3 | Discover | Build taxonomy; pick 6–10 home subs; seed 8–10 non-promo helpful comments |
-| Days 4–10 | Engage | 10 helpful comments/day using 2–2–1; publish 3 micro-assets; log everything |
+| Days 1–3 | Discover | Build taxonomy; pick 6–10 home subs; seed 8–10 non‑promo helpful comments |
+| Days 4–10 | Engage | 10 helpful comments/day using 2–2–1; publish 3 micro‑assets; log everything |
 | Days 11–17 | Engage → Convert | Host office hours (if allowed); add Reddit presets to onboarding; invited DMs only |
 | Days 18–21 | Convert → Scale | Double down on top 3 keyword × 2 sub pairs; compile “Best of Reddit” guide; optional tiny ad on that guide |
 
@@ -244,13 +301,13 @@ Fix in order: comment specificity → onboarding friction → time-to-value → 
 
 ## Working Examples & Ready-to-Use Blocks
 
-Trade-off table (paste into a comment):
+Trade‑off table (paste into a comment):
 
 Quick compare from what folks mentioned:
 
 - Zapier — easiest to start; gets pricey at scale.
 - Make — flexible scenarios; learning curve.
-- n8n — cheapest/self-hosted; needs ops time.
+- n8n — cheapest/self‑hosted; needs ops time.
 
 If you’re <5 zaps/day → Zapier free is fine.
 Weekly reports → Make shines.
@@ -260,13 +317,15 @@ FWIW, I built a prebuilt “invoice chaser” flow. Happy to share a 60s walkthr
 
 Mod outreach (when rules are unclear):
 
-Hi mods — OPs often ask about late invoice nudges. I have a 1-page checklist (no signup) that directly answers this. OK to share if I disclose I built a related tool?
+> Hi mods — OPs often ask about late invoice nudges. I have a 1‑page checklist (no signup) that directly answers this. OK to share if I disclose I built a related tool?
 
 First DM (after invite):
 
-Here’s the invoice nudge template (copy → tweak names → done).
-If you try it, this 60s walkthrough shows a one-click “auto-remind” version.
-No pressure—curious if it helps by tomorrow; happy to adjust tone.
+> Here’s the invoice nudge template (copy → tweak names → done).
+>
+> If you try it, this 60s walkthrough shows a one‑click “auto‑remind” version.
+>
+> No pressure—curious if it helps by tomorrow; happy to adjust tone.
 
 ---
 
@@ -287,7 +346,7 @@ Use this once per sprint; it becomes your prospecting engine.
 
 ## Closing Thought
 
-Reddit rewards practitioners. If you run this D.E.C. loop with crisp discovery, generous public help, and a first-minute product experience that delivers value, you won’t need gimmicks to reach your first 100 customers—you’ll earn them thread by thread, with a reputation that compounds long after this sprint ends.
+Reddit rewards practitioners. If you run this D.E.C. loop with crisp discovery, generous public help, and a first‑minute product experience that delivers value, you won’t need gimmicks to reach your first 100 customers—you’ll earn them thread by thread, with a reputation that compounds long after this sprint ends.
 `;
 
 const PCV_CONTENT = `

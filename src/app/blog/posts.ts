@@ -20,7 +20,7 @@ export const posts: BlogPostMeta[] = [
   {
     slug: "validating-product-market-fit-on-reddit",
     title: "How to Find Your First 100 Customers on Reddit - Discover, Engage, Convert Leads",
-    date: "2025-02-12",
+    date: "2025-09-14",
     image: "/reddit.svg",
     seoDescription: "Learn how to validate product ideas using Reddit insights. Get real customer feedback, identify pain points, and test product concepts before building. Complete guide with frameworks and examples.",
     excerpt: "Most products fail because we validate solutions instead of problems. Reddit flips that dynamic—it's where people confess frustrations in plain language at scale.",

@@ -31,6 +31,12 @@
 .post ol {
   margin: 0.9rem 0 0.9rem 1.25rem;
 }
+.post ul {
+  list-style: disc outside;
+}
+.post ol {
+  list-style: decimal outside;
+}
 .post li {
   margin: 0.3rem 0;
 }
